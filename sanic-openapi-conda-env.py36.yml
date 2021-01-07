@@ -1,0 +1,17 @@
+name: sanic-openapi
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python>=3.6.0,<3.7.0a0
+  - aiohttp
+  - pytest
+  - pytest-cov
+  - loguru
+  - requests-async >=0.5.0
+  - pip==18.0
+  - pip:
+      - sanic >=19.6.0
+

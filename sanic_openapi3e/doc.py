@@ -254,18 +254,17 @@ def tag(name, description=None):
     """
 
     def inner(func):
-        if name not in tags:
-            tags[name] = Tag(name=name, description=description)
-        else:
-            if not tags[name].description:
-                tags[name] = Tag(name=name, description=description)
+        if name in tags:
+            if tags[name].description:
+                if description and tags[name].description != description:
+                    msg = "Conflicting tag.description for tag `{}`: existing: `{}`, conflicting: `{}`".format(
+                        name, tags[name].description, description
+                    )
+                    assert tags[name].description == description, msg
             else:
-                if description:
-                    if not tags[name].description == description:
-                        msg = "Conflicting tag.description for tag `{}`: existing: `{}`, conflicting: `{}`".format(
-                            name, tags[name].description, description
-                        )
-                        assert tags[name].description == description, msg
+                tags[name] = Tag(name=name, description=description)
+        else:
+            tags[name] = Tag(name=name, description=description)
         endpoints[func].x_tags_holder.append(tags[name])
         return func
 

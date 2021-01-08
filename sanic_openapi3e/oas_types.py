@@ -94,7 +94,7 @@ def openapi_keyname(key: str) -> str:
     """
     Returns the OpenAPI name for keys.
     """
-    _key = {
+    return {
         "_format": "format",
         "_in": "in",
         "_license": "license",
@@ -126,7 +126,6 @@ def openapi_keyname(key: str) -> str:
         "unique_items": "uniqueItems",
         "write_only": "writeOnly",
     }.get(key, key)
-    return _key
 
 
 NoneType = type(None)
@@ -173,11 +172,9 @@ class OObject:
                 "PathItem",
                 "Operation",
             ):
-                v2 = list(OObject._serialize(e, for_repr=for_repr) for e in v)
+                v2 = [OObject._serialize(e, for_repr=for_repr) for e in v]
             elif k2 == "security":
-                v2 = list(
-                    SecurityRequirement._serialize(sr, for_repr=for_repr) for sr in v
-                )
+                v2 = [SecurityRequirement._serialize(sr, for_repr=for_repr) for sr in v]
             else:
                 v2 = OObject._serialize(v)
             if not v2:
@@ -399,14 +396,14 @@ class ServerVariable(OObject):
 
         if enum:
             # All strings
-            if not set(type(e) for e in enum) == {type("str")}:
+            if {type(e) for e in enum} != {type("str")}:
                 raise AssertionError(
                     "For `{}`, all enum values must be str.".format(
                         self.__class__.__qualname__
                     )
                 )
             # All unique
-            if not len(set(enum)) == len(enum):
+            if len(set(enum)) != len(enum):
                 raise AssertionError(
                     "For `{}`, all enum values must be unique.".format(
                         self.__class__.__qualname__
@@ -886,11 +883,7 @@ class Encoding(OObject):
             )
             # TODO - add (where?) check that the style is suitable for this type+location.
         if explode is None:
-            if style == "form":
-                explode = True
-            else:
-                explode = False
-
+            explode = style == "form"
         _assert_type(explode, (bool,), "explode", self.__class__)
         _assert_type(allow_reserved, (bool,), "allow_reserved", self.__class__)
 
@@ -1847,45 +1840,44 @@ class Parameter(OObject):
 
     def __add__(self, other):
         assert isinstance(other, Parameter)
-        _d = dict()
+        _d = {}
         for k, v in self.__dict__.items():
-            if not v:
-                _d[k] = getattr(other, k)
-            else:
+            if v:
                 _d[k] = v
                 ov = getattr(other, k)
-                if ov:
-                    if v != ov:
+                if ov and v != ov:
                         # TODO - this should be done recursively. Move __add__ up to OObject?
                         # eg: schema:
                         # Schema{"type": "integer"} != Schema{"format": "int32", "minimum": 4, "type": "integer"}
-                        if isinstance(ov, Reference):
-                            # Simple replace.
-                            # TODO - check that the ref actually exists in the components.
-                            # TODO - check that the ref is compatible
-                            _d[k] = ov
+                    if isinstance(ov, Reference):
+                        # Simple replace.
+                        # TODO - check that the ref actually exists in the components.
+                        # TODO - check that the ref is compatible
+                        _d[k] = ov
 
-                        elif isinstance(v, OObject):
-                            v_d = dict()
-                            for v_k, v_v in v.__dict__.items():
-                                if not v_v:
-                                    v_d[v_k] = getattr(ov, v_k)
-                                else:
-                                    v_d[v_k] = v_v
-                                    v_ov = getattr(ov, v_k)
-                                    if v_ov:
-                                        assert v_v == v_ov, "{}.{}: {} != {}".format(
-                                            k, v_k, v_v, v_ov
-                                        )
+                    elif isinstance(v, OObject):
+                        v_d = {}
+                        for v_k, v_v in v.__dict__.items():
+                            if v_v:
+                                v_d[v_k] = v_v
+                                v_ov = getattr(ov, v_k)
+                                if v_ov:
+                                    assert v_v == v_ov, "{}.{}: {} != {}".format(
+                                        k, v_k, v_v, v_ov
+                                    )
 
-                            # TODO: this use of globals is _OK_ but it would be nice to not need it.
-                            _d[k] = globals()[v.__class__.__qualname__](**v_d)
+                            else:
+                                v_d[v_k] = getattr(ov, v_k)
+                        # TODO: this use of globals is _OK_ but it would be nice to not need it.
+                        _d[k] = globals()[v.__class__.__qualname__](**v_d)
 
-                        else:
-                            raise AssertionError(
-                                "{}: {} != {}".format(k, getattr(self, k), ov)
-                            )
+                    else:
+                        raise AssertionError(
+                            "{}: {} != {}".format(k, getattr(self, k), ov)
+                        )
 
+            else:
+                _d[k] = getattr(other, k)
         return Parameter(**_d)
 
 
@@ -2415,7 +2407,7 @@ class Responses(OObject):
         """
         # TODO - types
         # TODO - validations
-        self.__dict__ = responses if responses else {"200": Response.DEFAULT_SUCCESS}
+        self.__dict__ = responses or {"200": Response.DEFAULT_SUCCESS}
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item
@@ -2888,18 +2880,15 @@ class Paths(OObject):
         for _parsed_uri, path_item in self._paths:
             if _parsed_uri == item:
                 return path_item
-        if not self.locked:
-            path_item = PathItem()
-            self._paths.append((item, path_item))
-            return self._paths[-1][1]
-        else:
+        if self.locked:
             raise KeyError(item)
 
+        path_item = PathItem()
+        self._paths.append((item, path_item))
+        return self._paths[-1][1]
+
     def __contains__(self, item):
-        for _parsed_uri, _path_item in self._paths:
-            if _parsed_uri == item:
-                return True
-        return False
+        return any(_parsed_uri == item for _parsed_uri, _path_item in self._paths)
 
     def __iter__(self):
         yield from self._paths
@@ -3019,7 +3008,7 @@ class OpenAPIv3(OObject):
         """
 
         if tags:
-            assert sorted(set(t.name for t in tags)) == sorted(t.name for t in tags)
+            assert sorted({t.name for t in tags}) == sorted(t.name for t in tags)
         self.tags = tags
         """
         A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect 

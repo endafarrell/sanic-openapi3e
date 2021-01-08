@@ -389,7 +389,9 @@ class Info(OObject):
 # Server Object. Since v3
 # --------------------------------------------------------------- #
 class ServerVariable(OObject):
-    def __init__(self, enum=None, default=None, description=None):
+    def __init__(
+        self, default: str, enum: List[str] = None, description: Optional[str] = None
+    ):
         """
         An object representing a Server Variable for server URL template substitution.
 
@@ -397,10 +399,8 @@ class ServerVariable(OObject):
         :param default: REQUIRED. The default value to use for substitution, which SHALL be sent if an alternate value
             is not supplied. Note this behavior is different than the Schema Object's treatment of default values,
             because in those cases parameter values are optional.
-        :param description:
-        :type enum: List[str]
-        :type default: str
-        :type description: str
+        :param description: An optional description for the server variable. CommonMark syntax MAY be used for rich text
+            representation.
         """
         _assert_type(enum, (list,), "enum", self.__class__)
         _assert_type(default, (str,), "default", self.__class__)
@@ -423,17 +423,17 @@ class ServerVariable(OObject):
                         self.__class__.__qualname__
                     )
                 )
-        self.enum = enum  # type: List[str]
+        self.enum = enum
         """An enumeration of string values to be used if the substitution options are from a limited set."""
 
-        self.default = default  # type: str
+        self.default = default
         """
         REQUIRED. The default value to use for substitution, which SHALL be sent if an alternate value is not supplied. 
         Note this behavior is different than the Schema Object's treatment of default values, because in those cases 
         parameter values are optional.
         """
 
-        self.description = description  # type: str
+        self.description = description
         """
         An optional description for the server variable. CommonMark syntax MAY be used for rich text representation.
         """
@@ -1049,31 +1049,9 @@ class Schema(OObject):
     Strings = None  # type: Schema
     """A pre-defined String Schema. An array of (simple) String elements."""
 
-    def addEnum(self, enum: List):
-        _assert_type(enum, (list,), "enum", self.__class__)
-        assert len(enum)
-        self.enum = enum
-        enum0_type = {
-            int: Schema.Integer,
-            str: Schema.String,
-            float: Schema.Number,
-        }.get(type(enum[0]), Schema.String)
-        if self._type:
-            if self._type == "array":
-                if self.items:
-                    assert self.items.get("type") == enum0_type._type, (
-                        self.items,
-                        enum0_type,
-                    )
-                else:
-                    self.items = enum0_type
-            else:
-                assert self._type == enum0_type._type, (self._type, enum0_type)
-        else:
-            self._type = enum0_type
-
     def __init__(
         self,
+        _type: str,
         #
         # The following properties are taken directly from the JSON Schema definition and follow the same
         # specifications:
@@ -1096,12 +1074,11 @@ class Schema(OObject):
         #
         # The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
         # OpenAPI Specification.
-        _type: Optional[str] = None,
         all_of: Optional[Union["Schema", Reference]] = None,
         one_of: Optional[Union["Schema", Reference]] = None,
         any_of: Optional[Union["Schema", Reference]] = None,
         _not: Optional[Union["Schema", Reference]] = None,
-        items: Optional[Dict] = None,
+        items: Optional[Dict[str, str]] = None,
         properties: Optional[Union["Schema", Reference]] = None,
         additional_properties: Optional[Union["Schema", Reference]] = None,
         description: Optional[str] = None,
@@ -1154,19 +1131,17 @@ class Schema(OObject):
         - any_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
         - _not - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
         - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and
-                  not a standard JSON Schema. items MUST be present if the type is array.
+            not a standard JSON Schema. items MUST be present if the type is array.
         - properties - Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
-                       referenced).
-        - additional_properties - Value can be boolean or object. Inline or referenced schema MUST be of a Schema
-                                    Object and not a standard JSON Schema. Consistent with JSON Schema,
-                                    additionalProperties defaults to true.
+            referenced).
+        - additional_properties - Inline or referenced schema MUST be of a Schema
+            Object and not a standard JSON Schema. Consistent with JSON Schema.
         - description - CommonMark syntax MAY be used for rich text representation.
         - _format - See Data Type Formats for further details. While relying on JSON Schema's defined formats, the
-                    OAS offers a few additional predefined formats.
-        - default - The default value represents what would be assumed by the consumer of the input as the value of
-                      the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type
-                      for the Schema Object defined at the same level. For example, if type is string, then default can
-                      be "foo" but cannot be 1.
+            OAS offers a few additional predefined formats.
+        - default - The default value represents what would be assumed by the consumer of the input as the value of the
+            schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema
+            Object defined at the same level. For example, if type is string, then default can be "foo" but cannot be 1.
 
         Alternatively, any time a Schema Object can be used, a Reference Object can be used in its place. This allows
         referencing definitions instead of defining them inline.
@@ -1203,7 +1178,7 @@ class Schema(OObject):
         :param pattern: The value of this keyword MUST be a string.  This string SHOULD be a valid regular expression,
             according to the ECMA 262 regular expression dialect. A string instance is considered valid if the regular
             expression matches the instance successfully.  Recall: regular expressions are not implicitly anchored.
-            Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
+            Note: whether or not this is a valid regular expression is not checked by sanic-openapi3e.
         :param max_items: The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to,
             0. An array instance is valid against "maxItems" if its size is less than, or equal to, the value of this
             keyword.
@@ -1430,7 +1405,7 @@ class Schema(OObject):
         A string instance is considered valid if the regular expression matches the instance successfully.  Recall: 
         regular expressions are not implicitly anchored.
         
-        Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
+        Note: whether or not this is a valid regular expression is not checked by sanic-openapi3e.
         """
 
         self.max_items = max_items
@@ -1501,7 +1476,7 @@ class Schema(OObject):
         if _type:
             # TODO - must these be in OTypeFormat.keys()?
             pass
-        self._type = _type
+        self._type: Optional[str] = _type
         """Value MUST be a string. Multiple types via an array are not supported."""
 
         self.all_of = all_of
@@ -1610,6 +1585,50 @@ class Schema(OObject):
                     self.__class__.__qualname__
                 )
             )
+
+    def add_enum(self, enum: List):
+        enum0_type: str = self.get_enum_type(enum)
+
+        if self._type:
+            if self._type == "array":
+                if self.items:
+                    assert self.items.get("type") == enum0_type, (
+                        self.items,
+                        enum0_type,
+                    )
+                else:
+                    self.items = {"type": enum0_type}
+            else:
+                assert self._type == enum0_type, (self._type, enum0_type)
+        else:
+            self._type = enum0_type
+        self.enum = enum
+
+    @classmethod
+    def get_enum_type(cls, enum: List) -> str:
+        _assert_type(enum, (list,), "enum", cls)
+        assert len(enum)
+        enum_types = {type(e) for e in enum}
+        if len(enum_types) != 1:
+            raise AssertionError(
+                "For `{}`, all values of the enum/choices must be of the same type, but `{}` were seen".format(
+                    cls.__qualname__, enum_types
+                )
+            )
+
+        # At definition, the Schema.String is set to `None`, but below (and before code gets to use it) it is set to
+        # `Schema(_type="string")`. This is for python3.6 reasons. Thus, mypy needs to be silenced for the next line and
+        # the line just before the return.
+        _enum_type: str = Schema.String._type   # type: ignore
+        enum0_schema: Optional[Schema] = {
+            int: Schema.Integer,
+            str: Schema.String,
+            float: Schema.Number,
+        }.get(type(enum[0]))
+        if enum0_schema:
+            _enum_type = enum0_schema._type  # type: ignore
+
+        return _enum_type
 
 
 Schema.Integer = Schema(_type="integer")
@@ -2042,7 +2061,12 @@ Response.DEFAULT_SUCCESS = Response(description="Success")
 
 
 class RequestBody(OObject):
-    def __init__(self,  content: Dict[str, MediaType], description: Optional[str]=None, required:bool=False):
+    def __init__(
+        self,
+        content: Dict[str, MediaType],
+        description: Optional[str] = None,
+        required: bool = False,
+    ):
         """
         Describes a single request body.
 
@@ -2058,26 +2082,30 @@ class RequestBody(OObject):
         _assert_type(content, (dict,), "content", self.__class__)
 
         # Assignment and docs
-        self.description = description  # type: str
+        self.description = description
         """
         A brief description of the request body. This could contain examples of use. CommonMark syntax MAY be used for 
         rich text representation.
         """
 
-        self.content = content  # type: Dict[str, MediaType]
+        self.content = content
         """
         REQUIRED. The content of the request body. The key is a media type or media type range and the value describes 
         it. For requests that match multiple keys, only the most specific key is applicable. e.g. ``text/plain`` 
         overrides ``text/*``
         """
 
-        self.required = required  # type: bool
+        self.required = required
         """Determines if the request body is required in the request. Defaults to false."""
 
 
 class OAuthFlow(OObject):
     def __init__(
-        self, authorization_url:str, token_url:str, scopes:Dict[str, str], refresh_url:Optional[str]=None,
+        self,
+        authorization_url: str,
+        token_url: str,
+        scopes: Dict[str, str],
+        refresh_url: Optional[str] = None,
     ):
         """
         Configuration details for a supported OAuth Flow.
@@ -2122,10 +2150,10 @@ class OAuthFlow(OObject):
 class OAuthFlows(OObject):
     def __init__(
         self,
-        implicit:Optional[OAuthFlow]=None,
-        password: Optional[OAuthFlow]=None,
-        client_credentials: Optional[OAuthFlow]=None,
-        authorization_code: Optional[OAuthFlow]=None,
+        implicit: Optional[OAuthFlow] = None,
+        password: Optional[OAuthFlow] = None,
+        client_credentials: Optional[OAuthFlow] = None,
+        authorization_code: Optional[OAuthFlow] = None,
     ):
         """
         Allows configuration of the supported OAuth Flows.
@@ -2163,8 +2191,8 @@ class SecurityScheme(OObject):
         scheme: str,
         flows: OAuthFlows,
         openid_connect_url: str,
-            description: Optional[str]=None,
-            bearer_format=None,
+        description: Optional[str] = None,
+        bearer_format=None,
     ):
         """
         Defines a security scheme that can be used by the operations. Supported schemes are HTTP authentication, an API
@@ -2208,36 +2236,36 @@ class SecurityScheme(OObject):
         if _in:
             assert _in in ("query", "header", "cookie")
 
-        self._type = _type  # type: str
+        self._type = _type
         """
         REQUIRED (but not checked). The type of the security scheme. Valid values are "apiKey", "http", "oauth2", 
         "openIdConnect"."""
 
-        self.description = description  # type: str
+        self.description = description
         """A short description for security scheme. CommonMark syntax MAY be used for rich text representation."""
 
-        self.name = name  # type: str
+        self.name = name
         """REQUIRED (but not checked). The name of the header, query or cookie parameter to be used."""
 
-        self._in = _in  # type: str
+        self._in = _in
         """REQUIRED (but not checked). The location of the API key. Valid values are "query", "header" or "cookie"."""
 
-        self.scheme = scheme  # type: str
+        self.scheme = scheme
         """
         REQUIRED (but not checked). The name of the HTTP Authorization scheme to be used in the Authorization header as 
         defined in RFC7235.
         """
 
-        self.bearer_format = bearer_format  # type: str
+        self.bearer_format = bearer_format
         """
         A hint to the client to identify how the bearer token is formatted. Bearer tokens are usually generated by an 
         authorization server, so this information is primarily for documentation purposes.
         """
 
-        self.flows = flows  # type: OAuthFlows
+        self.flows = flows
         """REQUIRED (but not checked). An object containing configuration information for the flow types supported."""
 
-        self.openid_Connect_url = openid_connect_url  # type: str
+        self.openid_Connect_url = openid_connect_url
         """
         REQUIRED (but not checked). OpenId Connect URL to discover OAuth2 configuration values. This MUST be in the form 
         of a URL.

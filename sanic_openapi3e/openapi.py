@@ -302,12 +302,13 @@ def _build_openapi_spec(
                     op: Operation = getattr(path_item, op_name)
                     if op:
                         op_tag_names = op.tags
-                        for op_tag_name in op_tag_names:
-                            if tag.name == op_tag_name:
-                                if not any(
-                                    [t.name == op_tag_name for t in in_use_tags]
-                                ):
-                                    in_use_tags.add(tag)
+                        if op_tag_names:
+                            for op_tag_name in op_tag_names:
+                                if tag.name == op_tag_name:
+                                    if not any(
+                                        [t.name == op_tag_name for t in in_use_tags]
+                                    ):
+                                        in_use_tags.add(tag)
         _v3_tags = sorted(in_use_tags)
 
     servers = app.config.get("OPENAPI_SERVERS", None)

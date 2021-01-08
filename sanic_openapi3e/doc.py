@@ -79,20 +79,20 @@ def exclude(boolean=True):
 
 # noinspection PyShadowingNames
 def parameter(
-        name:str,
-        _in="query",
-        description: Optional[str] = None,
-        required: Optional[bool] = None,
-        deprecated:bool=False,
-        allow_empty_value: Optional[bool] = None,
-        choices: Optional[List]=None,
-        style: Optional[str] = None,
-        explode: Optional[bool] = None,
-        allow_reserved: Optional[bool] = None,
-        schema: Optional[Union[Schema, Reference]] = None,
-        example: Optional[Any] = None,
-        examples: Optional[Dict[str, Union[Example, Reference]]] = None,
-        content: Optional[Dict[str, MediaType]] = None,
+    name: str,
+    _in="query",
+    description: Optional[str] = None,
+    required: Optional[bool] = None,
+    deprecated: bool = False,
+    allow_empty_value: Optional[bool] = None,
+    choices: Optional[List] = None,
+    style: Optional[str] = None,
+    explode: Optional[bool] = None,
+    allow_reserved: Optional[bool] = None,
+    schema: Optional[Union[Schema, Reference]] = None,
+    example: Optional[Any] = None,
+    examples: Optional[Dict[str, Union[Example, Reference]]] = None,
+    content: Optional[Dict[str, MediaType]] = None,
 ):
     """
     Describes a single operation parameter.
@@ -163,16 +163,25 @@ def parameter(
     if _in == "path":
         required = True
 
+    if schema is None:
+        if choices is None:
+            schema = Schema.String  # A basic default
+        else:
+            choices0_type = Schema.get_enum_type(choices)
+            schema = Schema(_type=choices0_type, enum=choices)
 
-    if schema is None and choices is not None:
-        schema = Schema(enum=choices)
-    elif schema is None and choices is None:
-        schema = Schema.String
-    elif schema is not None and choices is not None:
-        # ah: still need to ensure that these are compatible
-        schema.addEnum(choices)
-    elif schema is not None and choices is None:
-        pass
+    else:  # schema is not None
+        if choices is None:
+            pass  # OK - nothing to do
+        else:
+            # both schema and choices
+            if isinstance(schema, Schema):
+                schema.add_enum(choices)
+            else:
+                raise ValueError(
+                    "Cannot add choices to a Reference schema: define a new one with these choices."
+                )
+
     assert schema
 
     def inner(func):

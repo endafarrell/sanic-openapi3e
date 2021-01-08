@@ -196,13 +196,11 @@ def _build_openapi_spec(
             if str(_func.__module__) == "sanic.static" and hide_sanic_static:
                 continue
 
-            path_item_summary: Optional[str] = None
+            path_item_summary: Optional[str] = path_item.summary
             if path_item.x_exclude and not hide_excluded:
                 path_item_summary = "[excluded] " + (
                     path_item.summary if path_item.summary else ""
                 )
-            else:
-                path_item_summary = path_item.summary
 
             _parameters = path_item.parameters
             for _parameter in _parameters:
@@ -299,7 +297,6 @@ def _build_openapi_spec(
         # Check that the tags are in use. This can depend on `hide_excluded`, so we re-use the _v3_paths.
         in_use_tags: Set[Tag] = set()
         for tag in _v3_tags:
-            print(f"\n\nopenapi.py#303, {type(tag)}, {tag}\n")
             for path, path_item in _v3_paths:
                 for op_name in Operation.OPERATION_NAMES:
                     op: Operation = getattr(path_item, op_name)

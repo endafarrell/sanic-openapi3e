@@ -1,7 +1,5 @@
 import pathlib
 
-
-
 import sanic.request
 import sanic.response
 from sanic import Sanic
@@ -9,8 +7,10 @@ from sanic import Sanic
 # isort: off
 # These two lines are to ensure that the version of `sanic_openapi3e` your app uses is from this checkout.
 import sys
+
 sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
 from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
+
 # isort: on
 
 app = Sanic(name=__file__, strict_slashes=True)
@@ -50,12 +50,14 @@ def get_id_29(request, an_id: int):
     return sanic.response.json(d)
 
 
-example_port=8002
-@app.listener('after_server_start')
+example_port = 8002
+
+
+@app.listener("after_server_start")
 async def notify_server_started(app: sanic.app.Sanic, __):
-    print('\n\n************* sanic-openapi3e ****************************')
-    print(f'See your openapi swagger on http://127.0.0.1:{example_port}/swagger/')
-    print('************* sanic-openapi3e ****************************\n\n')
+    print("\n\n************* sanic-openapi3e ********************************")
+    print(f"* See your openapi swagger on http://127.0.0.1:{example_port}/swagger/ *")
+    print("************* sanic-openapi3e ********************************\n\n")
 
 
 app.go_fast(port=example_port)

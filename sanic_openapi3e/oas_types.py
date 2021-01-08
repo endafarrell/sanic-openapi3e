@@ -1049,7 +1049,7 @@ class Schema(OObject):
     Strings = None  # type: Schema
     """A pre-defined String Schema. An array of (simple) String elements."""
 
-    def addEnum(self, enum):
+    def addEnum(self, enum: List):
         _assert_type(enum, (list,), "enum", self.__class__)
         assert len(enum)
         self.enum = enum
@@ -2042,19 +2042,16 @@ Response.DEFAULT_SUCCESS = Response(description="Success")
 
 
 class RequestBody(OObject):
-    def __init__(self, description=None, content=None, required=None):
+    def __init__(self,  content: Dict[str, MediaType], description: Optional[str]=None, required:bool=False):
         """
         Describes a single request body.
 
-        :param description: A brief description of the request body. This could contain examples of use. CommonMark
-            syntax MAY be used for rich text representation.
         :param content: REQUIRED. The content of the request body. The key is a media type or media type range and the
             value describes it. For requests that match multiple keys, only the most specific key is applicable. e.g.
             ``text/plain`` overrides ``text/*``
+        :param description: A brief description of the request body. This could contain examples of use. CommonMark
+            syntax MAY be used for rich text representation.
         :param required: Determines if the request body is required in the request. Defaults to false.
-        :type description: str
-        :type content: Dict[str, MediaType]
-        :type required: bool
         """
         # TODO - types
         _assert_required(content, "content", self.__class__)
@@ -2080,7 +2077,7 @@ class RequestBody(OObject):
 
 class OAuthFlow(OObject):
     def __init__(
-        self, authorization_url=None, token_url=None, refresh_url=None, scopes=None
+        self, authorization_url:str, token_url:str, scopes:Dict[str, str], refresh_url:Optional[str]=None,
     ):
         """
         Configuration details for a supported OAuth Flow.
@@ -2099,28 +2096,23 @@ class OAuthFlow(OObject):
         :param refresh_url: The URL to be used for obtaining refresh tokens. This MUST be in the form of a URL.
         :param scopes: REQUIRED (but not checked). The available scopes for the OAuth2 security scheme. A map between
             the scope name and a short description for it.
-        :type authorization_url: str
-        :type token_url: str
-        :type refresh_url: str
-        :type scopes: Dict[str, str]
         """
 
-        # TODO - types
         # TODO - see notes above re: validation
 
         # Assignment and docs
-        self.authorization_url = authorization_url  # type: str
+        self.authorization_url = authorization_url
         """
         REQUIRED (but not checked). The authorization URL to be used for this flow. This MUST be in the form of a URL.
         """
 
-        self.token_url = token_url  # type: str
+        self.token_url = token_url
         """REQUIRED (but not checked). The token URL to be used for this flow. This MUST be in the form of a URL."""
 
-        self.refresh_url = refresh_url  # type: str
+        self.refresh_url = refresh_url
         """The URL to be used for obtaining refresh tokens. This MUST be in the form of a URL."""
 
-        self.scopes = scopes  # type: Dict[str, str]
+        self.scopes = scopes
         """
         REQUIRED (but not checked). The available scopes for the OAuth2 security scheme. A map between the scope name 
         and a short description for it.
@@ -2130,10 +2122,10 @@ class OAuthFlow(OObject):
 class OAuthFlows(OObject):
     def __init__(
         self,
-        implicit=None,
-        password=None,
-        client_credentials=None,
-        authorization_code=None,
+        implicit:Optional[OAuthFlow]=None,
+        password: Optional[OAuthFlow]=None,
+        client_credentials: Optional[OAuthFlow]=None,
+        authorization_code: Optional[OAuthFlow]=None,
     ):
         """
         Allows configuration of the supported OAuth Flows.
@@ -2144,39 +2136,35 @@ class OAuthFlows(OObject):
             OpenAPI 2.0.
         :param authorization_code: Configuration for the OAuth Authorization Code flow. Previously called accessCode in
             OpenAPI 2.0.
-        :type implicit: OAuthFlow
-        :type password: OAuthFlow
-        :type client_credentials: OAuthFlow
-        :type authorization_code: OAuthFlow
         """
         # TODO - types
         # No specific validation
 
         # Assignment and docs
-        self.implicit = implicit  # type: OAuthFlow
+        self.implicit = implicit
         """Configuration for the OAuth Implicit flow"""
 
-        self.password = password  # type: OAuthFlow
+        self.password = password
         """Configuration for the OAuth Resource Owner Password flow"""
 
-        self.client_credentials = client_credentials  # type: OAuthFlow
+        self.client_credentials = client_credentials
         """Configuration for the OAuth Client Credentials flow. Previously called application in OpenAPI 2.0."""
 
-        self.authorization_code = authorization_code  # type: OAuthFlow
+        self.authorization_code = authorization_code
         """Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0."""
 
 
 class SecurityScheme(OObject):
     def __init__(
         self,
-        _type=None,
-        description=None,
-        name=None,
-        _in=None,
-        scheme=None,
-        bearer_format=None,
-        flows=None,
-        openid_connect_url=None,
+        _type: str,
+        name: str,
+        _in: str,
+        scheme: str,
+        flows: OAuthFlows,
+        openid_connect_url: str,
+            description: Optional[str]=None,
+            bearer_format=None,
     ):
         """
         Defines a security scheme that can be used by the operations. Supported schemes are HTTP authentication, an API
@@ -2248,6 +2236,7 @@ class SecurityScheme(OObject):
 
         self.flows = flows  # type: OAuthFlows
         """REQUIRED (but not checked). An object containing configuration information for the flow types supported."""
+
         self.openid_Connect_url = openid_connect_url  # type: str
         """
         REQUIRED (but not checked). OpenId Connect URL to discover OAuth2 configuration values. This MUST be in the form 

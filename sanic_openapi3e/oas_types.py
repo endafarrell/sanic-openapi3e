@@ -27,17 +27,29 @@ This implementation has some known limitations:
 * There is no accommodation for Specification Extensions.
 * Inconsistent use of Optional[type] vs type throughout.
 * Schema.items is not well understood, your mileage may vary.
-* SecurityScheme (specifically the REQUIREDs) are now well understood, and so no validation checks on REQUIRED fields
+* SecurityScheme (specifically the REQUIREDs) are not well understood, and so no validation checks on REQUIRED fields
   are done.
 
 """
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
-from collections import OrderedDict
 import json
+from collections import OrderedDict
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 
-# @logger.catch(reraise=True)
-def _assert_type(element, types, name, clazz):
+def _assert_type(
+    element: Any, types: Sequence[Any], name: str, clazz: Type[Any]
+) -> None:
     """
     Utility to help assert types are only as expected.
 
@@ -45,11 +57,6 @@ def _assert_type(element, types, name, clazz):
     :param types: The allowed types
     :param name: The name of the element
     :param clazz: The class containing the element
-    :type element: Any
-    :type types: Iterable[Any]
-    :type name: str
-    :type clazz: class
-    :return: None
     """
     assert isinstance(types, tuple)
     assert isinstance(name, str)
@@ -59,7 +66,6 @@ def _assert_type(element, types, name, clazz):
         )
 
 
-# @logger.catch(reraise=True)
 def _assert_required(element, name, clazz, why=""):
     assert isinstance(name, str)
 
@@ -71,7 +77,6 @@ def _assert_required(element, name, clazz, why=""):
         )
 
 
-# @logger.catch(reraise=True)
 def _assert_strictly_greater_than_zero(element, name, clazz):
     assert isinstance(name, str)
     if element is not None:
@@ -96,14 +101,9 @@ def _assert_strictly_greater_than_zero(element, name, clazz):
 #     )
 
 
-def openapi_keyname(key):
+def openapi_keyname(key: str) -> str:
     """
     Returns the OpenAPI name for keys.
-
-    :param key:
-    :type key: str
-    :return: OpenAPI name for `key`
-    :rtype str
     """
     _key = {
         "_format": "format",
@@ -145,7 +145,7 @@ NoneType = type(None)
 
 class OObject:
     @staticmethod
-    def _serialize(value, for_repr=False):
+    def _serialize(value: Any, for_repr=False) -> Union[Dict, List[Dict], Any]:
         """
         Internal serialisation to a dict
         :param value: Any
@@ -212,142 +212,131 @@ class OObject:
 
 
 class OType(OObject):
-    name = None  # type: str
-    formats = list()  # type: List[str]
-    # to be extended by sub classes
-
-    def __init__(self, value, _format=None):
-        """
-        Base class for OAS-defined types.
-
-        :param value:
-        :type value: Any
-        :param _format: Optional[str]
-        :type _format: str
-        """
-        if _format:
-            assert _format in self.formats
-        self.format = _format  # type: str
-        self.value = value  # type: Union[int, float, str, bool]
+    name: str
+    formats: List[str]
 
 
 class OInteger(OType):
-    name = "integer"  # type: str
-    formats = ["int32", "int64"]  # type: List[str]
+    name = "integer"
+    formats = ["int32", "int64"]
 
-    def serialise(self):
-        """
+    def __init__(self, value: int, _format: Optional[str] = None):
+        if _format:
+            assert _format in self.formats
+        self.format = _format
+        self.value = value
 
-        :return:
-        :rtype: int
-        """
+    def serialise(self) -> int:
         return self.value
 
 
 class ONumber(OType):
-    name = "number"  # type: str
-    formats = ["float", "double"]  # type: List[str]
+    name = "number"
+    formats = ["float", "double"]
 
-    def serialise(self):
-        """
+    def __init__(self, value: float, _format: Optional[str] = None):
+        if _format:
+            assert _format in self.formats
+        self.format = _format
+        self.value = value
 
-        :return:
-        :rtype: float
-        """
+    def serialise(self) -> float:
         return self.value
 
 
 class OString(OType):
-    name = "string"  # type: str
-    formats = ["byte", "binary", "date", "date-time", "password"]  # type: List[str]
+    name = "string"
+    formats = ["byte", "binary", "date", "date-time", "password"]
 
-    def serialise(self):
-        """
+    def __init__(self, value: str, _format: Optional[str] = None):
+        if _format:
+            assert _format in self.formats
+        self.format = _format
+        self.value = value
 
-        :return:
-        :rtype: str
-        """
+    def serialise(self) -> str:
         return self.value
 
 
 class OBoolean(OType):
-    name = "boolean"  # type: str
-    formats = None  # type: List[str]
+    name = "boolean"
+    formats: List[str] = []
 
-    def serialise(self):
-        """
+    def __init__(self, value: bool, _format: Optional[str] = None):
+        if _format:
+            assert _format in self.formats
+        self.format = _format
+        self.value = value
 
-        :return:
-        :rtype: bool
-        """
+    def serialise(self) -> bool:
         return self.value
 
 
-OTypeFormats = dict(
-    (_type.name, _type.formats) for _type in (OInteger, ONumber, OString, OBoolean)
-)  # type: Dict[str, List[str]]
+# OTypeFormats: Dict[str, List[str]] = {
+#     _type.name: _type.formats for _type in (OInteger, ONumber, OString, OBoolean)
+# }
 
 
 # --------------------------------------------------------------- #
 # Info Object
 # --------------------------------------------------------------- #
 class Contact(OObject):
-    def __init__(self, name, url, email):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        url: Optional[str] = None,
+        email: Optional[str] = None,
+    ):
         """
         Contact information for the exposed API.
 
         :param name: The identifying name of the contact person/organization.
         :param url: The URL pointing to the contact information. MUST be in the format of a URL.
         :param email: The email address of the contact person/organization. MUST be in the format of an email address.
-        :type name: Optional[str]
-        :type url: Optional[str]
-        :type email: Optional[str]
         """
         _assert_type(name, (str,), "name", self.__class__)
         _assert_type(url, (str,), "url", self.__class__)
         _assert_type(email, (str,), "email", self.__class__)
 
-        self.name = name  # type: str
+        self.name = name
         """The identifying name of the contact person/organization."""
 
-        self.url = url  # type: str
+        self.url = url
         """The URL pointing to the contact information. MUST be in the format of a URL."""
 
-        self.email = email  # type: str
+        self.email = email
         """The email address of the contact person/organization. MUST be in the format of an email address."""
 
 
 class License(OObject):
-    def __init__(self, name=None, url=None):
+    def __init__(self, name: str, url: Optional[str] = None):
         """
         License information for the exposed API.
 
         :param name: REQUIRED. The license name used for the API.
         :param url: A URL to the license used for the API. MUST be in the format of a URL.
-        :type name: str
-        :type url: str
         """
         _assert_type(name, (str,), "name", self.__class__)
         _assert_type(url, (str,), "url", self.__class__)
 
         _assert_required(name, "name", self.__class__)
 
-        self.name = name  # type: str
+        self.name = name
         """REQUIRED. The license name used for the API."""
 
-        self.url = url  # type: str
+        self.url = url
         """A URL to the license used for the API. MUST be in the format of a URL."""
 
 
 class Info(OObject):
     def __init__(
         self,
-        title=None,
-        description=None,
-        terms_of_service=None,
-        contact=None,
-        _license=None,
-        version=None,
+        title: str,
+        version: str,
+        description: Optional[str] = None,
+        terms_of_service: Optional[str] = None,
+        contact: Optional[Contact] = None,
+        _license: Optional[License] = None,
     ):
         """
         The object provides metadata about the API. The metadata MAY be used by the clients if needed, and MAY be
@@ -361,12 +350,7 @@ class Info(OObject):
         :param _license: The license information for the exposed API.
         :param version: REQUIRED. The version of the OpenAPI document (which is distinct from the OpenAPI Specification
             version or the API implementation version).
-        :type title: str
-        :type description: Optional[str]
-        :type terms_of_service: Optional[str]
-        :type contact: Optional[Contact]
-        :type _license: Optional[License]
-        :type version: str
+
 
         """
         _assert_type(title, (str,), "title", self.__class__)
@@ -456,7 +440,12 @@ class ServerVariable(OObject):
 
 
 class Server(OObject):
-    def __init__(self, url=None, description=None, variables=None):
+    def __init__(
+        self,
+        url: str,
+        description: Optional[str] = None,
+        variables: Optional[Dict[str, ServerVariable]] = None,
+    ):
         """
         An object representing a Server.
 
@@ -467,9 +456,6 @@ class Server(OObject):
             for rich text representation.
         :param variables: A map between a variable name and its value. The value is used for substitution in the
             server's URL template.
-        :type url: str
-        :type description: str
-        :param variables: Dict[str, ServerVariable]
         """
         _assert_type(url, (str,), "url", self.__class__)
         _assert_type(description, (str,), "description", self.__class__)
@@ -477,18 +463,18 @@ class Server(OObject):
 
         _assert_required(url, "url", self.__class__)
 
-        self.url = url  # type: str
+        self.url = url
         """
         REQUIRED. A URL to the target host. This URL supports Server Variables and MAY be relative, to indicate that the 
         host location is relative to the location where the OpenAPI document is being served. Variable substitutions 
         will be made when a variable is named in {brackets}."""
 
-        self.description = description  # type: str
+        self.description = description
         """
         An optional string describing the host designated by the URL. CommonMark syntax MAY be used for rich text 
         representation.
         """
-        self.variables = variables  # type: Dict[str, ServerVariable]
+        self.variables = variables
         """
         A map between a variable name and its value. The value is used for substitution in the server's URL template.
         """
@@ -636,641 +622,6 @@ class ExternalDocumentation(OObject):
 
         self.url = url  # type: str
         """REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL."""
-
-
-class Schema(OObject):
-    Integer = None  # type: Schema
-    """A pre-defined Integer Schema. Very simple, no properties other than `format` of `int64`."""
-
-    Number = None  # type: Schema
-    """A pre-defined Number Schema. Very simple, no properties other than `format` of `double`."""
-
-    String = None  # type: Schema
-    """A pre-defined String Schema. Very simple, no properties."""
-
-    Integers = None  # type: Schema
-    """A pre-defined Integers Schema. An array of (simple) Integer elements."""
-
-    Numbers = None  # type: Schema
-    """A pre-defined Number Schema. An array of (simple) Number elements."""
-
-    Strings = None  # type: Schema
-    """A pre-defined String Schema. An array of (simple) String elements."""
-
-    def addEnum(self, enum):
-        _assert_type(enum, (list,), "enum", self.__class__)
-        assert len(enum)
-        self.enum = enum
-        enum0_type = {
-            int: Schema.Integer,
-            str: Schema.String,
-            float: Schema.Number,
-        }.get(type(enum[0]), Schema.String)
-        if self._type:
-            if self._type == "array":
-                if self.items:
-                    assert self.items.get("type") == enum0_type._type, (
-                        self.items,
-                        enum0_type,
-                    )
-                else:
-                    self.items = enum0_type
-            else:
-                assert self._type == enum0_type._type, (self._type, enum0_type)
-        else:
-            self._type = enum0_type
-
-    def __init__(
-        self,
-        #
-        # The following properties are taken directly from the JSON Schema definition and follow the same
-        # specifications:
-        title=None,
-        multiple_of=None,
-        maximum=None,
-        exclusive_maximum=False,
-        minimum=None,
-        exclusive_minimum=False,
-        max_length=None,
-        min_length=None,
-        pattern=None,
-        max_items=None,
-        min_items=None,
-        unique_items=False,
-        max_properties=None,
-        min_properties=None,
-        required=None,
-        enum=None,
-        #
-        # The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
-        # OpenAPI Specification.
-        _type=None,
-        all_of=None,
-        one_of=None,
-        any_of=None,
-        _not=None,
-        items=None,
-        properties=None,
-        additional_properties=None,
-        description=None,
-        _format=None,
-        default=None,
-        #
-        # The OAS extensions.
-        nullable=False,
-        discriminator=None,
-        read_only=False,
-        write_only=False,
-        xml=None,
-        external_docs=None,
-        example=None,
-        deprecated=False,
-    ):
-        """
-        The Schema Object allows the definition of input and output data types. These types can be objects, but also
-        primitives and arrays. This object is an extended subset of the `JSON Schema Specification Wright Draft 00
-        <https://tools.ietf.org/html/draft-wright-json-schema-validation-00>`_.
-
-        For more information about the properties, see JSON Schema Core and JSON Schema Validation. Unless stated
-        otherwise, the property definitions follow the JSON Schema.
-
-        The following properties are taken directly from the JSON Schema definition and follow the same specifications:
-
-        - title
-        - multiple_of
-        - maximum
-        - exclusive_maximum
-        - minimum
-        - exclusive_minimum
-        - max_length
-        - min_length
-        - pattern
-        - max_items
-        - min_items
-        - unique_items
-        - max_properties
-        - min_properties
-        - required
-        - enum
-
-        The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
-        OpenAPI Specification.
-
-        - type - Value MUST be a string. Multiple types via an array are not supported.
-        - all_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        - one_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        - any_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        - _not - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and
-                  not a standard JSON Schema. items MUST be present if the type is array.
-        - properties - Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
-                       referenced).
-        - additional_properties - Value can be boolean or object. Inline or referenced schema MUST be of a Schema
-                                    Object and not a standard JSON Schema. Consistent with JSON Schema,
-                                    additionalProperties defaults to true.
-        - description - CommonMark syntax MAY be used for rich text representation.
-        - _format - See Data Type Formats for further details. While relying on JSON Schema's defined formats, the
-                    OAS offers a few additional predefined formats.
-        - default - The default value represents what would be assumed by the consumer of the input as the value of
-                      the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type
-                      for the Schema Object defined at the same level. For example, if type is string, then default can
-                      be "foo" but cannot be 1.
-
-        Alternatively, any time a Schema Object can be used, a Reference Object can be used in its place. This allows
-        referencing definitions instead of defining them inline.
-
-        Additional properties defined by the JSON Schema specification that are not mentioned here are strictly
-        unsupported.
-
-        :param title: Can be used to decorate a user interface with information about the data produced by this user
-            interface.  A title will preferrably [sic] be short.
-        :param multiple_of: The value of "multiple_of" MUST be a number, strictly greater than 0. A numeric instance is
-            only valid if division by this keyword's value results in an integer.
-        :param maximum: The value of "maximum" MUST be a number, representing an upper limit for a numeric instance. If
-            the instance is a number, then this keyword validates if "exclusiveMaximum" is true and instance is less
-            than the provided value, or else if the instance is less than or exactly equal to the provided value.
-        :param exclusive_maximum: The value of "exclusive_maximum" MUST be a boolean, representing whether the limit in
-            "maximum" is exclusive or not.  An undefined value is the same as false. If "exclusive_maximum" is true,
-            then a numeric instance SHOULD NOT be equal to the value specified in "maximum". If "exclusive_maximum" is
-            false (or not specified), then a numeric instance MAY be equal to the value of "maximum".
-        :param minimum: The value of "minimum" MUST be a number, representing a lower limit for a numeric instance. If
-            the instance is a number, then this keyword validates if "exclusive_minimum" is true and instance is greater
-            than the provided value, or else if the instance is greater than or exactly equal to the provided value.
-        :param exclusive_minimum: The value of "exclusive_minimum" MUST be a boolean, representing whether the limit in
-            "minimum" is exclusive or not.  An undefined value is the same as false. If "exclusive_minimum" is true,
-            then a numeric instance SHOULD NOT be equal to the value specified in "minimum". If "exclusive_minimum" is
-            false (or not specified), then a numeric instance MAY be equal to the value of "minimum".
-        :param max_length: The value of this keyword MUST be a non-negative integer. The value of this keyword MUST be
-            an integer.  This integer MUST be greater than, or equal to, 0. A string instance is valid against this
-            keyword if its length is less than, or equal to, the value of this keyword. The length of a string instance
-            is defined as the number of its characters as defined by RFC 7159 [RFC7159].
-        :param min_length: A string instance is valid against this keyword if its length is greater than, or equal to,
-            the value of this keyword. The length of a string instance is defined as the number of its characters as
-            defined by RFC 7159 [RFC7159]. The value of this keyword MUST be an integer.  This integer MUST be greater
-            than, or equal to, 0. "min_length", if absent, may be considered as being present with integer value 0.
-        :param pattern: The value of this keyword MUST be a string.  This string SHOULD be a valid regular expression,
-            according to the ECMA 262 regular expression dialect. A string instance is considered valid if the regular
-            expression matches the instance successfully.  Recall: regular expressions are not implicitly anchored.
-            Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
-        :param max_items: The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to,
-            0. An array instance is valid against "maxItems" if its size is less than, or equal to, the value of this
-            keyword.
-        :param min_items: The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to,
-            0. An array instance is valid against "minItems" if its size is greater than, or equal to, the value of this
-            keyword. If this keyword is not present, it may be considered present with a value of 0.
-        :param unique_items: The value of this keyword MUST be a boolean. If this keyword has boolean value false, the
-            instance validates successfully.  If it has boolean value true, the instance validates successfully if all
-            of its elements are unique. If not present, this keyword may be considered present with boolean value false.
-        :param max_properties: he value of this keyword MUST be an integer.  This integer MUST be greater than, or equal
-            to, 0. An object instance is valid against "max_properties" if its number of properties is less than, or
-            equal to, the value of this keyword.
-        :param min_properties: The value of this keyword MUST be an integer.  This integer MUST be greater than, or
-            equal to, 0. An object instance is valid against "min_properties" if its number of properties is greater
-            than, or equal to, the value of this keyword. If this keyword is not present, it may be considered present
-            with a value of 0.
-        :param required: The value of this keyword MUST be an array.  This array MUST have at least one element.
-            Elements of this array MUST be strings, and MUST be unique. An object instance is valid against this keyword
-            if its property set contains all elements in this keyword's array value. Note: sanic-openapi3e implements
-            these checks as a Set of str.
-        :param enum: The value of this keyword MUST be an array.  This array SHOULD have at least one element.
-            Elements in the array SHOULD be unique. Elements in the array MAY be of any type, including null. An
-            instance validates successfully against this keyword if its value is equal to one of the elements in this
-            keyword's array value. Note: sanic-openapi3e implements these checks as a Set of Any.
-        :param _type: Value MUST be a string. Multiple types via an array are not supported.
-        :param all_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        :param one_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        :param any_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        :param _not: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
-        :param items: Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object
-            and not a standard JSON Schema. items MUST be present if the type is array.
-        :param properties: Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
-            referenced).
-        :param additional_properties: Value can be boolean or object. Inline or referenced schema MUST be of a Schema
-            Object and not a standard JSON Schema. Consistent with JSON Schema, additionalProperties defaults to true.
-        :param description: CommonMark syntax MAY be used for rich text representation.
-        :param _format:  See `Data Type Formats
-            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#dataTypeFormat>`_ for further
-            details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
-        :param default: The default value represents what would be assumed by the consumer of the input as the value of
-            the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the
-            Schema Object defined at the same level. For example, if type is string, then default can be "foo" but
-            cannot be 1.
-        :param nullable: Allows sending a null value for the defined schema. Default value is false.
-        :param discriminator: Adds support for polymorphism. The discriminator is an object name that is used to
-            differentiate between other schemas which may satisfy the payload description. See Composition and
-            Inheritance for more details.
-        :param read_only: Relevant only for Schema "properties" definitions. Declares the property as "read only". This
-            means that it MAY be sent as part of a response but SHOULD NOT be sent as part of the request. If the
-            property is marked as read_only being true and is in the required list, the required will take effect on the
-            response only. A property MUST NOT be marked as both read_only and writeOnly being true. Default value is
-            false.
-        :param write_only: Relevant only for Schema "properties" definitions. Declares the property as "write only".
-            Therefore, it MAY be sent as part of a request but SHOULD NOT be sent as part of the response. If the
-            property is marked as write_only being true and is in the required list, the required will take effect on
-            the request only. A property MUST NOT be marked as both read_only and write_only being true. Default value
-            is false.
-        :param xml: This MAY be used only on properties schemas. It has no effect on root schemas. Adds additional
-            metadata to describe the XML representation of this property.
-        :param external_docs: Additional external documentation for this schema.
-        :param example: A free-form property to include an example of an instance for this schema. To represent examples
-            that cannot be naturally represented in JSON or YAML, a string value can be used to contain the example with
-            escaping where necessary.
-        :param deprecated: Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value
-            is false.
-        :type title: str
-        :type multiple_of: int
-        :type maximum: int
-        :type exclusive_maximum: bool
-        :type minimum: int
-        :type exclusive_minimum: bool
-        :type max_length: int
-        :type min_length: int
-        :type pattern: str
-        :type max_items: int
-        :type min_items: int
-        :type unique_items: bool
-        :type max_properties: int
-        :type min_properties: int
-        :type required: List[str]
-        :type enum: List[Any]
-        :type _type: str
-        :type all_of: Union[Schema, Reference]
-        :type one_of: Union[Schema, Reference]
-        :type any_of: Union[Schema, Reference]
-        :type _not: Union[Schema, Reference]
-        :type items: Dict
-        :type properties: Union[Schema, Reference]
-        :type additional_properties: Union[Schema, Reference]
-        :type description: str
-        :type _format: str
-        :type default: Union[str, int, float, bool]
-        :type nullable: bool
-        :type discriminator: Discriminator
-        :type read_only: bool
-        :type write_only: bool
-        :type xml: XML
-        :type external_docs: ExternalDocumentation
-        :type example: Any
-        :type deprecated: bool
-        """
-
-        # JSON Schema definition
-        _assert_type(title, (str,), "title", self.__class__)
-        _assert_type(multiple_of, (int,), "multiple_of", self.__class__)
-        _assert_type(maximum, (int, float), "maximum", self.__class__)
-        _assert_type(exclusive_maximum, (bool,), "exclusive_maximum", self.__class__)
-        _assert_type(minimum, (int, float), "minimum", self.__class__)
-        _assert_type(exclusive_minimum, (bool,), "exclusive_minimum", self.__class__)
-        _assert_type(max_length, (int,), "max_length", self.__class__)
-        _assert_type(min_length, (int,), "min_length", self.__class__)
-        _assert_type(pattern, (str,), "pattern", self.__class__)
-        _assert_type(max_items, (int,), "max_items", self.__class__)
-        _assert_type(min_items, (int,), "min_items", self.__class__)
-        _assert_type(unique_items, (bool,), "unique_items", self.__class__)
-        _assert_type(max_properties, (int,), "max_properties", self.__class__)
-        _assert_type(min_properties, (int,), "min_properties", self.__class__)
-        _assert_type(required, (list,), "required", self.__class__)
-        _assert_type(enum, (list,), "enum", self.__class__)
-
-        # JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
-        _assert_type(_type, (str,), "_type", self.__class__)
-        _assert_type(all_of, (Schema, Reference), "all_of", self.__class__)
-        _assert_type(one_of, (Schema, Reference), "one_of", self.__class__)
-        _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
-        _assert_type(_not, (Schema, Reference), "_not", self.__class__)
-        _assert_type(items, (dict,), "items", self.__class__)
-        # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
-        _assert_type(properties, (Schema, Reference), "properties", self.__class__)
-        _assert_type(
-            additional_properties,
-            (Schema, Reference),
-            "additional_properties",
-            self.__class__,
-        )
-        _assert_type(description, (str,), "description", self.__class__)
-        _assert_type(_format, (str,), "_format", self.__class__)
-        _assert_type(default, (str, int, float, bool), "default", self.__class__)
-
-        # The OAS extensions
-        _assert_type(nullable, (bool,), "nullable", self.__class__)
-        _assert_type(discriminator, (Discriminator,), "discriminator", self.__class__)
-        _assert_type(read_only, (bool,), "read_only", self.__class__)
-        _assert_type(write_only, (bool,), "write_only", self.__class__)
-        _assert_type(xml, (XML,), "xml", self.__class__)
-        _assert_type(
-            external_docs, (ExternalDocumentation,), "external_docs", self.__class__
-        )
-        # Note: example is defined to have the type `Any`
-        _assert_type(deprecated, (bool,), "deprecated", self.__class__)
-        _assert_strictly_greater_than_zero(multiple_of, "multiple_of", self.__class__)
-        _assert_strictly_greater_than_zero(max_length, "max_length", self.__class__)
-        _assert_strictly_greater_than_zero(min_length, "min_length", self.__class__)
-        _assert_strictly_greater_than_zero(max_items, "max_items", self.__class__)
-        _assert_strictly_greater_than_zero(
-            min_properties, "min_properties", self.__class__
-        )
-
-        if required is not None:
-            assert required, "MUST have at least one element."
-            assert set(type(e) for e in required) == {
-                type("str")
-            }, "For `{}.required`, all elements MUST be strings.".format(
-                self.__class__.__qualname__
-            )
-            assert len(set(required)) == len(
-                required
-            ), "For `{}.required`, all elements MUST be unique.".format(
-                self.__class__.__qualname__
-            )
-        # if enum:
-        #     if not len(enum):
-        #         logger.warning(
-        #             "`{}.enum` SHOULD have at least one element. {}".format(
-        #                 self.__class__.__qualname__, self
-        #             )
-        #         )
-        if _type == "array":
-            _assert_required(items, "items", self.__class__, " as `type=array`.")
-
-        #  Assignment and docs
-        self.title = title  # type: Optional[str]
-        """
-        Can be used to decorate a user interface with information about the data produced by this user interface.  A 
-        title will preferrably [sic] be short.
-        """
-
-        self.multiple_of = multiple_of  # type: Optional[int]
-        """
-        The value of "multiple_of" MUST be a number, strictly greater than 0.
-
-        A numeric instance is only valid if division by this keyword's value results in an integer. """
-
-        self.maximum = maximum  # type: Optional[Union[int, float]]
-        """
-        The value of "maximum" MUST be a number, representing an upper limit for a numeric instance.
-
-        If the instance is a number, then this keyword validates if "exclusiveMaximum" is true and instance is less than 
-        the provided value, or else if the instance is less than or exactly equal to the provided value.
-        """
-
-        self.exclusive_maximum = exclusive_maximum  # type: Optional[bool]
-        """
-        The value of "exclusive_maximum" MUST be a boolean, representing whether the limit in "maximum" is exclusive or 
-        not.  An undefined value is the same as false.
-
-        If "exclusive_maximum" is true, then a numeric instance SHOULD NOT be equal to the value specified in "maximum".  
-        If "exclusive_maximum" is false (or not specified), then a numeric instance MAY be equal to the value of 
-        "maximum".
-        """
-
-        self.minimum = minimum  # type: Optional[Union[int, float]]
-        """
-        The value of "minimum" MUST be a number, representing a lower limit for a numeric instance.
-
-        If the instance is a number, then this keyword validates if "exclusive_minimum" is true and instance is greater 
-        than the provided value, or else if the instance is greater than or exactly equal to the provided value.
-        """
-
-        self.exclusive_minimum = exclusive_minimum  # type: Optional[bool]
-        """
-        The value of "exclusive_minimum" MUST be a boolean, representing whether the limit in "minimum" is exclusive or 
-        not.  An undefined value is the same as false.
-
-        If "exclusive_minimum" is true, then a numeric instance SHOULD NOT be equal to the value specified in "minimum".  
-        If "exclusive_minimum" is false (or not specified), then a numeric instance MAY be equal to the value of
-        "minimum".
-        """
-
-        self.max_length = max_length  # type: int
-        """
-        The value of this keyword MUST be a non-negative integer.
-
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        A string instance is valid against this keyword if its length is less than, or equal to, the value of this 
-        keyword.
-
-        The length of a string instance is defined as the number of its characters as defined by RFC 7159 [RFC7159].
-        """
-
-        self.min_length = min_length  # type: int
-        """
-        A string instance is valid against this keyword if its length is greater than, or equal to, the value of this 
-        keyword.
-
-        The length of a string instance is defined as the number of its characters as defined by RFC 7159 [RFC7159].
-
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        "min_length", if absent, may be considered as being present with integer value 0.
-        """
-
-        self.pattern = pattern  # type: Optional[str]
-        """
-        The value of this keyword MUST be a string.  This string SHOULD be a valid regular expression, according to the 
-        ECMA 262 regular expression dialect.
-
-        A string instance is considered valid if the regular expression matches the instance successfully.  Recall: 
-        regular expressions are not implicitly anchored.
-        
-        Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
-        """
-
-        self.max_items = max_items  # type: int
-        """
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        An array instance is valid against "maxItems" if its size is less than, or equal to, the value of this keyword.
-        """
-
-        self.min_items = min_items  # type: int
-        """
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        An array instance is valid against "minItems" if its size is greater than, or equal to, the value of this 
-        keyword.
-        
-        If this keyword is not present, it may be considered present with a value of 0.
-        """
-
-        self.unique_items = unique_items  # type: bool
-        """
-        The value of this keyword MUST be a boolean.
-
-        If this keyword has boolean value false, the instance validates successfully.  If it has boolean value true, the 
-        instance validates successfully if all of its elements are unique.
-
-        If not present, this keyword may be considered present with boolean value false.
-        """
-
-        self.max_properties = max_properties  # type: int
-        """
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        An object instance is valid against "max_properties" if its number of properties is less than, or equal to, the 
-        value of this keyword.
-        """
-
-        self.min_properties = min_properties  # type: int
-        """
-        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
-
-        An object instance is valid against "min_properties" if its number of properties is greater than, or equal to, 
-        the value of this keyword.
-
-        If this keyword is not present, it may be considered present with a value of 0.
-        """
-
-        self.required = required  # type: Optional[List[str]]
-        """
-        The value of this keyword MUST be an array.  This array MUST have at least one element.  Elements of this array 
-        MUST be strings, and MUST be unique.
-
-        An object instance is valid against this keyword if its property set contains all elements in this keyword's 
-        array value.
-        """
-
-        self.enum = enum  # type: Optional[List[Any]]
-        """
-        The value of this keyword MUST be an array.  This array SHOULD have at least one element.  Elements in the array 
-        SHOULD be unique.
-
-        Elements in the array MAY be of any type, including null.
-
-        An instance validates successfully against this keyword if its value is equal to one of the elements in this 
-        keyword's array value.
-        """
-
-        if _type:
-            # TODO - must these be in OTypeFormat.keys()?
-            pass
-        self._type = _type  # type: Optional[str]
-        """Value MUST be a string. Multiple types via an array are not supported."""
-
-        self.all_of = all_of  # type: Optional[Union[Schema, Reference]]
-        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
-
-        self.one_of = one_of  # type: Optional[Union[Schema, Reference]]
-        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
-
-        self.any_of = any_of  # type: Optional[Union[Schema, Reference]]
-        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
-
-        self._not = _not  # type: Optional[Union[Schema, Reference]]
-        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
-
-        self.items = items  # type: Optional[Dict]
-        """
-        Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and not a 
-        standard JSON Schema. items MUST be present if the type is array.
-        """
-        # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
-
-        self.properties = properties  # type: Optional[Union[Schema, Reference]]
-        """ Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or referenced)."""
-
-        self.additional_properties = (
-            additional_properties
-        )  # type: Optional[Union[Schema, Reference, bool]]
-        """
-        Value can be boolean or object. Inline or referenced schema MUST be of a Schema Object and not a standard JSON 
-        Schema.
-        """
-
-        self.description = description  # type: Optional[str]
-        """CommonMark syntax MAY be used for rich text representation."""
-
-        self._format = _format  # type: Optional[str]
-        """
-        See Data Type Formats for further details. While relying on JSON Schema's defined formats, the OAS offers a few 
-        additional predefined formats.
-        """
-
-        self.default = default  # type: Optional[Union[str, int, float, bool]]
-        """
-        The default value represents what would be assumed by the consumer of the input as the value of the schema if 
-        one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object 
-        defined at the same level. For example, if type is string, then default can be "foo" but cannot be 1.
-        """
-        # TODO - add checks that ensure that the type of default is compatible with the _type
-
-        # The OAS extensions
-        self.nullable = nullable  # type: Optional[bool]
-        """Allows sending a null value for the defined schema. Default value is false."""
-
-        self.discriminator = discriminator  # type: Optional[Discriminator]
-        """
-        Adds support for polymorphism. The discriminator is an object name that is used to differentiate between other 
-        schemas which may satisfy the payload description. See Composition and Inheritance for more details.
-        """
-
-        self.read_only = read_only  # type: Optional[bool]
-        """
-        Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY 
-        be sent as part of a response but SHOULD NOT be sent as part of the request. If the property is marked as 
-        read_only being true and is in the required list, the required will take effect on the response only. A property 
-        MUST NOT be marked as both read_only and write_only being true. Default value is false.
-        """
-
-        self.write_only = write_only  # type: Optional[bool]
-        """
-        Relevant only for Schema "properties" definitions. Declares the property as "write only". Therefore, it MAY be 
-        sent as part of a request but SHOULD NOT be sent as part of the response. If the property is marked as 
-        write_only being true and is in the required list, the required will take effect on the request only. A property
-        MUST NOT be marked as both read_only and write_only being true. Default value is false.
-        """
-
-        self.xml = xml  # type: Optional[XML]
-        """
-        This MAY be used only on properties schemas. It has no effect on root schemas. Adds additional metadata to 
-        describe the XML representation of this property.
-        """
-
-        self.external_docs = external_docs  # type: Optional[ExternalDocumentation]
-        """Additional external documentation for this schema."""
-
-        self.example = example  # type: Any
-        """
-        A free-form property to include an example of an instance for this schema. To represent examples that cannot be 
-        naturally represented in JSON or YAML, a string value can be used to contain the example with escaping where 
-        necessary.
-        """
-
-        self.deprecated = deprecated  # type: Optional[bool]
-        """ Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value is false."""
-
-        # Other stated requirements:
-        # if items:
-        #     logger.warning(
-        #         "For `{}`, items are not fully defined. Your mileage may vary.".format(
-        #             self.__class__.__qualname__
-        #         )
-        #     )
-
-        if _type == "array" and not items:
-            raise AssertionError(
-                "For `{}`, items MUST be present if the type is array.".format(
-                    self.__class__.__qualname__
-                )
-            )
-        if _format:
-            # TODO - must these be in OTypeFormat[_type]?
-            pass
-
-        if read_only and write_only:
-            raise AssertionError(
-                "For `{}`, A property; MUST NOT be marked as both read_only and write_only being true.".format(
-                    self.__class__.__qualname__
-                )
-            )
-
-
-Schema.Integer = Schema(_type="integer")
-Schema.Number = Schema(_type="number", _format="double")
-Schema.String = Schema(_type="string")
-Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize())
-Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize())
-Schema.Strings = Schema(_type="array", items=Schema.String.serialize())
 
 
 class Example(OObject):
@@ -1679,22 +1030,612 @@ class MediaType(OObject):
         """
 
 
+class Schema(OObject):
+    Integer = None  # type: Schema
+    """A pre-defined Integer Schema. Very simple, no properties other than `format` of `int64`."""
+
+    Number = None  # type: Schema
+    """A pre-defined Number Schema. Very simple, no properties other than `format` of `double`."""
+
+    String = None  # type: Schema
+    """A pre-defined String Schema. Very simple, no properties."""
+
+    Integers = None  # type: Schema
+    """A pre-defined Integers Schema. An array of (simple) Integer elements."""
+
+    Numbers = None  # type: Schema
+    """A pre-defined Number Schema. An array of (simple) Number elements."""
+
+    Strings = None  # type: Schema
+    """A pre-defined String Schema. An array of (simple) String elements."""
+
+    def addEnum(self, enum):
+        _assert_type(enum, (list,), "enum", self.__class__)
+        assert len(enum)
+        self.enum = enum
+        enum0_type = {
+            int: Schema.Integer,
+            str: Schema.String,
+            float: Schema.Number,
+        }.get(type(enum[0]), Schema.String)
+        if self._type:
+            if self._type == "array":
+                if self.items:
+                    assert self.items.get("type") == enum0_type._type, (
+                        self.items,
+                        enum0_type,
+                    )
+                else:
+                    self.items = enum0_type
+            else:
+                assert self._type == enum0_type._type, (self._type, enum0_type)
+        else:
+            self._type = enum0_type
+
+    def __init__(
+        self,
+        #
+        # The following properties are taken directly from the JSON Schema definition and follow the same
+        # specifications:
+        title: Optional[str] = None,
+        multiple_of: Optional[int] = None,
+        maximum: Optional[int] = None,
+        exclusive_maximum: bool = False,
+        minimum: Optional[int] = None,
+        exclusive_minimum: bool = False,
+        max_length: Optional[int] = None,
+        min_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        max_items: Optional[int] = None,
+        min_items: Optional[int] = None,
+        unique_items: bool = False,
+        max_properties: Optional[int] = None,
+        min_properties: Optional[int] = None,
+        required: Optional[List[str]] = None,
+        enum: Optional[List[Any]] = None,
+        #
+        # The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
+        # OpenAPI Specification.
+        _type: Optional[str] = None,
+        all_of: Optional[Union["Schema", Reference]] = None,
+        one_of: Optional[Union["Schema", Reference]] = None,
+        any_of: Optional[Union["Schema", Reference]] = None,
+        _not: Optional[Union["Schema", Reference]] = None,
+        items: Optional[Dict] = None,
+        properties: Optional[Union["Schema", Reference]] = None,
+        additional_properties: Optional[Union["Schema", Reference]] = None,
+        description: Optional[str] = None,
+        _format: Optional[str] = None,
+        default: Optional[Union[str, int, float, bool]] = None,
+        #
+        # The OAS extensions.
+        nullable: bool = False,
+        discriminator: Optional[Discriminator] = None,
+        read_only: bool = False,
+        write_only: bool = False,
+        xml: Optional[XML] = None,
+        external_docs: Optional[ExternalDocumentation] = None,
+        example: Optional[Any] = None,
+        deprecated: bool = False,
+    ):
+        """
+        The Schema Object allows the definition of input and output data types. These types can be objects, but also
+        primitives and arrays. This object is an extended subset of the `JSON Schema Specification Wright Draft 00
+        <https://tools.ietf.org/html/draft-wright-json-schema-validation-00>`_.
+
+        For more information about the properties, see JSON Schema Core and JSON Schema Validation. Unless stated
+        otherwise, the property definitions follow the JSON Schema.
+
+        The following properties are taken directly from the JSON Schema definition and follow the same specifications:
+
+        - title
+        - multiple_of
+        - maximum
+        - exclusive_maximum
+        - minimum
+        - exclusive_minimum
+        - max_length
+        - min_length
+        - pattern
+        - max_items
+        - min_items
+        - unique_items
+        - max_properties
+        - min_properties
+        - required
+        - enum
+
+        The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
+        OpenAPI Specification.
+
+        - type - Value MUST be a string. Multiple types via an array are not supported.
+        - all_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        - one_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        - any_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        - _not - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and
+                  not a standard JSON Schema. items MUST be present if the type is array.
+        - properties - Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
+                       referenced).
+        - additional_properties - Value can be boolean or object. Inline or referenced schema MUST be of a Schema
+                                    Object and not a standard JSON Schema. Consistent with JSON Schema,
+                                    additionalProperties defaults to true.
+        - description - CommonMark syntax MAY be used for rich text representation.
+        - _format - See Data Type Formats for further details. While relying on JSON Schema's defined formats, the
+                    OAS offers a few additional predefined formats.
+        - default - The default value represents what would be assumed by the consumer of the input as the value of
+                      the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type
+                      for the Schema Object defined at the same level. For example, if type is string, then default can
+                      be "foo" but cannot be 1.
+
+        Alternatively, any time a Schema Object can be used, a Reference Object can be used in its place. This allows
+        referencing definitions instead of defining them inline.
+
+        Additional properties defined by the JSON Schema specification that are not mentioned here are strictly
+        unsupported.
+
+        :param title: Can be used to decorate a user interface with information about the data produced by this user
+            interface.  A title will preferrably [sic] be short.
+        :param multiple_of: The value of "multiple_of" MUST be a number, strictly greater than 0. A numeric instance is
+            only valid if division by this keyword's value results in an integer.
+        :param maximum: The value of "maximum" MUST be a number, representing an upper limit for a numeric instance. If
+            the instance is a number, then this keyword validates if "exclusiveMaximum" is true and instance is less
+            than the provided value, or else if the instance is less than or exactly equal to the provided value.
+        :param exclusive_maximum: The value of "exclusive_maximum" MUST be a boolean, representing whether the limit in
+            "maximum" is exclusive or not.  An undefined value is the same as false. If "exclusive_maximum" is true,
+            then a numeric instance SHOULD NOT be equal to the value specified in "maximum". If "exclusive_maximum" is
+            false (or not specified), then a numeric instance MAY be equal to the value of "maximum".
+        :param minimum: The value of "minimum" MUST be a number, representing a lower limit for a numeric instance. If
+            the instance is a number, then this keyword validates if "exclusive_minimum" is true and instance is greater
+            than the provided value, or else if the instance is greater than or exactly equal to the provided value.
+        :param exclusive_minimum: The value of "exclusive_minimum" MUST be a boolean, representing whether the limit in
+            "minimum" is exclusive or not.  An undefined value is the same as false. If "exclusive_minimum" is true,
+            then a numeric instance SHOULD NOT be equal to the value specified in "minimum". If "exclusive_minimum" is
+            false (or not specified), then a numeric instance MAY be equal to the value of "minimum".
+        :param max_length: The value of this keyword MUST be a non-negative integer. The value of this keyword MUST be
+            an integer.  This integer MUST be greater than, or equal to, 0. A string instance is valid against this
+            keyword if its length is less than, or equal to, the value of this keyword. The length of a string instance
+            is defined as the number of its characters as defined by RFC 7159 [RFC7159].
+        :param min_length: A string instance is valid against this keyword if its length is greater than, or equal to,
+            the value of this keyword. The length of a string instance is defined as the number of its characters as
+            defined by RFC 7159 [RFC7159]. The value of this keyword MUST be an integer.  This integer MUST be greater
+            than, or equal to, 0. "min_length", if absent, may be considered as being present with integer value 0.
+        :param pattern: The value of this keyword MUST be a string.  This string SHOULD be a valid regular expression,
+            according to the ECMA 262 regular expression dialect. A string instance is considered valid if the regular
+            expression matches the instance successfully.  Recall: regular expressions are not implicitly anchored.
+            Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
+        :param max_items: The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to,
+            0. An array instance is valid against "maxItems" if its size is less than, or equal to, the value of this
+            keyword.
+        :param min_items: The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to,
+            0. An array instance is valid against "minItems" if its size is greater than, or equal to, the value of this
+            keyword. If this keyword is not present, it may be considered present with a value of 0.
+        :param unique_items: The value of this keyword MUST be a boolean. If this keyword has boolean value false, the
+            instance validates successfully.  If it has boolean value true, the instance validates successfully if all
+            of its elements are unique. If not present, this keyword may be considered present with boolean value false.
+        :param max_properties: he value of this keyword MUST be an integer.  This integer MUST be greater than, or equal
+            to, 0. An object instance is valid against "max_properties" if its number of properties is less than, or
+            equal to, the value of this keyword.
+        :param min_properties: The value of this keyword MUST be an integer.  This integer MUST be greater than, or
+            equal to, 0. An object instance is valid against "min_properties" if its number of properties is greater
+            than, or equal to, the value of this keyword. If this keyword is not present, it may be considered present
+            with a value of 0.
+        :param required: The value of this keyword MUST be an array.  This array MUST have at least one element.
+            Elements of this array MUST be strings, and MUST be unique. An object instance is valid against this keyword
+            if its property set contains all elements in this keyword's array value. Note: sanic-openapi3e implements
+            these checks as a Set of str.
+        :param enum: The value of this keyword MUST be an array.  This array SHOULD have at least one element.
+            Elements in the array SHOULD be unique. Elements in the array MAY be of any type, including null. An
+            instance validates successfully against this keyword if its value is equal to one of the elements in this
+            keyword's array value. Note: sanic-openapi3e implements these checks as a Set of Any.
+        :param _type: Value MUST be a string. Multiple types via an array are not supported.
+        :param all_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        :param one_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        :param any_of: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        :param _not: Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+        :param items: Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object
+            and not a standard JSON Schema. items MUST be present if the type is array.
+        :param properties: Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
+            referenced).
+        :param additional_properties: Value can be boolean or object. Inline or referenced schema MUST be of a Schema
+            Object and not a standard JSON Schema. Consistent with JSON Schema, additionalProperties defaults to true.
+        :param description: CommonMark syntax MAY be used for rich text representation.
+        :param _format:  See `Data Type Formats
+            <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#dataTypeFormat>`_ for further
+            details. While relying on JSON Schema's defined formats, the OAS offers a few additional predefined formats.
+        :param default: The default value represents what would be assumed by the consumer of the input as the value of
+            the schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the
+            Schema Object defined at the same level. For example, if type is string, then default can be "foo" but
+            cannot be 1.
+        :param nullable: Allows sending a null value for the defined schema. Default value is false.
+        :param discriminator: Adds support for polymorphism. The discriminator is an object name that is used to
+            differentiate between other schemas which may satisfy the payload description. See Composition and
+            Inheritance for more details.
+        :param read_only: Relevant only for Schema "properties" definitions. Declares the property as "read only". This
+            means that it MAY be sent as part of a response but SHOULD NOT be sent as part of the request. If the
+            property is marked as read_only being true and is in the required list, the required will take effect on the
+            response only. A property MUST NOT be marked as both read_only and writeOnly being true. Default value is
+            false.
+        :param write_only: Relevant only for Schema "properties" definitions. Declares the property as "write only".
+            Therefore, it MAY be sent as part of a request but SHOULD NOT be sent as part of the response. If the
+            property is marked as write_only being true and is in the required list, the required will take effect on
+            the request only. A property MUST NOT be marked as both read_only and write_only being true. Default value
+            is false.
+        :param xml: This MAY be used only on properties schemas. It has no effect on root schemas. Adds additional
+            metadata to describe the XML representation of this property.
+        :param external_docs: Additional external documentation for this schema.
+        :param example: A free-form property to include an example of an instance for this schema. To represent examples
+            that cannot be naturally represented in JSON or YAML, a string value can be used to contain the example with
+            escaping where necessary.
+        :param deprecated: Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value
+            is false.
+        """
+
+        # JSON Schema definition
+        _assert_type(title, (str,), "title", self.__class__)
+        _assert_type(multiple_of, (int,), "multiple_of", self.__class__)
+        _assert_type(maximum, (int, float), "maximum", self.__class__)
+        _assert_type(exclusive_maximum, (bool,), "exclusive_maximum", self.__class__)
+        _assert_type(minimum, (int, float), "minimum", self.__class__)
+        _assert_type(exclusive_minimum, (bool,), "exclusive_minimum", self.__class__)
+        _assert_type(max_length, (int,), "max_length", self.__class__)
+        _assert_type(min_length, (int,), "min_length", self.__class__)
+        _assert_type(pattern, (str,), "pattern", self.__class__)
+        _assert_type(max_items, (int,), "max_items", self.__class__)
+        _assert_type(min_items, (int,), "min_items", self.__class__)
+        _assert_type(unique_items, (bool,), "unique_items", self.__class__)
+        _assert_type(max_properties, (int,), "max_properties", self.__class__)
+        _assert_type(min_properties, (int,), "min_properties", self.__class__)
+        _assert_type(required, (list,), "required", self.__class__)
+        _assert_type(enum, (list,), "enum", self.__class__)
+
+        # JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
+        _assert_type(_type, (str,), "_type", self.__class__)
+        _assert_type(all_of, (Schema, Reference), "all_of", self.__class__)
+        _assert_type(one_of, (Schema, Reference), "one_of", self.__class__)
+        _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
+        _assert_type(_not, (Schema, Reference), "_not", self.__class__)
+        _assert_type(items, (dict,), "items", self.__class__)
+        # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
+        _assert_type(properties, (Schema, Reference), "properties", self.__class__)
+        _assert_type(
+            additional_properties,
+            (Schema, Reference),
+            "additional_properties",
+            self.__class__,
+        )
+        _assert_type(description, (str,), "description", self.__class__)
+        _assert_type(_format, (str,), "_format", self.__class__)
+        _assert_type(default, (str, int, float, bool), "default", self.__class__)
+
+        # The OAS extensions
+        _assert_type(nullable, (bool,), "nullable", self.__class__)
+        _assert_type(discriminator, (Discriminator,), "discriminator", self.__class__)
+        _assert_type(read_only, (bool,), "read_only", self.__class__)
+        _assert_type(write_only, (bool,), "write_only", self.__class__)
+        _assert_type(xml, (XML,), "xml", self.__class__)
+        _assert_type(
+            external_docs, (ExternalDocumentation,), "external_docs", self.__class__
+        )
+        # Note: example is defined to have the type `Any`
+        _assert_type(deprecated, (bool,), "deprecated", self.__class__)
+        _assert_strictly_greater_than_zero(multiple_of, "multiple_of", self.__class__)
+        _assert_strictly_greater_than_zero(max_length, "max_length", self.__class__)
+        _assert_strictly_greater_than_zero(min_length, "min_length", self.__class__)
+        _assert_strictly_greater_than_zero(max_items, "max_items", self.__class__)
+        _assert_strictly_greater_than_zero(
+            min_properties, "min_properties", self.__class__
+        )
+
+        if required is not None:
+            assert required, "MUST have at least one element."
+            assert set(type(e) for e in required) == {
+                type("str")
+            }, "For `{}.required`, all elements MUST be strings.".format(
+                self.__class__.__qualname__
+            )
+            assert len(set(required)) == len(
+                required
+            ), "For `{}.required`, all elements MUST be unique.".format(
+                self.__class__.__qualname__
+            )
+        # if enum:
+        #     if not len(enum):
+        #         logger.warning(
+        #             "`{}.enum` SHOULD have at least one element. {}".format(
+        #                 self.__class__.__qualname__, self
+        #             )
+        #         )
+        if _type == "array":
+            _assert_required(items, "items", self.__class__, " as `type=array`.")
+
+        #  Assignment and docs
+        self.title = title
+        """
+        Can be used to decorate a user interface with information about the data produced by this user interface.  A 
+        title will preferrably [sic] be short.
+        """
+
+        self.multiple_of = multiple_of
+        """
+        The value of "multiple_of" MUST be a number, strictly greater than 0.
+
+        A numeric instance is only valid if division by this keyword's value results in an integer. """
+
+        self.maximum = maximum
+        """
+        The value of "maximum" MUST be a number, representing an upper limit for a numeric instance.
+
+        If the instance is a number, then this keyword validates if "exclusiveMaximum" is true and instance is less than 
+        the provided value, or else if the instance is less than or exactly equal to the provided value.
+        """
+
+        self.exclusive_maximum = exclusive_maximum
+        """
+        The value of "exclusive_maximum" MUST be a boolean, representing whether the limit in "maximum" is exclusive or 
+        not.  An undefined value is the same as false.
+
+        If "exclusive_maximum" is true, then a numeric instance SHOULD NOT be equal to the value specified in "maximum".  
+        If "exclusive_maximum" is false (or not specified), then a numeric instance MAY be equal to the value of 
+        "maximum".
+        """
+
+        self.minimum = minimum
+        """
+        The value of "minimum" MUST be a number, representing a lower limit for a numeric instance.
+
+        If the instance is a number, then this keyword validates if "exclusive_minimum" is true and instance is greater 
+        than the provided value, or else if the instance is greater than or exactly equal to the provided value.
+        """
+
+        self.exclusive_minimum = exclusive_minimum
+        """
+        The value of "exclusive_minimum" MUST be a boolean, representing whether the limit in "minimum" is exclusive or 
+        not.  An undefined value is the same as false.
+
+        If "exclusive_minimum" is true, then a numeric instance SHOULD NOT be equal to the value specified in "minimum".  
+        If "exclusive_minimum" is false (or not specified), then a numeric instance MAY be equal to the value of
+        "minimum".
+        """
+
+        self.max_length = max_length
+        """
+        The value of this keyword MUST be a non-negative integer.
+
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        A string instance is valid against this keyword if its length is less than, or equal to, the value of this 
+        keyword.
+
+        The length of a string instance is defined as the number of its characters as defined by RFC 7159 [RFC7159].
+        """
+
+        self.min_length = min_length
+        """
+        A string instance is valid against this keyword if its length is greater than, or equal to, the value of this 
+        keyword.
+
+        The length of a string instance is defined as the number of its characters as defined by RFC 7159 [RFC7159].
+
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        "min_length", if absent, may be considered as being present with integer value 0.
+        """
+
+        self.pattern = pattern
+        """
+        The value of this keyword MUST be a string.  This string SHOULD be a valid regular expression, according to the 
+        ECMA 262 regular expression dialect.
+
+        A string instance is considered valid if the regular expression matches the instance successfully.  Recall: 
+        regular expressions are not implicitly anchored.
+        
+        Note: whether or not this is a valid regular expression is not checked by sanic-openapi.
+        """
+
+        self.max_items = max_items
+        """
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        An array instance is valid against "maxItems" if its size is less than, or equal to, the value of this keyword.
+        """
+
+        self.min_items = min_items
+        """
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        An array instance is valid against "minItems" if its size is greater than, or equal to, the value of this 
+        keyword.
+        
+        If this keyword is not present, it may be considered present with a value of 0.
+        """
+
+        self.unique_items = unique_items
+        """
+        The value of this keyword MUST be a boolean.
+
+        If this keyword has boolean value false, the instance validates successfully.  If it has boolean value true, the 
+        instance validates successfully if all of its elements are unique.
+
+        If not present, this keyword may be considered present with boolean value false.
+        """
+
+        self.max_properties = max_properties
+        """
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        An object instance is valid against "max_properties" if its number of properties is less than, or equal to, the 
+        value of this keyword.
+        """
+
+        self.min_properties = min_properties
+        """
+        The value of this keyword MUST be an integer.  This integer MUST be greater than, or equal to, 0.
+
+        An object instance is valid against "min_properties" if its number of properties is greater than, or equal to, 
+        the value of this keyword.
+
+        If this keyword is not present, it may be considered present with a value of 0.
+        """
+
+        self.required = required
+        """
+        The value of this keyword MUST be an array.  This array MUST have at least one element.  Elements of this array 
+        MUST be strings, and MUST be unique.
+
+        An object instance is valid against this keyword if its property set contains all elements in this keyword's 
+        array value.
+        """
+
+        self.enum = enum
+        """
+        The value of this keyword MUST be an array.  This array SHOULD have at least one element.  Elements in the array 
+        SHOULD be unique.
+
+        Elements in the array MAY be of any type, including null.
+
+        An instance validates successfully against this keyword if its value is equal to one of the elements in this 
+        keyword's array value.
+        """
+
+        if _type:
+            # TODO - must these be in OTypeFormat.keys()?
+            pass
+        self._type = _type
+        """Value MUST be a string. Multiple types via an array are not supported."""
+
+        self.all_of = all_of
+        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
+
+        self.one_of = one_of
+        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
+
+        self.any_of = any_of
+        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
+
+        self._not = _not
+        """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
+
+        self.items = items
+        """
+        Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and not a 
+        standard JSON Schema. items MUST be present if the type is array.
+        """
+        # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
+
+        self.properties = properties  # type: Optional[Union[Schema, Reference]]
+        """ Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or referenced)."""
+
+        self.additional_properties = additional_properties
+        """
+        Value can be boolean or object. Inline or referenced schema MUST be of a Schema Object and not a standard JSON 
+        Schema.
+        """
+
+        self.description = description
+        """CommonMark syntax MAY be used for rich text representation."""
+
+        self._format = _format
+        """
+        See Data Type Formats for further details. While relying on JSON Schema's defined formats, the OAS offers a few 
+        additional predefined formats.
+        """
+
+        self.default = default
+        """
+        The default value represents what would be assumed by the consumer of the input as the value of the schema if 
+        one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema Object 
+        defined at the same level. For example, if type is string, then default can be "foo" but cannot be 1.
+        """
+        # TODO - add checks that ensure that the type of default is compatible with the _type
+
+        # The OAS extensions
+        self.nullable = nullable
+        """Allows sending a null value for the defined schema. Default value is false."""
+
+        self.discriminator = discriminator
+        """
+        Adds support for polymorphism. The discriminator is an object name that is used to differentiate between other 
+        schemas which may satisfy the payload description. See Composition and Inheritance for more details.
+        """
+
+        self.read_only = read_only
+        """
+        Relevant only for Schema "properties" definitions. Declares the property as "read only". This means that it MAY 
+        be sent as part of a response but SHOULD NOT be sent as part of the request. If the property is marked as 
+        read_only being true and is in the required list, the required will take effect on the response only. A property 
+        MUST NOT be marked as both read_only and write_only being true. Default value is false.
+        """
+
+        self.write_only = write_only
+        """
+        Relevant only for Schema "properties" definitions. Declares the property as "write only". Therefore, it MAY be 
+        sent as part of a request but SHOULD NOT be sent as part of the response. If the property is marked as 
+        write_only being true and is in the required list, the required will take effect on the request only. A property
+        MUST NOT be marked as both read_only and write_only being true. Default value is false.
+        """
+
+        self.xml = xml
+        """
+        This MAY be used only on properties schemas. It has no effect on root schemas. Adds additional metadata to 
+        describe the XML representation of this property.
+        """
+
+        self.external_docs = external_docs
+        """Additional external documentation for this schema."""
+
+        self.example = example
+        """
+        A free-form property to include an example of an instance for this schema. To represent examples that cannot be 
+        naturally represented in JSON or YAML, a string value can be used to contain the example with escaping where 
+        necessary.
+        """
+
+        self.deprecated = deprecated
+        """ Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value is false."""
+
+        if _type == "array" and not items:
+            raise AssertionError(
+                "For `{}`, items MUST be present if the type is array.".format(
+                    self.__class__.__qualname__
+                )
+            )
+        if _format:
+            # TODO - must these be in OTypeFormat[_type]?
+            pass
+
+        if read_only and write_only:
+            raise AssertionError(
+                "For `{}`, A property; MUST NOT be marked as both read_only and write_only being true.".format(
+                    self.__class__.__qualname__
+                )
+            )
+
+
+Schema.Integer = Schema(_type="integer")
+Schema.Number = Schema(_type="number", _format="double")
+Schema.String = Schema(_type="string")
+Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize())
+Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize())
+Schema.Strings = Schema(_type="array", items=Schema.String.serialize())
+
+
 class Parameter(OObject):
     def __init__(
         self,
-        name=None,
-        _in=None,
-        description=None,
-        required=None,
-        deprecated=None,
-        allow_empty_value=None,
-        style=None,
-        explode=None,
-        allow_reserved=None,
-        schema=None,
-        example=None,
-        examples=None,
-        content=None,
+        name: str,
+        _in: str,
+        description: Optional[str] = None,
+        required: Optional[bool] = None,
+        deprecated: Optional[bool] = None,
+        allow_empty_value: Optional[bool] = None,
+        style: Optional[str] = None,
+        explode: Optional[bool] = None,
+        allow_reserved: Optional[bool] = None,
+        schema: Optional[Union[Schema, Reference]] = None,
+        example: Optional[Any] = None,
+        examples: Optional[Dict[str, Union[Example, Reference]]] = None,
+        content: Optional[Dict[str, MediaType]] = None,
     ):
         """
         Describes a single operation parameter.
@@ -1758,19 +1699,7 @@ class Parameter(OObject):
             example provided by the schema.
         :param content: A map containing the representations for the parameter. The key is the media type and the value
             describes it. The map MUST only contain one entry.
-        :type name: str
-        :type _in: str
-        :type description: Optional[str]
-        :type required: Optional[bool]
-        :type deprecated: Optional[bool]
-        :type allow_empty_value: Optional[bool]
-        :type style: Optional[str]
-        :type explode: Optional[bool]
-        :type allow_reserved: Optional[bool]
-        :type schema: Optional[Union[Schema, Reference]]
-        :type example: Optional[Any]
-        :type examples: Optional[Dict[str, Union[Example, Reference]]]
-        :type content: Optional[Dict[str, MediaType]]
+
         """
 
         _assert_type(name, (str,), "name", self.__class__)
@@ -1803,6 +1732,8 @@ class Parameter(OObject):
             )
         if _in == "path":
             assert required is True
+        else:
+            required = required or False
 
         assert not (example and examples)
         if examples:
@@ -1829,7 +1760,7 @@ class Parameter(OObject):
                     )
 
         # Assignments and docs
-        self.name = name  # type: str
+        self.name = name
         """
         REQUIRED. The name of the parameter. Parameter names are case sensitive. If in is "path", the name field MUST 
         correspond to the associated path segment from the path field in the Paths Object. See Path Templating for 
@@ -1838,30 +1769,30 @@ class Parameter(OObject):
         the in property.
         """
 
-        self.description = description  # type: Optional[str]
+        self.description = description
         """
         A brief description of the parameter. This could contain examples of use. CommonMark syntax MAY be used for rich 
         text representation.
         """
 
-        self._in = _in  # type: str
+        self._in = _in
         """REQUIRED. The location of the parameter. Possible values are "query", "header", "path" or "cookie"."""
 
-        self.description = description  # type: str
+        self.description = description
         """
         A brief description of the parameter. This could contain examples of use. CommonMark syntax MAY be used for rich 
         text representation.
         """
-        self.required = required  # type: bool
+        self.required: bool = required
         """
         Determines whether this parameter is mandatory. If the parameter _in is "path", this property is REQUIRED 
         and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
         """
 
-        self.deprecated = deprecated  # type: bool
+        self.deprecated = deprecated or False
         """Specifies that a parameter is deprecated and SHOULD be transitioned out of usage. Default value is false."""
 
-        self.allow_empty_value = allow_empty_value  # type: bool
+        self.allow_empty_value = allow_empty_value
         """
         Sets the ability to pass empty-valued parameters. This is valid only for query parameters and allows sending a 
         parameter with an empty value. Default value is false. If style is used, and if behavior is n/a (cannot be 
@@ -1869,7 +1800,7 @@ class Parameter(OObject):
         likely to be removed in a later revision.
         """
 
-        self.style = style  # type: str
+        self.style = style
         """
         Describes how the parameter value will be serialized depending on the type of the parameter value. Default 
         values (based on value of ``_in``): 
@@ -1878,28 +1809,27 @@ class Parameter(OObject):
         * for path - simple; 
         * for header - simple; 
         * for cookie - form.
-        
-        TODO - set these defaults?
         """
-        self.explode = explode  # type: bool
+        # ^^ TODO - set these defaults?
+        self.explode = explode
         """
         When this is true, parameter values of type array or object generate separate parameters for each value of the 
         array or key-value pair of the map. For other types of parameters this property has no effect. When style is 
         form, the default value is true. For all other styles, the default value is false.
-        TODO - set these defaults?
         """
+        # ^^ TODO - set these defaults?
 
-        self.allow_reserved = allow_reserved  # type: bool
+        self.allow_reserved = allow_reserved
         """
         Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 
         ``:/?#[]@!$&'()*+,;=`` to be included without percent-encoding. This property only applies to parameters with an 
         ``_in`` value of query. The default value is false.
         """
 
-        self.schema = schema  # type: Union[Schema, Reference]
+        self.schema = schema
         """The schema defining the type used for the parameter."""
 
-        self.example = example  # type: Any
+        self.example = example
         """
         Example of the media type. The example SHOULD match the specified schema and encoding properties if present. The 
         example field is mutually exclusive of the examples field. Furthermore, if referencing a schema which contains 
@@ -1908,14 +1838,14 @@ class Parameter(OObject):
         where necessary.
         """
 
-        self.examples = examples  # type: Dict[str, Union[Example, Reference]]
+        self.examples = examples
         """
         Examples of the media type. Each example SHOULD contain a value in the correct format as specified in the 
         parameter encoding. The examples object is mutually exclusive of the example object. Furthermore, if referencing 
         a schema which contains an example, the examples value SHALL override the example provided by the schema.
         """
 
-        self.content = content  # type: Dict[str, MediaType]
+        self.content = content
         """
         A map containing the representations for the parameter. The key is the media type and the value describes it. 
         The map MUST only contain one entry.
@@ -1968,12 +1898,12 @@ class Parameter(OObject):
 class Link(OObject):
     def __init__(
         self,
-        operation_ref=None,
-        operation_id=None,
-        parameters=None,
-        request_body=None,
-        description=None,
-        server=None,
+        operation_ref: Optional[str] = None,
+        operation_id: Optional[str] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+        request_body: Optional[Any] = None,
+        description: Optional[str] = None,
+        server: Optional[Server] = None,
     ):
         """
         The Link object represents a possible design-time link for a response. The presence of a link does not guarantee
@@ -1999,12 +1929,7 @@ class Link(OObject):
         :param request_body: A literal value or {expression} to use as a request body when calling the target operation.
         :param description: A description of the link. CommonMark syntax MAY be used for rich text representation.
         :param server: A server object to be used by the target operation.
-        :type operation_ref: str
-        :type operation_id: str
-        :type parameters: Dict[str, Any]
-        :type request_body: Any
-        :type description: str
-        :type server: Server
+
         """
         # TODO docstrings
         _assert_type(operation_ref, (str,), "operation_ref", self.__class__)
@@ -2016,20 +1941,20 @@ class Link(OObject):
 
         assert not (operation_ref and operation_id)
 
-        self.operation_ref = operation_ref  # type: str
+        self.operation_ref = operation_ref
         """
         A relative or absolute reference to an OAS operation. This field is mutually exclusive of the operationId field,
         and MUST point to an Operation Object. Relative operationRef values MAY be used to locate an existing Operation 
         Object in the OpenAPI definition.
         """
 
-        self.operation_id = operation_id  # type: str
+        self.operation_id = operation_id
         """
         The name of an existing, resolvable OAS operation, as defined with a unique operationId. This field is mutually 
         exclusive of the operationRef field.
         """
 
-        self.parameters = parameters  # type: Dict[str, Any]
+        self.parameters = parameters
         """
         A map representing parameters to pass to an operation as specified with operationId or identified via 
         operationRef. The key is the parameter name to be used, whereas the value can be a constant or an expression to 
@@ -2038,18 +1963,26 @@ class Link(OObject):
         path.id).
         """
 
-        self.request_body = request_body  # type: Any
+        self.request_body = request_body
         """ A literal value or {expression} to use as a request body when calling the target operation."""
 
-        self.description = description  # type: str
-        self.server = server  # type: Server
+        self.description = description
+
+        self.server = server
         """A server object to be used by the target operation."""
 
 
 class Response(OObject):
+    # This is reset from None to a Response directly after the class definition.
     DEFAULT_SUCCESS = None  # type: Response
 
-    def __init__(self, description=None, headers=None, content=None, links=None):
+    def __init__(
+        self,
+        description: str,
+        headers: Optional[Dict[str, Union[Header, Reference]]] = None,
+        content: Optional[Dict[str, MediaType]] = None,
+        links: Optional[Dict[str, Union[Link, Reference]]] = None,
+    ):
         """
         Describes a single response from an API Operation, including design-time, static links to operations based on
         the response.
@@ -2062,11 +1995,6 @@ class Response(OObject):
             type range and the value describes it. For responses that match multiple keys, only the most specific key is
             applicable. e.g. ``text/plain`` overrides ``text/*``.
         :param links: A map of operations links that can be followed from the response. The key of the map is a short
-        :type description: str
-        :type headers: Optional[Dict[str, Union[Header, Reference]]]
-            name for the link, following the naming constraints of the names for Component Objects.
-        :type content: Optional[Dict[str, MediaType]]
-        :type links: Optional[Dict[str, Union[Link, Reference]]]
         """
         _assert_type(description, (str,), "description", self.__class__)
         _assert_type(headers, (dict,), "headers", self.__class__)
@@ -2085,25 +2013,25 @@ class Response(OObject):
                 assert isinstance(link_spec, (Link, Reference))
 
         # Assignment and docs
-        self.description = description  # type: str
+        self.description = description
         """
         REQUIRED. A short description of the response. CommonMark syntax MAY be used for rich text representation.
         """
 
-        self.headers = headers  # type: Optional[Dict[str, Union[Header, Reference]]]
+        self.headers = headers
         """
         Maps a header name to its definition. RFC7230 states header names are case insensitive. If a response header is 
         defined with the name "Content-Type", it SHALL be ignored.
         """
 
-        self.content = content  # type: Optional[Dict[str, MediaType]]
+        self.content = content
         """
         A map containing descriptions of potential response payloads. The key is a media type or media type range and 
         the value describes it. For responses that match multiple keys, only the most specific key is applicable. e.g. 
         ``text/plain`` overrides ``text/*``.
         """
 
-        self.links = links  # type: Optional[Dict[str, Union[Link, Reference]]]
+        self.links = links
         """
         A map of operations links that can be followed from the response. The key of the map is a short name for the 
         link, following the naming constraints of the names for Component Objects.
@@ -2401,15 +2329,15 @@ class Callback(OObject):
 class Components(OObject):
     def __init__(
         self,
-        schemas=None,
-        responses=None,
-        parameters=None,
-        examples=None,
-        request_bodies=None,
-        headers=None,
-        security_schemes=None,
-        links=None,
-        callbacks=None,
+        schemas: Optional[Dict[str, Union[Schema, Reference]]] = None,
+        responses: Optional[Dict[str, Union[Response, Reference]]] = None,
+        parameters: Optional[Dict[str, Union[Parameter, Reference]]] = None,
+        examples: Optional[Dict[str, Union[Example, Reference]]] = None,
+        request_bodies: Optional[Dict[str, Union[RequestBody, Reference]]] = None,
+        headers: Optional[Dict[str, Union[Header, Reference]]] = None,
+        security_schemes: Optional[Dict[str, Union[SecurityScheme, Reference]]] = None,
+        links: Optional[Dict[str, Union[Link, Reference]]] = None,
+        callbacks: Optional[Dict[str, Union[Callback, Reference]]] = None,
     ):
         """
         Holds a set of reusable objects for different aspects of the OAS. All objects defined within the components
@@ -2425,15 +2353,7 @@ class Components(OObject):
         :param security_schemes: An object to hold reusable Security Scheme Objects.
         :param links: An object to hold reusable Link Objects.
         :param callbacks: An object to hold reusable Callback Objects.
-        :type schemas: Dict[str, Union[Schema, Reference]]
-        :type responses: Dict[str, Union[Response, Reference]]
-        :type parameters: Dict[str, Union[Parameter, Reference]]
-        :type examples: Dict[str, Union[Example, Reference]]
-        :type request_bodies:  Dict[str, Union[RequestBody, Reference]]
-        :type headers: Dict[str, Union[Header, Reference]]
-        :type security_schemes: Dict[str, Union[SecurityScheme, Reference]]
-        :type links: Dict[str, Union[Link, Reference]]
-        :type callbacks: Dict[str, Union[Callback, Reference]]
+
         """
         _assert_type(schemas, (dict,), "schemas", self.__class__)
         _assert_type(responses, (dict,), "responses", self.__class__)
@@ -2448,42 +2368,38 @@ class Components(OObject):
         # TODO - value type checks
 
         # assignment and docs
-        self.schemas = schemas  # type: Dict[str, Union[Schema, Reference]]
+        self.schemas = schemas
         """An object to hold reusable Schema Objects."""
 
-        self.responses = responses  # type: Dict[str, Union[Response, Reference]]
+        self.responses = responses
         """An object to hold reusable Response Objects."""
 
-        self.parameters = parameters  # type: Dict[str, Union[Parameter, Reference]]
+        self.parameters = parameters
         """An object to hold reusable Parameter Objects."""
 
-        self.examples = examples  # type: Dict[str, Union[Example, Reference]]
+        self.examples = examples
         """An object to hold reusable Example Objects."""
 
-        self.request_bodies = (
-            request_bodies
-        )  # type: Dict[str, Union[RequestBody, Reference]]
+        self.request_bodies = request_bodies
         """An object to hold reusable Request Body Objects."""
 
-        self.headers = headers  # type: Dict[str, Union[Header, Reference]]
+        self.headers = headers
         """An object to hold reusable Header Objects."""
 
-        self.security_schemes = (
-            security_schemes
-        )  # type: Dict[str, Union[SecurityScheme, Reference]]
+        self.security_schemes = security_schemes
         """An object to hold reusable Security Scheme Objects."""
 
-        self.links = links  # type: Dict[str, Union[Link, Reference]]
+        self.links = links
         """An object to hold reusable Link Objects."""
 
-        self.callbacks = callbacks  # type: Dict[str, Union[Callback, Reference]]
+        self.callbacks = callbacks
         """An object to hold reusable Callback Objects."""
 
 
 class Responses(OObject):
 
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
-    def __init__(self, responses=None):
+    def __init__(self, responses: Optional[Dict[str, Response]] = None):
         """
         A container for the expected responses of an operation. The container maps a HTTP response code to the expected
         response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
@@ -2513,11 +2429,10 @@ class Responses(OObject):
         explicit code definition takes precedence over the range definition for that code.
 
         :param responses: A mapping of response code (as str) to a Response.
-        :type responses: Dict[str, Response]
         """
         # TODO - types
         # TODO - validations
-        self.__dict__ = responses
+        self.__dict__ = responses if responses else {"200": Response.DEFAULT_SUCCESS}
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item
@@ -2570,7 +2485,7 @@ class Responses(OObject):
 
 class SecurityRequirement(OObject):
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
-    def __init__(self, names=None):
+    def __init__(self, names: Dict[str, List[str]]):
         """
         Lists the required security schemes to execute this operation. The name used for each property MUST correspond
         to a security scheme declared in the Security Schemes under the Components Object.
@@ -2586,7 +2501,6 @@ class SecurityRequirement(OObject):
             Schemes under the Components Object. If the security scheme is of type "oauth2" or "openIdConnect", then the
             value is a list of scope names required for the execution. For other security scheme types, the array MUST
             be empty.
-        :type names: Dict[str, List[str]
         """
         # TODO - types
         # TODO - validations
@@ -2651,18 +2565,18 @@ class Operation(OObject):
 
     def __init__(
         self,
-        tags=None,
-        summary=None,
-        description=None,
-        external_docs=None,
-        operation_id=None,
-        parameters=None,
-        request_body=None,
-        responses=None,
-        callbacks=None,
-        deprecated=None,
-        security=None,
-        servers=None,
+        operation_id: str,
+        responses: Responses,
+        tags: Optional[List[str]] = None,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        external_docs: Optional[ExternalDocumentation] = None,
+        parameters: Optional[List[Parameter]] = None,
+        request_body: Optional[Union[RequestBody, Reference]] = None,
+        callbacks: Optional[Dict[str, Union[Callback, Reference]]] = None,
+        deprecated: bool = False,
+        security: Optional[List[SecurityRequirement]] = None,
+        servers: Optional[List[Server]] = None,
     ):
         """
         Describes a single API operation on a path.
@@ -2698,51 +2612,41 @@ class Operation(OObject):
             security. To remove a top-level security declaration, an empty array can be used.
         :param servers: An alternative server array to service this operation. If an alternative server object is
             specified at the Path Item Object or Root level, it will be overridden by this value.
-        :type tags: List[str]
-        :type summary: str
-        :type description: str
-        :type external_docs: ExternalDocumentation
-        :type operation_id: str
-        :type parameters: List[Parameter]
-        :type request_body: Union[RequestBody, Reference]
-        :type responses: Responses
-        :type callbacks: Dict[str, Union[Callback, Reference]]
-        :type deprecated: bool
-        :type security: List[SecurityRequirement]
-        :type servers: List[Server]
         """
         # TODO  - types
         _assert_type(parameters, (list,), "parameters", self.__class__)
 
         # TODO - validations
         _assert_required(responses, "responses", self.__class__)
+        _assert_required(operation_id, "operation_id", self.__class__)
 
         # assignment and docs
-        self.tags = tags  # type: List[str]
+        self.tags = tags
         """
         A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources 
         or any other qualifier.
         """
 
-        self.summary = summary  # type: str
+        self.summary = summary
         """A short summary of what the operation does."""
 
-        self.description = description  # type: str
+        self.description = description
         """
         A verbose explanation of the operation behavior. CommonMark syntax MAY be used for rich text representation.
         """
 
-        self.external_docs = external_docs  # type: ExternalDocumentation
+        self.external_docs = external_docs
         """Additional external documentation for this operation."""
 
-        self.operation_id = operation_id  # type: str
+        assert operation_id
+        self.operation_id = operation_id
         """
         Unique string used to identify the operation. The id MUST be unique among all operations described in the API. 
         The operationId value is case-sensitive. Tools and libraries MAY use the operationId to uniquely identify an 
         operation, therefore, it is RECOMMENDED to follow common programming naming conventions.
         """
 
-        self.parameters = parameters  # type: List[Parameter]
+        self.parameters = parameters
         """
         A list of parameters that are applicable for this operation. If a parameter is already defined at the Path Item, 
         the new definition will override it but can never remove it. The list MUST NOT include duplicated parameters. 
@@ -2750,17 +2654,17 @@ class Operation(OObject):
         link to parameters that are defined at the OpenAPI Object's components/parameters.
         """
 
-        self.request_body = request_body  # type: Union[RequestBody, Reference]
+        self.request_body = request_body
         """
         The request body applicable for this operation. The requestBody is only supported in HTTP methods where the HTTP 
         1.1 specification RFC7231 has explicitly defined semantics for request bodies. In other cases where the HTTP 
         spec is vague, requestBody SHALL be ignored by consumers.
         """
 
-        self.responses = responses  # type: Responses
+        self.responses = responses
         """REQUIRED. The list of possible responses as they are returned from executing this operation."""
 
-        self.callbacks = callbacks  # type: Dict[str, Union[Callback, Reference]]
+        self.callbacks = callbacks
         """
         A map of possible out-of band callbacks related to the parent operation. The key is a unique identifier for the 
         Callback Object. Each value in the map is a Callback Object that describes a request that may be initiated by 
@@ -2768,13 +2672,13 @@ class Operation(OObject):
         expression, evaluated at runtime, that identifies a URL to use for the callback operation.
         """
 
-        self.deprecated = deprecated  # type: bool
+        self.deprecated = deprecated
         """
         Declares this operation to be deprecated. Consumers SHOULD refrain from usage of the declared operation. Default 
         value is false.
         """
 
-        self.security = security  # type: List[SecurityRequirement]
+        self.security = security
         """
         A declaration of which security mechanisms can be used for this operation. The list of values includes 
         alternative security requirement objects that can be used. Only one of the security requirement objects need to 
@@ -2782,35 +2686,84 @@ class Operation(OObject):
         top-level security declaration, an empty array can be used.
         """
 
-        self.servers = servers  # type: List[Server]
+        self.servers = servers
         """
         An alternative server array to service this operation. If an alternative server object is specified at the 
         PathItem Object or Root level, it will be overridden by this value.
         """
 
 
+class Tag(OObject):
+    def __init__(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        external_docs: Optional[ExternalDocumentation] = None,
+    ):
+        """
+        Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a Tag Object per
+        tag defined in the Operation Object instances.
+
+        :param name: REQUIRED. The name of the tag.
+        :param description: A short description for the tag. CommonMark syntax MAY be used for rich text representation.
+        :param external_docs: An ExternalDocumentation fpr this tag.
+        """
+
+        _assert_required(name, "name", self.__class__)
+
+        self.name = name
+        """REQUIRED. The name of the tag."""
+
+        self.description = description
+        """A short description for the tag. CommonMark syntax MAY be used for rich text representation."""
+
+        self.external_docs = external_docs
+        """Additional external documentation for this tag."""
+
+    def __hash__(self):
+        return hash((self.name, self.description, self.external_docs))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            raise NotImplementedError()
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.external_docs == other.external_docs
+        )
+
+    def __lt__(self, other):
+        if not isinstance(other, type(self)):
+            raise NotImplementedError()
+        return (self.name, self.description, self.external_docs) < (
+            other.name,
+            other.description,
+            other.external_docs,
+        )
+
+
 class PathItem(OObject):
     def __init__(
         self,
-        dollar_ref=None,
-        summary=None,
-        description=None,
-        get=None,
-        put=None,
-        post=None,
-        delete=None,
-        options=None,
-        head=None,
-        patch=None,
-        trace=None,
-        servers=None,
-        parameters=None,
-        request_body=None,
+        dollar_ref: Optional[str] = None,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        get: Optional[Operation] = None,
+        put: Optional[Operation] = None,
+        post: Optional[Operation] = None,
+        delete: Optional[Operation] = None,
+        options: Optional[Operation] = None,
+        head: Optional[Operation] = None,
+        patch: Optional[Operation] = None,
+        trace: Optional[Operation] = None,
+        servers: Optional[List[Server]] = None,
+        parameters: Optional[List[Union[Parameter, Reference]]] = None,
+        request_body: Optional[Union[RequestBody, Reference]] = None,
         # TODO = add hide/suppress?
-        x_tags_holder=None,
-        x_deprecated_holder=None,
-        x_responses_holder=None,
-        x_exclude=None,
+        x_tags_holder: Optional[List[Tag]] = None,
+        x_deprecated_holder: Optional[bool] = None,
+        x_responses_holder: Optional[Dict[str, Response]] = None,
+        x_exclude: Optional[bool] = None,
     ):
         """
         Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
@@ -2845,24 +2798,6 @@ class PathItem(OObject):
         :param x_responses_holder: sanic-openapi3e implementation extension to allow Responses on the PathItem until
             they can be passed to the Operation/s.
         :param x_exclude: sanic-openapi3e extension to completly exclude the path from the spec.
-        :type dollar_ref: Optional[str]
-        :type summary: Optional[str]
-        :type description: Optional[str]
-        :type get: Optional[Operation]
-        :type put: Optional[Operation]
-        :type post: Optional[Operation]
-        :type delete: Optional[Operation]
-        :type options: Optional[Operation]
-        :type head: Optional[Operation]
-        :type patch: Optional[Operation]
-        :type trace: Optional[Operation]
-        :type servers: Optional[List[Server]]
-        :type parameters: Optional[List[Union[Parameter,Reference]]]
-        :type request_body: Optional[Union[RequestBody, Reference]]
-        :type x_tags_holder: Optional[List[Tag]]
-        :type x_deprecated_holder: Optional[bool]
-        :type x_responses_holder: Optional[Dict[str, Union[Response, Reference]]]
-        :type x_exclude: Optional[bool]
         """
         # TODO  - types
 
@@ -2872,52 +2807,52 @@ class PathItem(OObject):
                 _assert_type(x_tag, (Tag,), "x_tags_holder[*]", self.__class__)
 
         # Assignment and docs
-        self.dollar_ref = dollar_ref  # type: str
+        self.dollar_ref = dollar_ref
         """
         Allows for an external definition of this path item. The referenced structure MUST be in the format of a Path 
         Item Object. If there are conflicts between the referenced definition and this Path Item's definition, the 
         behavior is undefined.
         """
 
-        self.summary = summary  # type: Optional[str]
+        self.summary = summary
         """An optional, string summary, intended to apply to all operations in this path."""
 
-        self.description = description  # type: Optional[str]
+        self.description = description
         """
         An optional, string description, intended to apply to all operations in this path. CommonMark syntax MAY be used 
         for rich text representation.
         """
 
-        self.get = get  # type: Optional[Operation]
+        self.get = get
         """ A definition of a GET operation on this path."""
 
-        self.put = put  # type: Optional[Operation]
+        self.put = put
         """A definition of a PUT operation on this path."""
 
-        self.post = post  # type: Optional[Operation]
+        self.post = post
         """A definition of a POST operation on this path."""
 
-        self.delete = delete  # type: Optional[Operation]
+        self.delete = delete
         """A definition of a DELETE operation on this path."""
 
-        self.options = options  # type: Optional[Operation]
+        self.options = options
         """A definition of an OPTIONS operation on this path."""
 
-        self.head = head  # type: Optional[Operation]
+        self.head = head
         """A definition of a HEAD operation on this path."""
 
-        self.patch = patch  # type: Optional[Operation]
+        self.patch = patch
         """A definition of an PATCH operation on this path."""
 
-        self.trace = trace  # type: Optional[Operation]
+        self.trace = trace
         """A definition of a TRACE operation on this path."""
 
-        self.servers = servers  # type: Optional[List[Server]]
+        self.servers = servers
         """An alternative server array to service all operations in this path."""
 
-        self.parameters = (
-            parameters if parameters is not None else list()
-        )  # type: Optional[List[Parameter]]
+        self.parameters: List[
+            Union[Parameter, Reference]
+        ] = parameters if parameters is not None else []
         """
         A list of parameters that are applicable for all the operations described under this path. These 
         parameters can be overridden at the operation level, but cannot be removed there. The list MUST NOT 
@@ -2926,40 +2861,25 @@ class PathItem(OObject):
         components/parameters.
         """
 
-        self.request_body = (
-            request_body
-        )  # type: Optional[Union[RequestBody, Reference]]
-        self.x_tags_holder = (
-            x_tags_holder if x_tags_holder is not None else list()
-        )  # type: Optional[List[str]]
-        self.x_deprecated_holder = x_deprecated_holder  # type: bool
-        self.x_responses_holder = (
-            x_responses_holder
-            if x_responses_holder is not None
-            else {"200": Response.DEFAULT_SUCCESS}
-        )  # type: Dict[str, Union[Response, Reference]]
-        self.x_exclude = x_exclude  # type: bool
+        self.request_body = request_body
+        self.x_tags_holder: List[
+            Tag
+        ] = x_tags_holder if x_tags_holder is not None else []
+        self.x_deprecated_holder = x_deprecated_holder
+        self.x_responses_holder: Responses = Responses(x_responses_holder)
+        self.x_exclude = x_exclude
 
 
 class Paths(OObject):
-    def __init__(self, path_items=None):
+    def __init__(self, path_items: Optional[List[Tuple[str, PathItem]]] = None):
         """
         Holds the relative endpoints to the individual endpoints and their operations. The path is appended to the URL
         from the Server Object in order to construct the full URL. The Paths MAY be empty, due to ACL constraints.
 
         :param path_items The endpoints
-        :type path_items: Optional[List[Tuple[Callable, PathItem]
         """
-        # TODO - types
-        if path_items:
-            self.locked = True  # tpye: bool
-            self._paths = (
-                path_items
-            )  # type: List[Tuple[Union[str, Callable], PathItem]]
-        else:
-            self.locked = False  # type: bool
-            self._paths = list()  # type: List[Tuple[Union[str, Callable], PathItem]]
-
+        self.locked: bool = False
+        self._paths: List[Tuple[str, PathItem]] = []
         """
         A collection of your `app`'s functions and their Path Item. The field name MUST begin with a slash. The path is 
         appended (no relative URL resolution) to the expanded URL from the Server Object's url field in order to 
@@ -2968,20 +2888,22 @@ class Paths(OObject):
         templated names MUST NOT exist as they are identical. In case of ambiguous matching, it's up to the tooling to 
         decide which one to use.
         """
+        if path_items:
+            self.locked = True
+            self._paths = path_items
 
     def __len__(self):
         return len(self._paths)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> PathItem:
         """
         A defaultdict interface if not locked.
 
         :param item: What to find.
-        :type item: Union[str, Callable]
-        :return:
         """
-        for _func, path_item in self._paths:
-            if _func == item:
+
+        for _parsed_uri, path_item in self._paths:
+            if _parsed_uri == item:
                 return path_item
         if not self.locked:
             path_item = PathItem()
@@ -2991,8 +2913,8 @@ class Paths(OObject):
             raise KeyError(item)
 
     def __contains__(self, item):
-        for _func, _path_item in self._paths:
-            if _func == item:
+        for _parsed_uri, _path_item in self._paths:
+            if _parsed_uri == item:
                 return True
         return False
 
@@ -3000,7 +2922,7 @@ class Paths(OObject):
         yield from self._paths
 
     def __setitem__(self, key, value):
-        # print("oas_types.2982", key, repr(value))
+
         if not self.locked:
             for idx, _ in enumerate(self._paths):
                 if self._paths[idx][0] == key:
@@ -3031,46 +2953,19 @@ class Paths(OObject):
         return "{}{}".format(self.__class__.__qualname__, json.dumps(self.serialize()))
 
 
-class Tag(OObject):
-    def __init__(self, name=None, description=None, external_docs=None):
-        """
-        Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a Tag Object per
-        tag defined in the Operation Object instances.
-
-        :param name: REQUIRED. The name of the tag.
-        :param description: A short description for the tag. CommonMark syntax MAY be used for rich text representation.
-        :param external_docs:
-        :type name: str
-        :type description: str
-        :type external_docs: ExternalDocumentation
-        """
-
-        # TODO - types
-        _assert_required(name, "name", self.__class__)
-
-        self.name = name  # type: str
-        """REQUIRED. The name of the tag."""
-
-        self.description = description  # type: str
-        """A short description for the tag. CommonMark syntax MAY be used for rich text representation."""
-
-        self.external_docs = external_docs  # type: ExternalDocumentation
-        """Additional external documentation for this tag."""
-
-
 class OpenAPIv3(OObject):
-    version = "3.0.2"  # type: str
+    version = "3.0.2"
 
     def __init__(
         self,
-        openapi=None,
-        info=None,
-        servers=None,
-        paths=None,
-        components=None,
-        security=None,
-        tags=None,
-        external_docs=None,
+        openapi: str,
+        info: Info,
+        paths: Paths,
+        servers: Optional[List[Server]] = None,
+        components: Optional[Components] = None,
+        security: Optional[List[SecurityRequirement]] = None,
+        tags: Optional[List[Tag]] = None,
+        external_docs: Optional[ExternalDocumentation] = None,
     ):
         """
         This is the root document object of the OpenAPI document.
@@ -3092,14 +2987,6 @@ class OpenAPIv3(OObject):
             be declared. The tags that are not declared MAY be organized randomly or based on the tools' logic. Each tag
             name in the list MUST be unique.
         :param external_docs: Additional external documentation.
-        :type openapi: str
-        :type info: Info
-        :type servers: Optional[List[Server]]
-        :type paths: Paths
-        :type components: Optional[Components]
-        :type security: Optional[List[SecurityRequirement]]
-        :type tags: Optional[List[Tag]]
-        :type external_docs: Optional[ExternalDocumentation]
         """
 
         _assert_type(openapi, (str,), "openapi", self.__class__)
@@ -3121,27 +3008,27 @@ class OpenAPIv3(OObject):
         if tags:
             assert len([t.name for t in tags]) == len(tags)
 
-        self.openapi = openapi  # type: str
+        self.openapi = openapi
         """
         REQUIRED. This string MUST be the semantic version number of the OpenAPI Specification version that the OpenAPI 
         document uses. The openapi field SHOULD be used by tooling specifications and clients to interpret the OpenAPI 
         document. This is not related to the API info.version string."""
 
-        self.info = info  # type: Info
+        self.info = info
         """REQUIRED. Provides metadata about the API. The metadata MAY be used by tooling as required."""
         assert paths
-        self.paths = paths  # type: Paths
+        self.paths = paths
         """REQUIRED. The available endpoints and operations for the API."""
 
-        self.servers = servers  # type: Optional[List[Server]]
+        self.servers = servers
         """
         An array of Server Objects, which provide connectivity information to a target server. If the servers property 
         is not provided, or is an empty array, the default value would be a Server Object with a url value of /.
         """
-        self.components = components  # type: Optional[Components]
+        self.components = components
         """An element to hold various schemas for the specification."""
 
-        self.security = security  # type: Optional[List[SecurityRequirement]]
+        self.security = security
         """
         A declaration of which security mechanisms can be used across the API. The list of values includes alternative 
         security requirement objects that can be used. Only one of the security requirement objects need to be satisfied 
@@ -3150,7 +3037,7 @@ class OpenAPIv3(OObject):
 
         if tags:
             assert sorted(set(t.name for t in tags)) == sorted(t.name for t in tags)
-        self.tags = tags  # type: Optional[List[Tag]]
+        self.tags = tags
         """
         A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect 
         on their order by the parsing tools. Not all tags that are used by the Operation Object must be declared. The 
@@ -3158,5 +3045,5 @@ class OpenAPIv3(OObject):
         MUST be unique.
         """
 
-        self.external_docs = external_docs  # type: Optional[ExternalDocumentation]
+        self.external_docs = external_docs
         """Additional external documentation."""

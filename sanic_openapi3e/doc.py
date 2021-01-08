@@ -3,8 +3,8 @@ TODO - note: everything is documented at the PathItem level, not the Operation l
 """
 from .oas_types import *  # <<-- here for users
 
-tags = dict()  # type: Dict[str, Tag]
-endpoints = Paths()  # type: Paths
+tags: Dict[str, Tag] = {}
+endpoints: Paths = Paths()
 
 
 def deprecated(boolean=True):
@@ -36,7 +36,7 @@ def deprecated(boolean=True):
     return inner
 
 
-def description(text):
+def description(text: str):
     """
     Add a description to the route by marking them `@doc.description("Descriptive text")`
     """
@@ -138,16 +138,11 @@ def parameter(
 
 # noinspection PyShadowingNames
 def request_body(
-    description=None,
-    required=False,
-    content=None,
+    description=None, required=False, content=None,
 ):
-
     def inner(func):
         _request_body = RequestBody(
-            description=description,
-            required=required,
-            content=content,
+            description=description, required=required, content=content,
         )
         endpoints[func].request_body = _request_body
         return func

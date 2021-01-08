@@ -1,10 +1,16 @@
+from typing import Set
+
 import pytest
+
 import sanic_openapi3e.oas_types
+from sanic_openapi3e.oas_types import Tag
 
 
 def test_otype():
-    o = sanic_openapi3e.oas_types.OType(value=2)
-    assert o.serialize(for_repr=False) == {"value": 2}
+    with pytest.raises(TypeError):
+        # noinspection PyArgumentList
+        o = sanic_openapi3e.oas_types.OType(value=2)
+        assert o.serialize(for_repr=False) == {"value": 2}
 
     o_int = sanic_openapi3e.oas_types.OInteger(value=2, _format="int32")
     assert o_int.serialize(for_repr=False) == {"value": 2, "format": "int32"}
@@ -49,6 +55,14 @@ def test_pathitem():
     assert ps[test_pathitem].x_exclude
 
 
-# @pytest.mark.xfail
-# def test_pytest():
-#     assert True
+def test_tag_eq():
+    tag = Tag("name", "desc")
+    assert tag == tag
+    assert tag == Tag("name", "desc")
+
+
+def test_set_of_tags():
+    tags: Set[Tag] = set()
+    tags.add(Tag("name", "desc"))
+    tags.add(Tag("name", "desc"))
+    assert len(tags) == 1, tags

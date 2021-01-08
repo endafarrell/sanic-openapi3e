@@ -1,11 +1,15 @@
+import pathlib
+
 import sanic.request
 import sanic.response
 from sanic import Sanic
 
-# This line is here only to ensure that the version your app uses is from this checkout.
-import sys; import pathlib; sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent.absolute()))
-
-from sanic_openapi3e import openapi_blueprint, swagger_blueprint, doc
+# isort: off
+# These two lines are to ensure that the version of `sanic_openapi3e` your app uses is from this checkout.
+import sys
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
+from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
+# isort: on
 
 
 int_min_4 = doc.Schema(
@@ -25,7 +29,7 @@ days_of_week = doc.Schema(
     enum=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 )
 
-app = Sanic(strict_slashes=True)
+app = Sanic(name=__file__, strict_slashes=True)
 app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
@@ -45,7 +49,13 @@ int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 
 
 @app.get("/41/test_id/<an_id:int>")
-@doc.parameter(name="an_id", description="An ID", required=True, _in="path", schema=doc.Schema.Integer)
+@doc.parameter(
+    name="an_id",
+    description="An ID",
+    required=True,
+    _in="path",
+    schema=doc.Schema.Integer,
+)
 @doc.tag("Tag 1", description="A tag desc")
 def test_id(request, an_id: int):
     d = locals()
@@ -104,7 +114,12 @@ def path__deprecated(request, an_id: int):
 
 @app.get("/90/test_parameter__deprecated/<an_id:int>")
 @doc.parameter(
-    name="an_id", description="An ID", required=True, _in="path", deprecated=True, schema=doc.Schema.Integer
+    name="an_id",
+    description="An ID",
+    required=True,
+    _in="path",
+    deprecated=True,
+    schema=doc.Schema.Integer,
 )
 @doc.summary("A path deprecated parameter")
 @doc.description("The parameter should be marked as deprecated")
@@ -229,4 +244,12 @@ def excluded_path_with_unique_tag(_):
     return sanic.response.json({})
 
 
-app.go_fast(port=8002)
+example_port=8002
+@app.listener('after_server_start')
+async def notify_server_started(app: sanic.app.Sanic, __):
+    print('\n\n************* sanic-openapi3e ****************************')
+    print(f'See your openapi swagger on http://127.0.0.1:{example_port}/swagger/')
+    print('************* sanic-openapi3e ****************************\n\n')
+
+
+app.go_fast(port=example_port)

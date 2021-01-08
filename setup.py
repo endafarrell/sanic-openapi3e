@@ -1,8 +1,9 @@
 """
 Sanic OpenAPI extension.
 """
-import re
 import pathlib
+import re
+
 from setuptools import setup
 
 module_init_path = pathlib.Path.cwd() / "sanic_openapi3e" / "__init__.py"

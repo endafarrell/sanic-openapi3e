@@ -9,20 +9,18 @@ Known limitations:
 
 """
 import re
-from itertools import repeat
 from collections import OrderedDict
-from typing import Any, List, Tuple
+from itertools import repeat
+from typing import Any, List, Optional, Set, Tuple
 
 import sanic
-import sanic.response
 import sanic.exceptions
+import sanic.response
+import sanic.router
 from sanic.blueprints import Blueprint
 from sanic.views import CompositionView
 
 from .doc import (
-    endpoints,
-    tags as doc_tags,
-    # these originate in oas_types
     Components,
     Contact,
     ExternalDocumentation,
@@ -40,7 +38,9 @@ from .doc import (
     SecurityRequirement,
     Server,
     Tag,
+    endpoints,
 )
+from .doc import tags as doc_tags  # these originate in oas_types
 from .swagger import blueprint as swagger_bp
 
 blueprint = Blueprint("openapi", url_prefix="openapi")
@@ -50,8 +50,8 @@ NotYetImplementedResponses = Responses(
     {"200": Response(description="A successful response")}
 )
 
-
-_openapi = {}  # type: OrderedDict[str, Any]
+# Note: python3.6 cannot use OrderedDict as a type hint (that was fixed in 3.7+...)
+_openapi = OrderedDict()  # type: OrderedDict[str, Any]
 """
 Module-level container to hold the OAS spec that will be served-up on request. See `build_openapi_spec` for how it is
 built.
@@ -67,7 +67,7 @@ CAST_2_SCHEMA = {int: Schema.Integer, float: Schema.Number, str: Schema.String}
 
 
 @blueprint.listener("before_server_start")
-def build_openapi_spec(app, _):
+def build_openapi_spec(app: sanic.app.Sanic, _):
     hide_openapi_self = app.config.get("HIDE_OPENAPI_SELF", True)
     hide_sanic_static = app.config.get("HIDE_SANIC_STATIC", True)
     show_excluded = app.config.get("SHOW_OPENAPI_EXCLUDED", False)
@@ -96,12 +96,12 @@ def build_openapi_spec(app, _):
 
 
 def _build_openapi_spec(
-    app,
+    app: sanic.app.Sanic,
     hide_openapi_self=True,
     hide_excluded=True,
     show_unused_tags=False,
     hide_sanic_static=True,
-):
+) -> OpenAPIv3:
     """
     Build the OpenAPI spec.
 
@@ -109,10 +109,6 @@ def _build_openapi_spec(
     :param hide_openapi_self:
     :param hide_excluded:
     :return: The spec
-    :type app: sanic.Sanic
-    :type hide_openapi_self: bool
-    :type hide_excluded: bool
-    :rtype OpenAPIv3
     """
 
     # We may reuse this later
@@ -125,8 +121,10 @@ def _build_openapi_spec(
                 )
             )
 
-    _oas_paths = list()  # type: List[Tuple[str, PathItem]]
+    _oas_paths: List[Tuple[str, PathItem]] = []
     for _uri, _route in app.router.routes_all.items():
+        assert isinstance(_uri, str)
+        assert isinstance(_route, sanic.router.Route), type(_route)
         # NOTE: TODO: there's no order here at all to either the _uri nor the _route. OAS specs do not define an order
         # NOTE: TODO: but people do rather like having at least document order for the routes.
         if hide_openapi_self:
@@ -152,9 +150,9 @@ def _build_openapi_spec(
             continue
 
         # We document the parameters at the PathItem, not at the Operation. First get the route parameters (if any)
-        uri_parsed = _uri
+        uri_parsed: str = _uri
         uri_for_opearion_id = _uri
-        parameters = []  # type: List[Tuple[str, Parameter]]
+        parameters: List[Tuple[str, Parameter]] = []
         for _parameter in _route.parameters:
             uri_parsed = re.sub(
                 "<" + _parameter.name + ".*?>", "{" + _parameter.name + "}", uri_parsed
@@ -191,17 +189,18 @@ def _build_openapi_spec(
 
         operations = OrderedDict()
         for _method, _func in pathitem_operations:
-            path_item = endpoints[_func]  # type: PathItem
+            path_item: PathItem = endpoints[_func]
+            assert isinstance(path_item, PathItem)
             if path_item.x_exclude and hide_excluded:
                 continue
             if str(_func.__module__) == "sanic.static" and hide_sanic_static:
                 continue
+
+            path_item_summary: Optional[str] = path_item.summary
             if path_item.x_exclude and not hide_excluded:
-                path_item_summary = (
-                    "[excluded] " + path_item.summary if path_item.summary else ""
+                path_item_summary = "[excluded] " + (
+                    path_item.summary if path_item.summary else ""
                 )
-            else:
-                path_item_summary = path_item.summary
 
             _parameters = path_item.parameters
             for _parameter in _parameters:
@@ -232,7 +231,7 @@ def _build_openapi_spec(
                 else:
                     parameters.append((_parameter.name, _parameter))
 
-            pathitem_tag_names = [t.name for t in path_item.x_tags_holder]
+            pathitem_tag_names: Set[str] = {t.name for t in path_item.x_tags_holder}
 
             # If the route does not have a tag, use the blueprint's name.
             for _blueprint in app.blueprints.values():
@@ -243,47 +242,44 @@ def _build_openapi_spec(
                     if _bproute.handler != _func:
                         continue
                     if not pathitem_tag_names:
-                        pathitem_tag_names.append(_blueprint.name)
+                        pathitem_tag_names.add(_blueprint.name)
 
             operation_id = "{}~~{}".format(
                 _method.upper(), uri_for_opearion_id
             ).replace("/", "~")
+
             operations[_method.lower()] = Operation(
-                **{
-                    "operation_id": operation_id,
-                    "summary": path_item_summary,
-                    "description": path_item.description,
-                    "parameters": [p[1] for p in parameters],
-                    "tags": pathitem_tag_names,
-                    "deprecated": path_item.x_deprecated_holder,
-                    "responses": path_item.x_responses_holder,
-                    "request_body": path_item.request_body,
-                    # TODO
-                    "servers": NotYetImplemented,
-                    "security": NotYetImplemented,
-                    "callbacks": NotYetImplemented,
-                }
+                operation_id=operation_id,
+                responses=path_item.x_responses_holder,
+                summary=path_item_summary,
+                description=path_item.description,
+                parameters=[p[1] for p in parameters],
+                tags=sorted(pathitem_tag_names),
+                deprecated=path_item.x_deprecated_holder or False,
+                request_body=path_item.request_body,
+                # TODO
+                servers=NotYetImplemented,
+                security=NotYetImplemented,
+                callbacks=NotYetImplemented,
             )
 
             _path = PathItem(**operations)
             _oas_paths.append((uri_parsed, _path))
 
     # Possible contact
+    contact: Optional[Contact] = None
     _contact_name = app.config.get("API_CONTACT_NAME")
     _contact_url = app.config.get("API_CONTACT_URL")
     _contact_email = app.config.get("API_CONTACT_EMAIL")
     if any((_contact_email, _contact_name, _contact_url)):
         contact = Contact(name=_contact_name, email=_contact_email, url=_contact_url)
-    else:
-        contact = None
 
     # Possible license
+    _license: Optional[License] = None
     _license_name = app.config.get("API_LICENSE_NAME")
     _license_url = app.config.get("API_LICENSE_URL")
     if any((_license_name, _license_url)):
         _license = License(name=_license_name, url=_license_url)
-    else:
-        _license = None
 
     info = Info(
         title=app.config.get("API_TITLE", "API"),
@@ -295,24 +291,25 @@ def _build_openapi_spec(
     )
 
     _v3_paths = Paths(_oas_paths)
-    _v3_tags = [t for t in doc_tags.values()]  # type: List[Tag]
+    _v3_tags: List[Tag] = sorted({t for t in doc_tags.values()})
 
     if not show_unused_tags:
         # Check that the tags are in use. This can depend on `hide_excluded`, so we re-use the _v3_paths.
-        in_use_tags = []
+        in_use_tags: Set[Tag] = set()
         for tag in _v3_tags:
             for path, path_item in _v3_paths:
                 for op_name in Operation.OPERATION_NAMES:
-                    op = getattr(path_item, op_name)  # type: Operation
+                    op: Operation = getattr(path_item, op_name)
                     if op:
                         op_tag_names = op.tags
-                        for op_tag_name in op_tag_names:
-                            if tag.name == op_tag_name:
-                                if not any(
-                                    [t.name == op_tag_name for t in in_use_tags]
-                                ):
-                                    in_use_tags.append(tag)
-        _v3_tags = in_use_tags
+                        if op_tag_names:
+                            for op_tag_name in op_tag_names:
+                                if tag.name == op_tag_name:
+                                    if not any(
+                                        [t.name == op_tag_name for t in in_use_tags]
+                                    ):
+                                        in_use_tags.add(tag)
+        _v3_tags = sorted(in_use_tags)
 
     servers = app.config.get("OPENAPI_SERVERS", None)
     if servers:
@@ -358,8 +355,8 @@ def _build_openapi_spec(
     openapi = OpenAPIv3(
         openapi=OpenAPIv3.version,
         info=info,
-        servers=servers,
         paths=_v3_paths,
+        servers=servers,
         components=components,
         security=security,
         tags=_v3_tags,

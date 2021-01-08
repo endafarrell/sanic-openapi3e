@@ -1,8 +1,12 @@
 # Sanic OpenAPI v3e
 
 OpenAPI v3 support for Sanic. Document and describe all parameters, 
-including sanic path params. python 3.5+
+including sanic path params. python 3.6+
 
+[![Pythons](https://img.shields.io/pypi/pyversions/sanic-openapi3e.svg)](https://img.shields.io/pypi/pyversions/sanic-openapi3e.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Downloads](https://pepy.tech/badge/sanic-openapi3e)](https://pepy.tech/project/sanic-openapi3e)
 ## Installation
 
 ```shell
@@ -297,7 +301,7 @@ To have a `contact`, set at least one of (but preferably all)
 `app.config.API_CONTACT_EMAIL`. 
 
 To have a `license`, `set app.config.API_LICENSE_NAME` and 
-optionally `app.config.API_LICENSE_URL` (all str, but the Swagger UI .
+optionally `app.config.API_LICENSE_URL` (all str, but the Swagger UI expects this to be a URL).
 
 To have a `termsOfService`, set
 `app.config.API_TERMS_OF_SERVICE_URL` (a str, but the Swagger UI 

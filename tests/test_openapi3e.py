@@ -1,6 +1,7 @@
 """Basic tests for the openapi_blueprint."""
-import sys
 import json
+import sys
+from typing import Dict, Union
 
 import pytest
 import sanic.response
@@ -30,7 +31,7 @@ null = None
 
 
 # ------------------------------------------------------------ #
-# pytest fixtures. Given that the sanic_openapi state is held
+# pytest fixtures. Given that the sanic_openapi3e state is held
 # in the module, we need to have them as fixtures to avoid the
 # routes from all tests being visible together.
 #
@@ -49,7 +50,7 @@ def openapi__mod_bp_doc():
         if t_unimport in sys.modules:
             del sys.modules[t_unimport]
     import sanic_openapi3e.openapi
-    from sanic_openapi3e import openapi_blueprint, doc
+    from sanic_openapi3e import doc, openapi_blueprint
 
     yield sanic_openapi3e.openapi, openapi_blueprint, doc
 
@@ -63,15 +64,21 @@ def openapi__mod_bp_doc():
         del sys.modules[t_unimport]
 
 
-def run_asserts(response, expected):
+def run_asserts(
+    response: Union[
+        sanic.response.HTTPResponse,
+        sanic.response.StreamingHTTPResponse,
+        Dict,
+        sanic_openapi3e.oas_types.OpenAPIv3,
+    ],
+    expected: Dict,
+):
     """
     Helper to run the assert and print the values if needed.
 
     :param response: What was returned by the test call
     :param expected: What was expected to be returned
-    :type response: Union[sanic.response.Response, dict, sanic_openapi3e.oas_types.OpenAPIv3]
-    :type expected: dict
-    :return: Nothing
+
     """
     if isinstance(response, dict):
         spec = response
@@ -92,10 +99,7 @@ def run_asserts(response, expected):
 
 def test_fundamentals(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_consumes_from_path_does_not_duplicate_parameters",
-        strict_slashes=strict_slashes,
-    )
+    app = Sanic("test_fundamentals", strict_slashes=strict_slashes,)
 
     app.blueprint(openapi_blueprint)
 
@@ -508,7 +512,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
     Test tags have non-conflicting values: only one of them has been described but that one description is seen by all.
     """
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic("test_tag_unique_description__one_null", strict_slashes=strict_slashes)
+    app = Sanic("test_tag_unique_description__same", strict_slashes=strict_slashes)
 
     app.blueprint(openapi_blueprint)
 
@@ -597,6 +601,164 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
     run_asserts(response, expected)
 
 
+def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
+    """
+    Test tags on paths with multiple methods are not repeated
+    """
+    openapi, openapi_blueprint, doc = openapi__mod_bp_doc
+    app = Sanic(
+        "test_path_with_multiple_methods_does_not_repeat_tags",
+        strict_slashes=strict_slashes,
+    )
+
+    app.blueprint(openapi_blueprint)
+
+    @app.get("/test/609/<an_id:int>")
+    @doc.parameter(
+        name="an_id",
+        description="An ID",
+        required=True,
+        choices=[1, 3, 5, 7, 11, 13],
+        _in="path",
+    )
+    @doc.response(200, description="A 200 description")
+    @doc.response(201, description="A 201 description")
+    @doc.tag("Described tag", description="This tag has a lovely description.")
+    def test_id(_, an_id: int):
+        return sanic.response.json(locals())
+
+    @app.post("/test/609/<an_id:int>")  # <<-- the detail under test.
+    @doc.parameter(
+        name="an_id",
+        description="An ID",
+        required=True,
+        choices=[1, 3, 5, 7, 11, 13],
+        _in="path",
+    )
+    @doc.response(200, description="A 200 description")
+    @doc.response(201, description="A 201 description")
+    @doc.tag("Described tag", description="This tag has a lovely description.")
+    def test_id2(_, an_id: int):
+        return sanic.response.json(locals())
+
+    _, response = app.test_client.get("/openapi/spec.json")
+    expected = {
+        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "openapi": "3.0.2",
+        "paths": {
+            "/test/609/{an_id}": {
+                "get": {
+                    "operationId": "GET~~~test~609~an_id",
+                    "parameters": [
+                        {
+                            "description": "An ID",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {
+                        "200": {"description": "A 200 description"},
+                        "201": {"description": "A 201 description"},
+                    },
+                    "tags": ["Described tag"],
+                },
+                "post": {
+                    "operationId": "POST~~~test~609~an_id",
+                    "parameters": [
+                        {
+                            "description": "An ID",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {
+                        "200": {"description": "A 200 description"},
+                        "201": {"description": "A 201 description"},
+                    },
+                    "tags": ["Described tag"],
+                },
+            }
+        },
+        "tags": [
+            {
+                "description": "This tag has a lovely description.",
+                "name": "Described tag",
+            }
+        ],
+    }
+
+    run_asserts(response, expected)
+
+
+def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc):
+    """
+    Test duplicated tags on paths  are not repeated
+    """
+    openapi, openapi_blueprint, doc = openapi__mod_bp_doc
+    app = Sanic(
+        "test_path_with_multiple_equal_tags_does_not_repeat_tags",
+        strict_slashes=strict_slashes,
+    )
+
+    app.blueprint(openapi_blueprint)
+
+    @app.get("/test/609/<an_id:int>")
+    @doc.parameter(
+        name="an_id",
+        description="An ID",
+        required=True,
+        choices=[1, 3, 5, 7, 11, 13],
+        _in="path",
+    )
+    @doc.response(200, description="A 200 description")
+    @doc.response(201, description="A 201 description")
+    @doc.tag("Described tag", description="This tag has a lovely description.")
+    @doc.tag(
+        "Described tag", description="This tag has a lovely description."
+    )  # <<-- the detail under test.
+    def test_id(_, an_id: int):
+        return sanic.response.json(locals())
+
+    _, response = app.test_client.get("/openapi/spec.json")
+    expected = {
+        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "openapi": "3.0.2",
+        "paths": {
+            "/test/609/{an_id}": {
+                "get": {
+                    "operationId": "GET~~~test~609~an_id",
+                    "parameters": [
+                        {
+                            "description": "An ID",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {
+                        "200": {"description": "A 200 description"},
+                        "201": {"description": "A 201 description"},
+                    },
+                    "tags": ["Described tag"],
+                },
+            }
+        },
+        "tags": [
+            {
+                "description": "This tag has a lovely description.",
+                "name": "Described tag",
+            }
+        ],
+    }
+
+    run_asserts(response, expected)
+
+
 # ------------------------------------------------------------ #
 #  responses details
 # ------------------------------------------------------------ #
@@ -670,9 +832,10 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
                             "name": "an_id",
                             "required": true,
                             "schema": {
-                                "items": {"type": "integer"}, 
+                                "items": {"type": "integer"},
                                 "type": "array",
-                                "enum": [1, 3, 5, 7, 11, 13]},
+                                "enum": [1, 3, 5, 7, 11, 13],
+                            },
                         }
                     ],
                     "responses": {"200": {"description": "Success"}},
@@ -755,7 +918,7 @@ def test_param__name_in(openapi__mod_bp_doc):
 
 def test_path_params_must_be_required(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic("test_param__name_in", strict_slashes=strict_slashes)
+    app = Sanic("test_path_params_must_be_required", strict_slashes=strict_slashes)
 
     app.blueprint(openapi_blueprint)
 
@@ -864,9 +1027,10 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
                             "name": "an_id",
                             "required": true,
                             "schema": {
-                                "items": {"type": "integer"}, 
+                                "items": {"type": "integer"},
                                 "type": "array",
-                                "enum": [1, 3, 5, 7, 11, 13]}
+                                "enum": [1, 3, 5, 7, 11, 13],
+                            },
                         }
                     ],
                     "responses": {"200": {"description": "Success"}},
@@ -876,6 +1040,7 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
     }
     if spec:
         import pprint
+
         pprint.pprint(spec)
     run_asserts(spec, expected)
 
@@ -1321,26 +1486,25 @@ def test_path_param_w_reference(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     assert response.json["components"]["schemas"]["int.min4"], response.json
-    assert response.json["paths"]["/examples/1300/test_id_min/{an_id}"]["get"]["parameters"][0]["schema"] == {'$ref': '#/components/schemas/int.min4'}
+    assert response.json["paths"]["/examples/1300/test_id_min/{an_id}"]["get"][
+        "parameters"
+    ][0]["schema"] == {"$ref": "#/components/schemas/int.min4"}
 
 
 #######################################################################################################################
 # POST
 
+
 def test_post_with_body(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
     assert openapi
-    app = Sanic("test_path_param_w_reference", strict_slashes=strict_slashes)
+    app = Sanic("test_post_with_body", strict_slashes=strict_slashes)
 
     app.blueprint(openapi_blueprint)
-    
+
     @app.post("/examples/1335/test_post")
     @doc.request_body(
-        description="some content",
-        content={
-            "application/json": {}
-        },
-        required=True,
+        description="some content", content={"application/json": {}}, required=True,
     )
     def test_id_min(request):
         return sanic.response.json(locals())

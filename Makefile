@@ -1,3 +1,5 @@
+# Please leave `list` as the first entry. That way, when someone runs `make` without any arguments it
+# simply lists the available targets.
 
 .PHONY: list
 list:
@@ -20,6 +22,24 @@ clean:
 	@find . -name htmlcov       -type d -exec rm -rf {} \; 2>/dev/null ; true
 	@find . -name ".coverage"   -type f -exec rm -r  {} \; 2>/dev/null ; true
 
+.PHONY: pretty
+pretty:
+	isort --profile black .
+	black .
+	isort --profile black . --check --diff
+	black --check .
+
+
+.PHONY: test1
+test1:
+	PYTHONPATH=. py.test \
+		--cov-report term:skip-covered \
+		--cov-report html \
+		--cov sanic_openapi3e --cov tests \
+		--verbose --verbose \
+		-s \
+		--failed-first \
+		--maxfail 1
 .PHONY: test
 test:
 	PYTHONPATH=. py.test \
@@ -27,7 +47,8 @@ test:
 		--cov-report html \
 		--cov sanic_openapi3e --cov tests \
 		--verbose --verbose \
-		--maxfail 1
+		--failed-first
+
 
 .PHONY: dist
 dist:

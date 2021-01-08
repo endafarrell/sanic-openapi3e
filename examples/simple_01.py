@@ -1,12 +1,17 @@
+import pathlib
+
 import sanic.request
 import sanic.response
 from sanic import Sanic
 
-# This line is here only to ensure that the version your app uses is from this checkout.
-import sys; import pathlib; sys.path.insert(0, str(pathlib.Path(__file__).parent.parent.parent.absolute()))
+# isort: off
+# These two lines are to ensure that the version of `sanic_openapi3e` your app uses is from this checkout.
+import sys
 
-from sanic_openapi3e import openapi_blueprint, swagger_blueprint, doc
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parent.parent))
+from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
 
+# isort: on
 
 days_of_week = doc.Schema(
     _type="string",
@@ -14,7 +19,7 @@ days_of_week = doc.Schema(
     enum=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 )
 
-app = Sanic(strict_slashes=True)
+app = Sanic(name=__file__, strict_slashes=True)
 app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
@@ -48,12 +53,20 @@ dow_ref = doc.Reference("#/components/schemas/days")
     _in="path",
     schema=int_min_4_ref,
 )
-@doc.tag("Tag 1", description="Tag 1 desc")
-@doc.tag("Tag 2", description="Tag 2 desc")
 def get_start_end_hops(request, start: str, end: str, hops: int):
     d = locals()
     del d["request"]  # not JSON serializable
     return sanic.response.json(d)
 
 
-app.go_fast(port=8002)
+example_port = 8002
+
+
+@app.listener("after_server_start")
+async def notify_server_started(app: sanic.app.Sanic, __):
+    print("\n\n************* sanic-openapi3e ********************************")
+    print(f"* See your openapi swagger on http://127.0.0.1:{example_port}/swagger/ *")
+    print("************* sanic-openapi3e ********************************\n\n")
+
+
+app.go_fast(port=example_port)

@@ -33,18 +33,7 @@ This implementation has some known limitations:
 """
 import json
 from collections import OrderedDict
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 
 def _assert_type(
@@ -363,25 +352,25 @@ class Info(OObject):
         _assert_required(title, "title", self.__class__)
         _assert_required(version, "version", self.__class__)
 
-        self.title = title  # type: str
+        self.title = title
         """REQUIRED. The title of the application."""
 
-        self.version = version  # type: str
+        self.version = version
         """
         REQUIRED. The version of the OpenAPI document (which is distinct from the OpenAPI Specification version or the 
         API implementation version).
         """
 
-        self.description = description  # type: Optional[str]
+        self.description = description
         """A short description of the application. CommonMark syntax MAY be used for rich text representation."""
 
-        self.terms_of_service = terms_of_service  # type: Optional[str]
+        self.terms_of_service = terms_of_service
         """A URL to the Terms of Service for the API. MUST be in the format of a URL."""
 
-        self.contact = contact  # type: Optional[Contact]
+        self.contact = contact
         """The contact information for the exposed API."""
 
-        self.license = _license  # type: Optional[License]
+        self.license = _license
         """The license information for the exposed API."""
 
 
@@ -484,7 +473,7 @@ class Server(OObject):
 # Components Object. Since v3
 # --------------------------------------------------------------- #
 class Reference(OObject):
-    def __init__(self, _ref=None):
+    def __init__(self, _ref: str):
         """
         A simple object to allow referencing other components in the specification, internally and externally.
 
@@ -494,18 +483,17 @@ class Reference(OObject):
         not by the JSON Schema specification.
 
         :param _ref: REQUIRED. The reference string.
-        :type _ref: str
         """
         _assert_type(_ref, (str,), "_ref ($ref)", self.__class__)
 
         _assert_required(_ref, "_ref ($ref)", self.__class__)
 
-        self.dollar_ref = _ref  # type: str
+        self.dollar_ref = _ref
         """REQUIRED. The reference string."""
 
 
 class Discriminator(OObject):
-    def __init__(self, property_name=None, mapping=None):
+    def __init__(self, property_name: str, mapping: Optional[Dict[str, str]] = None):
         """
         When request bodies or response payloads may be one of a number of different schemas, a discriminator object can
         be used to aid in serialization, deserialization, and validation. The discriminator is a specific object in a
@@ -514,33 +502,38 @@ class Discriminator(OObject):
 
         When using the discriminator, inline schemas will not be considered.
 
-        :param property_name:
-        :param mapping:
-        :type property_name: str
-        :type mapping: Dict[str, str]
+        :param property_name: REQUIRED. The name of the property in the payload that will hold the discriminator value.
+        :param mapping: An object to hold mappings between payload values and schema names or references.
+        
         """
         _assert_type(property_name, (str,), "property_name", self.__class__)
         _assert_type(mapping, (dict,), "mapping", self.__class__)
 
         _assert_required(property_name, "property_name", self.__class__)
-        for m_name, m_value in mapping.items():
-            if not isinstance(m_value, str):
-                raise AssertionError(
-                    "For `{}.mapping[{}]` the value must be a str.".format(
-                        self.__class__.__qualname__, m_name
+        if mapping:
+            for m_name, m_value in mapping.items():
+                if not isinstance(m_value, str):
+                    raise AssertionError(
+                        "For `{}.mapping[{}]` the value must be a str.".format(
+                            self.__class__.__qualname__, m_name
+                        )
                     )
-                )
 
-        self.property_name = property_name  # type: str
+        self.property_name = property_name
         """REQUIRED. The name of the property in the payload that will hold the discriminator value."""
 
-        self.mapping = mapping  # type: Dict[str, str]
+        self.mapping = mapping
         """An object to hold mappings between payload values and schema names or references."""
 
 
 class XML(OObject):
     def __init__(
-        self, name=None, namespace=None, prefix=None, attribute=None, wrapped=False
+        self,
+        name: Optional[str] = None,
+        namespace: Optional[str] = None,
+        prefix: Optional[str] = None,
+        attribute: bool = False,
+        wrapped: bool = False,
     ):
         """
         A metadata object that allows for more fine-tuned XML model definitions.
@@ -559,11 +552,6 @@ class XML(OObject):
         :param wrapped: MAY be used only for an array definition. Signifies whether the array is wrapped (for example,
             <books><book/><book/></books>) or unwrapped (<book/><book/>). Default value is false. The definition takes
             effect only when defined alongside type being array (outside the items).
-        :type name: str
-        :type namespace: str
-        :type prefix: str
-        :type attribute:  bool
-        :type wrapped: bool
         """
         _assert_type(name, (str,), "name", self.__class__)
         _assert_type(namespace, (str,), "namespace", self.__class__)
@@ -571,7 +559,7 @@ class XML(OObject):
         _assert_type(attribute, (bool,), "attribute", self.__class__)
         _assert_type(wrapped, (bool,), "wrapped", self.__class__)
 
-        self.name = name  # type: str
+        self.name = name
         """
         Replaces the name of the element/attribute used for the described schema property. When defined within items, it
         will affect the name of the individual XML elements within the list. When defined alongside type being array 
@@ -579,19 +567,19 @@ class XML(OObject):
         will be ignored.
         """
 
-        self.namespace = namespace  # type: str
+        self.namespace = namespace
         """The URI of the namespace definition. Value MUST be in the form of an absolute URI."""
 
-        self.prefix = prefix  # type: str
+        self.prefix = prefix
         """The prefix to be used for the name."""
 
-        self.attribute = attribute  # type: bool
+        self.attribute = attribute
         """
         Declares whether the property definition translates to an attribute instead of an element. Default value is 
         false.
         """
 
-        self.wrapped = wrapped  # type: bool
+        self.wrapped = wrapped
         """
         MAY be used only for an array definition. Signifies whether the array is wrapped (for example, 
         ``(<books><book/><book/></books>``) or unwrapped (``<book/><book/>``). Default value is false. The definition 
@@ -600,32 +588,36 @@ class XML(OObject):
 
 
 class ExternalDocumentation(OObject):
-    def __init__(self, description=None, url=None):
+    def __init__(self, url: str, description: Optional[str] = None):
         """
         Allows referencing an external resource for extended documentation.
 
+        :param url: REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL.
         :param description: A short description of the target documentation. CommonMark syntax MAY be used for rich text
             representation.
-        :param url: REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL.
-        :type description: str
-        :type url: str
         """
         _assert_type(description, (str,), "name", self.__class__)
         _assert_type(url, (str,), "url", self.__class__)
 
         _assert_required(url, "url", self.__class__)
 
-        self.description = description  # type: str
+        self.description = description
         """
         A short description of the target documentation. CommonMark syntax MAY be used for rich text representation.
         """
 
-        self.url = url  # type: str
+        self.url = url
         """REQUIRED. The URL for the target documentation. Value MUST be in the format of a URL."""
 
 
 class Example(OObject):
-    def __init__(self, summary=None, description=None, value=None, external_value=None):
+    def __init__(
+        self,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
+        value: Optional[Any] = None,
+        external_value: Optional[str] = None,
+    ):
         """
         In the `spec <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#example-object>`_ there
         is no top-line description, but there is supplemental doc.
@@ -643,10 +635,6 @@ class Example(OObject):
         :param external_value: A URL that points to the literal example. This provides the capability to reference
             examples that cannot easily be included in JSON or YAML documents. The value field and externalValue field
             are mutually exclusive.
-        :type summary: str
-        :type description: str
-        :type value: Any
-        :type external_value: str
 
         """
         _assert_type(summary, (str,), "summary", self.__class__)
@@ -657,20 +645,20 @@ class Example(OObject):
         assert not (value and external_value)
 
         # Assignment and docs
-        self.summary = summary  # type: str
+        self.summary = summary
         """Short description for the example."""
 
-        self.description = description  # type: str
+        self.description = description
         """Long description for the example. CommonMark syntax MAY be used for rich text representation."""
 
-        self.value = value  # type: Any
+        self.value = value
         """
         Embedded literal example. The value field and externalValue field are mutually exclusive. To represent examples 
         of media types that cannot naturally represented in JSON or YAML, use a string value to contain the example, 
         escaping where necessary.
         """
 
-        self.external_value = external_value  # type: str
+        self.external_value = external_value
         """
         A URL that points to the literal example. This provides the capability to reference examples that cannot easily 
         be included in JSON or YAML documents. The value field and externalValue field are mutually exclusive.
@@ -680,17 +668,17 @@ class Example(OObject):
 class Header(OObject):
     def __init__(
         self,
-        description=None,
-        required=None,
-        deprecated=None,
-        allow_empty_value=None,
-        style=None,
-        explode=None,
-        allow_reserved=None,
-        schema=None,
-        example=None,
-        examples=None,
-        content=None,
+        description: Optional[str] = None,
+        required: bool = False,
+        deprecated: bool = False,
+        allow_empty_value: bool = False,
+        style: Optional[str] = None,
+        explode: bool = False,
+        allow_reserved: bool = False,
+        schema: Optional[Union["Schema", Reference]] = None,
+        example: Optional[Any] = None,
+        examples: Optional[Dict[str, Union[Example, Reference]]] = None,
+        content: Optional[Dict[str, "MediaType"]] = None,
     ):
         """
         The Header Object follows the structure of the Parameter Object with the following changes:
@@ -703,7 +691,7 @@ class Header(OObject):
             MAY be used for rich text representation.
         :param required: Determines whether this parameter is mandatory. If the parameter ``_in`` is "path", this
             property is REQUIRED and its value MUST be true. Otherwise, the property MAY be included and its default
-            value is false.
+            value is false. Note that this is not checked by sanic-openapi3e.
         :param deprecated: Specifies that a parameter is deprecated and SHOULD be transitioned out of usage.
         :param allow_empty_value: Sets the ability to pass empty-valued parameters. This is valid only for query
             parameters and allows sending a parameter with an empty value. Default value is false. If style is used,
@@ -716,7 +704,7 @@ class Header(OObject):
             effect. When style is form, the default value is true. For all other styles, the default value is false.
         :param allow_reserved: Determines whether the parameter value SHOULD allow reserved characters, as defined by
             RFC3986 ``:/?#[]@!$&'()*+,;=`` to be included without percent-encoding. This property only applies to
-            parameters with an in value of query. The default value is false.
+            parameters with an `_in` value of query. The default value is false.
         :param schema: The schema defining the type used for the parameter.
         :param example: Example of the media type. The example SHOULD match the specified schema and encoding properties
             if present. The example object is mutually exclusive of the examples object. Furthermore, if referencing a
@@ -729,17 +717,6 @@ class Header(OObject):
             example provided by the schema.
         :param content: A map containing the representations for the parameter. The key is the media type and the value
             describes it. The map MUST only contain one entry.
-        :type description: str
-        :type required: bool
-        :type deprecated: bool
-        :type allow_empty_value: bool
-        :type style: str
-        :type explode: bool
-        :type allow_reserved: bool
-        :type schema: Union[Schema, Reference]
-        :type example: Any
-        :type examples: Dict[str, Union[Example, Reference]]
-        :param content: Dict[str, MediaType]
         """
 
         _assert_type(description, (str,), "description", self.__class__)
@@ -780,51 +757,51 @@ class Header(OObject):
                     )
 
         # Assignments and docs
-        self.description = description  # type: str
+        self.description = description
         """
         A brief description of the parameter. This could contain examples of use. CommonMark syntax MAY be used for rich 
         text representation.
         """
 
-        self.required = required  # type: str
+        self.required = required
         """
         Determines whether this parameter is mandatory. If the parameter location is "path", this property is REQUIRED 
         and its value MUST be true. Otherwise, the property MAY be included and its default value is false.
         """
 
-        self.deprecated = deprecated  # type: bool
+        self.deprecated = deprecated
         """Specifies that a parameter is deprecated and SHOULD be transitioned out of usage."""
 
-        self.allow_empty_value = allow_empty_value  # type: bool
+        self.allow_empty_value = allow_empty_value
         """
         Sets the ability to pass empty-valued parameters. This is valid only for query parameters and allows sending a 
         parameter with an empty value. Default value is false. If style is used, and if behavior is n/a (cannot be 
         serialized), the value of allowEmptyValue SHALL be ignored.
         """
 
-        self.style = style  # type: bool
+        self.style = style
         """
         Describes how the parameter value will be serialized depending on the type of the parameter value. Default 
         values (based on value of in): for query - form; for path - simple; for header - simple; for cookie - form.
         """
 
-        self.explode = explode  # type: bool
+        self.explode = explode
         """
         When this is true, parameter values of type array or object generate separate parameters for each value of the 
         array or key-value pair of the map. For other types of parameters this property has no effect. When style is 
         form, the default value is true. For all other styles, the default value is false.
         """
 
-        self.allow_reserved = allow_reserved  # type: bool
+        self.allow_reserved = allow_reserved
         """
         Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 
         ``:/?#[]@!$&'()*+,;=`` to be included without percent-encoding. This property only applies to parameters with an 
         in value of query. The default value is false."""
 
-        self.schema = schema  # type: Union[Schema, Reference]
+        self.schema = schema
         """The schema defining the type used for the parameter."""
 
-        self.example = example  # type: Any
+        self.example = example
         """
         Example of the media type. The example SHOULD match the specified schema and encoding properties if present. The 
         example object is mutually exclusive of the examples object. Furthermore, if referencing a schema which contains 
@@ -833,14 +810,14 @@ class Header(OObject):
         where necessary.
         """
 
-        self.examples = examples  # type: Dict[str, Union[Example, Reference]]
+        self.examples = examples
         """
         Examples of the media type. Each example SHOULD contain a value in the correct format as specified in the 
         parameter encoding. The examples object is mutually exclusive of the example object. Furthermore, if referencing 
         a schema which contains an example, the examples value SHALL override the example provided by the schema.
         """
 
-        self.content = content  # type: Dict[str, MediaType]
+        self.content = content
         """
         A map containing the representations for the parameter. The key is the media type and the value describes it. 
         The map MUST only contain one entry.
@@ -850,10 +827,10 @@ class Header(OObject):
 class Encoding(OObject):
     def __init__(
         self,
-        content_type=None,
-        headers=None,
-        style=None,
-        explode=None,
+        content_type: Optional[str] = None,
+        headers: Optional[Dict[str, Union[Header, Reference]]] = None,
+        style: Optional[str] = None,
+        explode: bool = False,
         allow_reserved=False,
     ):
         """
@@ -883,11 +860,6 @@ class Encoding(OObject):
         :param allow_reserved: Determines whether the parameter value SHOULD allow reserved characters, as defined by
          RFC3986 ``:/?#[]@!$&'()*+,;=`` to be included without percent-encoding. The default value is false. This
          property SHALL be ignored if the request body media type is not application/x-www-form-urlencoded.
-        :type content_type:
-        :type headers:
-        :type style:
-        :type explode:
-        :type allow_reserved:
         """
         _assert_type(content_type, (str,), "content_type", self.__class__)
         _assert_type(headers, (dict,), "headers", self.__class__)
@@ -923,7 +895,7 @@ class Encoding(OObject):
         _assert_type(allow_reserved, (bool,), "allow_reserved", self.__class__)
 
         # Assignment and docs
-        self.content_type = content_type  # type: str
+        self.content_type = content_type
         """
         The Content-Type for encoding a specific property. Default value depends on the property type: 
         
@@ -936,14 +908,14 @@ class Encoding(OObject):
         comma-separated list of the two types.
         """
 
-        self.headers = headers  # type: Dict[str, Union[Header, Reference]]
+        self.headers = headers
         """
         A map allowing additional information to be provided as headers, for example `Content-Disposition`. Content-Type 
         is described separately and SHALL be ignored in this section. This property SHALL be ignored if the request body 
         media type is not a multipart.
         """
 
-        self.explode = explode  # type: bool
+        self.explode = explode
         """
         When this is true, property values of type array or object generate separate parameters for each value of the 
         array, or key-value-pair of the map. For other types of properties this property has no effect. When style is 
@@ -951,7 +923,7 @@ class Encoding(OObject):
         ignored if the request body media type is not application/x-www-form-urlencoded.
         """
 
-        self.allow_reserved = allow_reserved  # type: bool
+        self.allow_reserved = allow_reserved
         """
         Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986 
         ``:/?#[]@!$&'()*+,;=`` to be included without percent-encoding. The default value is false. This property SHALL 
@@ -960,7 +932,13 @@ class Encoding(OObject):
 
 
 class MediaType(OObject):
-    def __init__(self, schema=None, example=None, examples=None, encoding=None):
+    def __init__(
+        self,
+        schema: Optional[Union["Schema", Reference]] = None,
+        example: Optional[Any] = None,
+        examples: Optional[Dict[str, Union[Example, Reference]]] = None,
+        encoding: Optional[Dict[str, Encoding]] = None,
+    ):
         """
         Each Media Type Object provides schema and examples for the media type identified by its key.
 
@@ -975,10 +953,7 @@ class MediaType(OObject):
         :param encoding: A map between a property name and its encoding information. The key, being the property name,
             MUST exist in the schema as a property. The encoding object SHALL only apply to requestBody objects when the
             media type is multipart or application/x-www-form-urlencoded.
-        :type schema: Union[Schema, Reference]
-        :type example: Any
-        :type examples: Dict[str, Union[Example, Reference]]
-        :type encoding: Dict[str, Encoding]
+
         """
         _assert_type(schema, (Schema, Reference), "schema", self.__class__)
         # Note: example is specified as "Any"
@@ -1005,24 +980,24 @@ class MediaType(OObject):
                     )
 
         # Assignment and Docs
-        self.schema = schema  # type: Union[Schema, Reference]
+        self.schema = schema
         """The schema defining the content of the request, response, or parameter."""
 
-        self.example = example  # type: Any
+        self.example = example
         """
         Example of the media type. The example object SHOULD be in the correct format as specified by the media type. 
         The example field is mutually exclusive of the examples field. Furthermore, if referencing a schema which 
         contains an example, the example value SHALL override the example provided by the schema.
         """
 
-        self.examples = examples  # type: Dict[str, Union[Example, Reference]]
+        self.examples = examples
         """
         Examples of the media type. Each example object SHOULD match the media type and specified schema if present. The 
         examples field is mutually exclusive of the example field. Furthermore, if referencing a schema which contains
         an example, the examples value SHALL override the example provided by the schema.
         """
 
-        self.encoding = encoding  # type: Dict[str, Encoding]
+        self.encoding = encoding
         """
         A map between a property name and its encoding information. The key, being the property name, MUST exist in the 
         schema as a property. The encoding object SHALL only apply to requestBody objects when the media type is 
@@ -1498,7 +1473,7 @@ class Schema(OObject):
         """
         # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
 
-        self.properties = properties  # type: Optional[Union[Schema, Reference]]
+        self.properties = properties
         """ Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or referenced)."""
 
         self.additional_properties = additional_properties
@@ -1619,7 +1594,7 @@ class Schema(OObject):
         # At definition, the Schema.String is set to `None`, but below (and before code gets to use it) it is set to
         # `Schema(_type="string")`. This is for python3.6 reasons. Thus, mypy needs to be silenced for the next line and
         # the line just before the return.
-        _enum_type: str = Schema.String._type   # type: ignore
+        _enum_type: str = Schema.String._type  # type: ignore
         enum0_schema: Optional[Schema] = {
             int: Schema.Integer,
             str: Schema.String,
@@ -2221,20 +2196,12 @@ class SecurityScheme(OObject):
             supported.
         :param openid_connect_url: REQUIRED (but not checked). OpenId Connect URL to discover OAuth2 configuration
             values. This MUST be in the form of a URL.
-        :type _type: str
-        :type description: str
-        :type name: str
-        :type _in: str
-        :type scheme: str
-        :type bearer_format: str
-        :type flows: OAuthFlows
-        :type openid_connect_url: str
         """
         # TODO - types
 
-        assert _type in ("apiKey", "http", "oauth2", "openIdConnect")
+        assert _type in {"apiKey", "http", "oauth2", "openIdConnect"}
         if _in:
-            assert _in in ("query", "header", "cookie")
+            assert _in in {"query", "header", "cookie"}
 
         self._type = _type
         """
@@ -2274,7 +2241,7 @@ class SecurityScheme(OObject):
 
 class Callback(OObject):
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
-    def __init__(self, callbacks=None):
+    def __init__(self, callbacks: Dict[Any, "PathItem"]):
         """
         A map of possible out-of band callbacks related to the parent operation. Each value in the map is a PathItem
         Object that describes a set of requests that may be initiated by the API provider and the expected responses.
@@ -2282,13 +2249,12 @@ class Callback(OObject):
         to use for the callback operation.
 
         Note: there is a _lot_ more documentation available in the spec for callbacks. `See
-        <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#callback-object>`_ fore.
+        <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#callback-object>`_ .
 
         :param callbacks: A mapping of Any to a PathItem used to define a callback request and expected responses.
         A `complete example
         <https://github.com/OAI/OpenAPI-Specification/blob/master/examples/v3.0/callback-example.yaml>`_ is available.
 
-        :type callbacks: Dict[Any, PathItem]
         """
         # TODO - types
         # TODO - validations

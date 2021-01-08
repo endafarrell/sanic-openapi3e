@@ -1,6 +1,7 @@
 """Basic tests for the openapi_blueprint."""
 import json
 import sys
+from typing import Dict, Union
 
 import pytest
 import sanic.response
@@ -63,15 +64,21 @@ def openapi__mod_bp_doc():
         del sys.modules[t_unimport]
 
 
-def run_asserts(response, expected):
+def run_asserts(
+    response: Union[
+        sanic.response.HTTPResponse,
+        sanic.response.StreamingHTTPResponse,
+        Dict,
+        sanic_openapi3e.oas_types.OpenAPIv3,
+    ],
+    expected: Dict,
+):
     """
     Helper to run the assert and print the values if needed.
 
     :param response: What was returned by the test call
     :param expected: What was expected to be returned
-    :type response: Union[sanic.response.Response, dict, sanic_openapi3e.oas_types.OpenAPIv3]
-    :type expected: dict
-    :return: Nothing
+
     """
     if isinstance(response, dict):
         spec = response

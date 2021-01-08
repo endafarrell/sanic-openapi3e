@@ -16,15 +16,15 @@ from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
 
 int_min_4 = doc.Schema(
     _type="integer", _format="int32", minimum=4, description="Minimum value: 4"
-)  # type: doc.Schema
+)
 an_id_ex1 = doc.Example(
     summary="A small number", description="Desc: Numbers less than ten", value=7
-)  # type: doc.Example
+)
 an_id_ex2 = doc.Example(
     summary="A big number",
     description="Desc: Numbers more than one million!",
     value=123456789,
-)  # type: doc.Example
+)
 days_of_week = doc.Schema(
     _type="string",
     description="Days of the week, short, English",

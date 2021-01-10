@@ -22,7 +22,7 @@ module_readme = pathlib.Path.cwd() / "README.md"
 with open(str(module_readme)) as fp:
     long_description = fp.read()
     long_description_content_type = "text/markdown"
-
+desc = "OpenAPI v3 support for Sanic. Document and describe all parameters, including sanic path params. Python 3.6+"
 setup(
     name="sanic-openapi3e",
     version=version,
@@ -30,7 +30,7 @@ setup(
     license="MIT",
     author="Enda Farrell",
     author_email="enda.farrell@gmail.com",
-    description="OpenAPI v3 support for Sanic. Document and describe all parameters, including sanic path params. Python 3.6+",
+    description=desc,
     long_description=long_description,
     long_description_content_type=long_description_content_type,
     packages=["sanic_openapi3e"],
@@ -41,9 +41,17 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Web Environment",
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+
     ],
 )

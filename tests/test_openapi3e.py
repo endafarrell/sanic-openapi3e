@@ -5,6 +5,7 @@ from typing import Dict, Union
 
 import pytest
 import sanic.response
+from loguru import logger
 from sanic import Sanic
 
 import sanic_openapi3e.oas_types
@@ -1511,3 +1512,121 @@ def test_post_with_body(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     assert response.json
+
+
+def test_camel_case_operation_id(openapi__mod_bp_doc):
+    _, openapi_blueprint, doc = openapi__mod_bp_doc
+    app = Sanic("test_camel_case_operation_id", strict_slashes=strict_slashes)
+    app.config.OPENAPI_OPERATION_ID_FN = (
+        sanic_openapi3e.openapi.camel_case_operation_id_fn
+    )  # <<-- item under test
+
+    app.blueprint(openapi_blueprint)
+
+    @app.get("/test/1523/path_exclude/<an_id:int>")
+    @doc.parameter(
+        name="an_id",
+        description="An ID w/ desx",
+        choices=[1, 3, 5, 7, 11, 13],
+        _in="path",
+    )
+    def get_test_line_path_element(_, an_id: int):
+        return sanic.response.json(locals())
+
+    _, response = app.test_client.get("/openapi/spec.json")
+    expected = {
+        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "openapi": "3.0.2",
+        "paths": {
+            "/test/1523/path_exclude/{an_id}": {
+                "get": {
+                    "operationId": "getTestLinePathElement",
+                    "parameters": [
+                        {
+                            "description": "An ID w/ desx",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "Success"}},
+                }
+            }
+        },
+    }
+
+    run_asserts(response, expected)
+
+
+def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
+    _, openapi_blueprint, doc = openapi__mod_bp_doc
+    app = Sanic(
+        "test_camel_case_operation_id_for_composite_view", strict_slashes=strict_slashes
+    )
+    app.config.OPENAPI_OPERATION_ID_FN = (
+        sanic_openapi3e.openapi.camel_case_operation_id_fn
+    )  # <<-- item under test
+
+    app.blueprint(openapi_blueprint)
+
+    @app.route("/test/1570/path_exclude/<an_id:int>", {"GET", "PUT", "delete"})
+    @doc.parameter(
+        name="an_id",
+        description="An ID w/ desx",
+        choices=[1, 3, 5, 7, 11, 13],
+        _in="path",
+    )
+    def test_line_path_element(_, an_id: int):
+        return sanic.response.json(locals())
+
+    _, response = app.test_client.get("/openapi/spec.json")
+    expected = {
+        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "openapi": "3.0.2",
+        "paths": {
+            "/test/1570/path_exclude/{an_id}": {
+                "delete": {
+                    "operationId": "deleteTestLinePathElement",
+                    "parameters": [
+                        {
+                            "description": "An ID w/ desx",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "Success"}},
+                },
+                "get": {
+                    "operationId": "getTestLinePathElement",
+                    "parameters": [
+                        {
+                            "description": "An ID w/ desx",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "Success"}},
+                },
+                "put": {
+                    "operationId": "putTestLinePathElement",
+                    "parameters": [
+                        {
+                            "description": "An ID w/ desx",
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                        }
+                    ],
+                    "responses": {"200": {"description": "Success"}},
+                },
+            }
+        },
+    }
+
+    run_asserts(response, expected)

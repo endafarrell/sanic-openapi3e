@@ -314,7 +314,58 @@ Setting `components`, `security` and `externalDocs` requires you to
 * set the appropriate `app.config.OPENAPI_COMPONENTS`, 
   `app.config.OPENAPI_SECURITY`,  
   `app.config.OPENAPI_EXTERNAL_DOCS`.
- 
+  
+#### Configure how the operationId is made
+
+The default code for creating the operationId creates unique (as they must be) strings from
+the following code:
+
+```python
+def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+    uri_for_operation_id: str = uri
+    for parameter in route.parameters:
+      uri_for_operation_id = re.sub(
+            "<" + parameter.name + ".*?>", parameter.name, uri_for_operation_id
+        )
+
+    return "{}~~{}".format(method.upper(), uri_for_operation_id).replace("/", "~")
+```
+
+You can implement your own code (as long as the method signature matches this), and set that to 
+be used in the app config:
+`app.config.OPENAPI_OPERATION_ID_FN = my_operation_id_fn`
+
+For example, to make `camelCase` operationIds from the Routes' handlers (but be advised you that
+you must ensure your handlers' function names are globally unique, not "just" unique within the
+Blueprint), you could use the supplied `camel_case_operation_id_fn`:
+
+```python
+def camel_case_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+
+  if hasattr(route.handler, "__class__") and hasattr(route.handler, "handlers"):
+    # These are `sanic.view.CompositeView`s
+    _method_handler = route.handler.handlers.get(method.upper())
+    if _method_handler:
+      handler_name = method + "_" + _method_handler.__name__
+    else:
+      raise ValueError(f"No {method.upper()} handler found for {uri} handlers: {route.handler.handlers}")
+  elif hasattr(route.handler, "__name__"):
+    if len(route.methods) > 1:
+      # This fn will be called many times, once per method, but we should prefix the handler_name with this
+      # prefix to make the operationIds globally unique. If the route is only used by one method, use that
+      # handler's name.
+      handler_name = method + "_" + route.handler.__name__
+    else:
+      handler_name = route.handler.__name__
+  else:
+    raise NotImplementedError()
+  return simple_snake2camel(handler_name)
+```
+
+and set it like `app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.camel_case_operation_id_fn`
+
+Note that this does not change the `parameter`'s  names.
+
 **control spec generation**
 
     hide_openapi_self = app.config.get("HIDE_OPENAPI_SELF", True)

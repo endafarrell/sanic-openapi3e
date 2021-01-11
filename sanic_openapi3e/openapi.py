@@ -8,10 +8,11 @@ Known limitations:
 * Parameters are documented at the PathItem level, not at the underlying Operation level.
 
 """
+import inspect
 import re
 from collections import OrderedDict
 from itertools import repeat
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 import sanic
 import sanic.exceptions
@@ -63,7 +64,46 @@ Module-level container to hold the OAS spec that may be served-up on request. Th
 contains all endpoints, including those marked as `exclude`.
 """
 
+
+def simple_snake2camel(string: str) -> str:
+    first, *rest = string.strip().lower().split("_")
+    return first + "".join(ele.title() for ele in rest)
+
+
 CAST_2_SCHEMA = {int: Schema.Integer, float: Schema.Number, str: Schema.String}
+
+
+def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+    uri_for_operation_id: str = uri
+    for parameter in route.parameters:
+        uri_for_operation_id = re.sub(
+            "<" + parameter.name + ".*?>", parameter.name, uri_for_operation_id
+        )
+
+    return "{}~~{}".format(method.upper(), uri_for_operation_id).replace("/", "~")
+
+
+def camel_case_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+    if hasattr(route.handler, "__class__") and hasattr(route.handler, "handlers"):
+        # These are `sanic.view.CompositeView`s
+        _method_handler = route.handler.handlers.get(method.upper())
+        if _method_handler:
+            handler_name = method + "_" + _method_handler.__name__
+        else:
+            raise ValueError(
+                f"No {method.upper()} handler found for {uri} handlers: {route.handler.handlers}"
+            )
+    elif hasattr(route.handler, "__name__"):
+        if len(route.methods) > 1:
+            # This fn will be called many times, once per method, but we should prefix the handler_name with this
+            # prefix to make the operationIds globally unique. If the route is only used by one method, use that
+            # handler's name.
+            handler_name = method + "_" + route.handler.__name__
+        else:
+            handler_name = route.handler.__name__
+    else:
+        raise NotImplementedError()
+    return simple_snake2camel(handler_name)
 
 
 @blueprint.listener("before_server_start")
@@ -72,9 +112,11 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
     hide_sanic_static = app.config.get("HIDE_SANIC_STATIC", True)
     show_excluded = app.config.get("SHOW_OPENAPI_EXCLUDED", False)
     show_unused_tags = app.config.get("SHOW_OPENAPI_UNUSED_TAGS", False)
+    operation_id_fn = app.config.get("OPENAPI_OPERATION_ID_FN", default_operation_id_fn)
 
     openapi = _build_openapi_spec(
         app,
+        operation_id_fn,
         hide_openapi_self,
         hide_excluded=True,
         show_unused_tags=show_unused_tags,
@@ -97,6 +139,7 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
 
 def _build_openapi_spec(
     app: sanic.app.Sanic,
+    operation_id_fn: Callable[[str, str, sanic.router.Route], str],
     hide_openapi_self=True,
     hide_excluded=True,
     show_unused_tags=False,
@@ -244,10 +287,7 @@ def _build_openapi_spec(
                     if not pathitem_tag_names:
                         pathitem_tag_names.add(_blueprint.name)
 
-            operation_id = "{}~~{}".format(
-                _method.upper(), uri_for_opearion_id
-            ).replace("/", "~")
-
+            operation_id = operation_id_fn(_method, _uri, _route)
             operations[_method.lower()] = Operation(
                 operation_id=operation_id,
                 responses=path_item.x_responses_holder,

@@ -10,13 +10,9 @@ module_init_path = pathlib.Path.cwd() / "sanic_openapi3e" / "__init__.py"
 assert module_init_path.exists()
 with open(str(module_init_path)) as fp:
     try:
-        version = re.findall(
-            r"""^__version__ = ['"]([^'"]+)['"]\r?$""", fp.read(), re.M
-        )[0]
+        version = re.findall(r"""^__version__ = ['"]([^'"]+)['"]\r?$""", fp.read(), re.M)[0]
     except IndexError:
-        raise RuntimeError(
-            "Unable to determine version from {}".format(module_init_path)
-        )
+        raise RuntimeError("Unable to determine version from {}".format(module_init_path))
 
 module_readme = pathlib.Path.cwd() / "README.md"
 with open(str(module_readme)) as fp:

@@ -21,11 +21,7 @@ app.blueprint(swagger_blueprint)
 
 @app.get("/15/test_id/<an_id:int>")
 @doc.parameter(
-    name="an_id",
-    description="An ID",
-    required=True,
-    _in="path",
-    schema=doc.Schema.Integer,
+    name="an_id", description="An ID", required=True, _in="path", schema=doc.Schema.Integer,
 )
 @doc.tag("Tag 1", description="A tag desc")
 def get_id_19(request, an_id: int):
@@ -38,11 +34,7 @@ def get_id_19(request, an_id: int):
 @doc.exclude()
 @doc.tag("Tag excluded", description="You shouldn's usually see this...")
 @doc.parameter(
-    name="an_id",
-    description="An ID",
-    required=True,
-    _in="path",
-    schema=doc.Schema.Integer,
+    name="an_id", description="An ID", required=True, _in="path", schema=doc.Schema.Integer,
 )
 def get_id_29(request, an_id: int):
     d = locals()

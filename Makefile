@@ -30,6 +30,12 @@ pretty:
 	black --check .
 
 
+.PHONY: good
+good: pretty
+	pylint sanic_openapi3e
+	mypy -p sanic_openapi3e
+
+
 .PHONY: test1
 test1:
 	PYTHONPATH=. py.test \
@@ -41,13 +47,14 @@ test1:
 		--failed-first \
 		--maxfail 1
 .PHONY: test
-test:
+test: good
 	PYTHONPATH=. py.test \
 		--cov-report term:skip-covered \
 		--cov-report html \
 		--cov sanic_openapi3e --cov tests \
 		--verbose --verbose \
 		--failed-first
+
 
 
 .PHONY: dist

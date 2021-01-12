@@ -8,7 +8,6 @@ Known limitations:
 * Parameters are documented at the PathItem level, not at the underlying Operation level.
 
 """
-import inspect
 import re
 from collections import OrderedDict
 from itertools import repeat
@@ -46,19 +45,17 @@ from .swagger import blueprint as swagger_bp
 
 blueprint = Blueprint("openapi", url_prefix="openapi")
 
-NotYetImplemented = None
-NotYetImplementedResponses = Responses(
-    {"200": Response(description="A successful response")}
-)
+NOT_YET_IMPLEMENTED = None
+NotYetImplementedResponses = Responses({"200": Response(description="A successful response")})
 
 # Note: python3.6 cannot use OrderedDict as a type hint (that was fixed in 3.7+...)
-_openapi = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI = OrderedDict()  # type: OrderedDict[str, Any]
 """
 Module-level container to hold the OAS spec that will be served-up on request. See `build_openapi_spec` for how it is
 built.
 """
 
-_openapi_all = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI_ALL = OrderedDict()  # type: OrderedDict[str, Any]
 """
 Module-level container to hold the OAS spec that may be served-up on request. The difference with this one is that it 
 contains all endpoints, including those marked as `exclude`.
@@ -67,7 +64,7 @@ contains all endpoints, including those marked as `exclude`.
 
 def simple_snake2camel(string: str) -> str:
     first, *rest = string.strip().lower().split("_")
-    return first + "".join(ele.title() for ele in rest)
+    return first + "".join(ele.capitalize() for ele in rest)
 
 
 CAST_2_SCHEMA = {int: Schema.Integer, float: Schema.Number, str: Schema.String}
@@ -76,9 +73,7 @@ CAST_2_SCHEMA = {int: Schema.Integer, float: Schema.Number, str: Schema.String}
 def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
     uri_for_operation_id: str = uri
     for parameter in route.parameters:
-        uri_for_operation_id = re.sub(
-            "<" + parameter.name + ".*?>", parameter.name, uri_for_operation_id
-        )
+        uri_for_operation_id = re.sub("<" + parameter.name + ".*?>", parameter.name, uri_for_operation_id)
 
     return "{}~~{}".format(method.upper(), uri_for_operation_id).replace("/", "~")
 
@@ -90,9 +85,7 @@ def camel_case_operation_id_fn(method: str, uri: str, route: sanic.router.Route)
         if _method_handler:
             handler_name = method + "_" + _method_handler.__name__
         else:
-            raise ValueError(
-                f"No {method.upper()} handler found for {uri} handlers: {route.handler.handlers}"
-            )
+            raise ValueError(f"No {method.upper()} handler found for {uri} handlers: {route.handler.handlers}")
     elif hasattr(route.handler, "__name__"):
         if len(route.methods) > 1:
             # This fn will be called many times, once per method, but we should prefix the handler_name with this
@@ -114,30 +107,32 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
     show_unused_tags = app.config.get("SHOW_OPENAPI_UNUSED_TAGS", False)
     operation_id_fn = app.config.get("OPENAPI_OPERATION_ID_FN", default_operation_id_fn)
 
+    assert callable(operation_id_fn), operation_id_fn
     openapi = _build_openapi_spec(
         app,
         operation_id_fn,
-        hide_openapi_self,
+        hide_openapi_self=hide_openapi_self,
         hide_excluded=True,
         show_unused_tags=show_unused_tags,
         hide_sanic_static=hide_sanic_static,
     )
-    global _openapi
-    _openapi = openapi.serialize()
+    global _OPENAPI  # pylint: disable=global-statement
+    _OPENAPI = openapi.serialize()
 
     if show_excluded:
         openapi_all = _build_openapi_spec(
             app,
-            hide_openapi_self,
+            operation_id_fn,
+            hide_openapi_self=hide_openapi_self,
             hide_excluded=False,
             show_unused_tags=True,
             hide_sanic_static=False,
         )
-        global _openapi_all
-        _openapi_all = openapi_all.serialize()
+        global _OPENAPI_ALL  # pylint: disable=global-statement
+        _OPENAPI_ALL = openapi_all.serialize()
 
 
-def _build_openapi_spec(
+def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,(too-many-branches
     app: sanic.app.Sanic,
     operation_id_fn: Callable[[str, str, sanic.router.Route], str],
     hide_openapi_self=True,
@@ -149,42 +144,35 @@ def _build_openapi_spec(
     Build the OpenAPI spec.
 
     :param app:
+    :param operation_id_fn
     :param hide_openapi_self:
     :param hide_excluded:
     :return: The spec
     """
 
     # We may reuse this later
+    assert callable(operation_id_fn), operation_id_fn
     components = app.config.get("OPENAPI_COMPONENTS", None)
     if components:
         if not isinstance(components, Components):
             raise AssertionError(
-                "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(
-                    type(components)
-                )
+                "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components))
             )
 
     _oas_paths: List[Tuple[str, PathItem]] = []
-    for _uri, _route in app.router.routes_all.items():
+    for _uri, _route in app.router.routes_all.items():  # pylint: disable=too-many-nested-blocks
         assert isinstance(_uri, str)
         assert isinstance(_route, sanic.router.Route), type(_route)
         # NOTE: TODO: there's no order here at all to either the _uri nor the _route. OAS specs do not define an order
         # NOTE: TODO: but people do rather like having at least document order for the routes.
         if hide_openapi_self:
-            if (
-                _uri.startswith("/" + blueprint.url_prefix)
-                if blueprint.url_prefix
-                else True
-            ) and any([bp_uri in _uri for bp_uri in [r.uri for r in blueprint.routes]]):
+            if (_uri.startswith("/" + blueprint.url_prefix) if blueprint.url_prefix else True) and any(
+                [bp_uri in _uri for bp_uri in [r.uri for r in blueprint.routes]]
+            ):
                 # Remove self-documentation from the spec
                 continue
-            if (
-                _uri.startswith("/" + swagger_bp.url_prefix)
-                if swagger_bp.url_prefix
-                else True
-            ) and any(
-                [bp_uri in _uri for bp_uri in [r.uri for r in swagger_bp.routes]]
-                + [not bool(swagger_bp.routes)]
+            if (_uri.startswith("/" + swagger_bp.url_prefix) if swagger_bp.url_prefix else True) and any(
+                [bp_uri in _uri for bp_uri in [r.uri for r in swagger_bp.routes]] + [not bool(swagger_bp.routes)]
             ):
                 # Remove self-documentation from the spec by not adding.
                 continue
@@ -197,12 +185,8 @@ def _build_openapi_spec(
         uri_for_opearion_id = _uri
         parameters: List[Tuple[str, Parameter]] = []
         for _parameter in _route.parameters:
-            uri_parsed = re.sub(
-                "<" + _parameter.name + ".*?>", "{" + _parameter.name + "}", uri_parsed
-            )
-            uri_for_opearion_id = re.sub(
-                "<" + _parameter.name + ".*?>", _parameter.name, uri_for_opearion_id
-            )
+            uri_parsed = re.sub("<" + _parameter.name + ".*?>", "{" + _parameter.name + "}", uri_parsed)
+            uri_for_opearion_id = re.sub("<" + _parameter.name + ".*?>", _parameter.name, uri_for_opearion_id)
 
             # Sanic route parameters can give us a name, we know that it is in the path and we may be able to establish
             # the basic schema.
@@ -241,9 +225,7 @@ def _build_openapi_spec(
 
             path_item_summary: Optional[str] = path_item.summary
             if path_item.x_exclude and not hide_excluded:
-                path_item_summary = "[excluded] " + (
-                    path_item.summary if path_item.summary else ""
-                )
+                path_item_summary = "[excluded] " + (path_item.summary if path_item.summary else "")
 
             _parameters = path_item.parameters
             for _parameter in _parameters:
@@ -265,12 +247,12 @@ def _build_openapi_spec(
                                     _parameter.name,
                                     parameters[idx][1] + _parameter,
                                 )
-                        except AssertionError as e:
+                        except AssertionError as ex:
                             raise AssertionError(
                                 "For `{} {}` ({}) the `{}` param is invalid: {}".format(
-                                    _method, _uri, str(_func), _parameter.name, e
+                                    _method, _uri, str(_func), _parameter.name, ex
                                 )
-                            )
+                            ) from ex
                 else:
                     parameters.append((_parameter.name, _parameter))
 
@@ -295,12 +277,12 @@ def _build_openapi_spec(
                 description=path_item.description,
                 parameters=[p[1] for p in parameters],
                 tags=sorted(pathitem_tag_names),
-                deprecated=path_item.x_deprecated_holder or False,
+                deprecated=path_item.x_deprecated_holder,
                 request_body=path_item.request_body,
                 # TODO
-                servers=NotYetImplemented,
-                security=NotYetImplemented,
-                callbacks=NotYetImplemented,
+                servers=NOT_YET_IMPLEMENTED,
+                security=NOT_YET_IMPLEMENTED,
+                callbacks=NOT_YET_IMPLEMENTED,
             )
 
             _path = PathItem(**operations)
@@ -331,23 +313,21 @@ def _build_openapi_spec(
     )
 
     _v3_paths = Paths(_oas_paths)
-    _v3_tags: List[Tag] = sorted({t for t in doc_tags.values()})
+    _v3_tags: List[Tag] = sorted(doc_tags.values())
 
-    if not show_unused_tags:
+    if not show_unused_tags:  # pylint: disable=too-many-nested-blocks
         # Check that the tags are in use. This can depend on `hide_excluded`, so we re-use the _v3_paths.
         in_use_tags: Set[Tag] = set()
         for tag in _v3_tags:
-            for path, path_item in _v3_paths:
+            for _path, path_item in _v3_paths:
                 for op_name in Operation.OPERATION_NAMES:
-                    op: Operation = getattr(path_item, op_name)
-                    if op:
-                        op_tag_names = op.tags
+                    operation: Operation = getattr(path_item, op_name)
+                    if operation:
+                        op_tag_names = operation.tags
                         if op_tag_names:
                             for op_tag_name in op_tag_names:
                                 if tag.name == op_tag_name:
-                                    if not any(
-                                        [t.name == op_tag_name for t in in_use_tags]
-                                    ):
+                                    if not any([t.name == op_tag_name for t in in_use_tags]):
                                         in_use_tags.add(tag)
         _v3_tags = sorted(in_use_tags)
 
@@ -355,16 +335,12 @@ def _build_openapi_spec(
     if servers:
         if not isinstance(servers, list):
             raise AssertionError(
-                "Your app.config's `OPENAPI_SERVERS` is not a list (of `Server`): {}".format(
-                    type(servers)
-                )
+                "Your app.config's `OPENAPI_SERVERS` is not a list (of `Server`): {}".format(type(servers))
             )
         for server in servers:
             if not isinstance(server, Server):
                 raise AssertionError(
-                    "You app.config's `OPENAPI_SERVERS` server `{}` is not a `Server`: {}".format(
-                        server, type(server)
-                    )
+                    "You app.config's `OPENAPI_SERVERS` server `{}` is not a `Server`: {}".format(server, type(server))
                 )
 
     security = app.config.get("OPENAPI_SECURITY", None)
@@ -407,12 +383,11 @@ def _build_openapi_spec(
 
 @blueprint.route("/spec.json")
 def spec_v3(_):
-    return sanic.response.json(_openapi)
+    return sanic.response.json(_OPENAPI)
 
 
 @blueprint.route("/spec.all.json")
 def spec_all(_):
-    if _openapi_all:
-        return sanic.response.json(_openapi_all)
-    else:
-        raise sanic.exceptions.NotFound()
+    if _OPENAPI_ALL:
+        return sanic.response.json(_OPENAPI_ALL)
+    raise sanic.exceptions.NotFound("Not found")

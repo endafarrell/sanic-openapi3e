@@ -24,13 +24,7 @@ app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
 schemas = {
-    "int.min4": doc.Schema(
-        title="int.min4",
-        _type="integer",
-        _format="int32",
-        minimum=4,
-        description="Minimum: 4",
-    ),
+    "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",),
     "days": days_of_week,
 }
 components = doc.Components(schemas=schemas)
@@ -40,18 +34,10 @@ dow_ref = doc.Reference("#/components/schemas/days")
 
 
 @app.get("/simple/01/from/<start>/to/<end>/in/<hops:int>")
+@doc.parameter(name="start", description="Start day", required=True, _in="path", schema=dow_ref)
+@doc.parameter(name="end", description="End day", required=True, _in="path", schema=dow_ref)
 @doc.parameter(
-    name="start", description="Start day", required=True, _in="path", schema=dow_ref
-)
-@doc.parameter(
-    name="end", description="End day", required=True, _in="path", schema=dow_ref
-)
-@doc.parameter(
-    name="hops",
-    description="hops to use",
-    required=True,
-    _in="path",
-    schema=int_min_4_ref,
+    name="hops", description="hops to use", required=True, _in="path", schema=int_min_4_ref,
 )
 def get_start_end_hops(request, start: str, end: str, hops: int):
     d = locals()

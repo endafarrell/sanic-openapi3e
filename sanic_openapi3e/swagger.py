@@ -1,3 +1,4 @@
+"""Adds a /swagger endpoint to your Sanic app."""
 import os.path
 
 from sanic.blueprints import Blueprint

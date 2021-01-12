@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """
 OpenAPI Spec 3.0.2 types, though without any `Specification Extensions
 <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#specificationExtensions>`_
@@ -25,20 +26,18 @@ This implementation has some known limitations:
 * Phrases in the spec like "MUST be in the format of a URL.", or "MUST be in the format of an email address." are noted,
   in the docs, but not checked.
 * There is no accommodation for Specification Extensions.
-* Inconsistent use of Optional[type] vs type throughout.
 * Schema.items is not well understood, your mileage may vary.
 * SecurityScheme (specifically the REQUIREDs) are not well understood, and so no validation checks on REQUIRED fields
   are done.
 
 """
+# pylint: disable=too-few-public-methods
 import json
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 
-def _assert_type(
-    element: Any, types: Sequence[Any], name: str, clazz: Type[Any]
-) -> None:
+def _assert_type(element: Any, types: Sequence[Any], name: str, clazz: Type[Any]) -> None:
     """
     Utility to help assert types are only as expected.
 
@@ -59,24 +58,16 @@ def _assert_required(element, name, clazz, why=""):
     assert isinstance(name, str)
 
     if not element:
-        raise AssertionError(
-            "For `{}`, the field `{}` is required{}.".format(
-                clazz.__qualname__, name, why
-            )
-        )
+        raise AssertionError("For `{}`, the field `{}` is required{}.".format(clazz.__qualname__, name, why))
 
 
 def _assert_strictly_greater_than_zero(element, name, clazz):
     assert isinstance(name, str)
     if element is not None:
-        assert isinstance(
-            element, int
-        ), "For `{}`, the field `{}` must be an int if supplied.".format(
+        assert isinstance(element, int), "For `{}`, the field `{}` must be an int if supplied.".format(
             clazz.__qualname__, name
         )
-        assert (
-            element > 0
-        ), "For `{}`, the field `{}` must be strictly greater than 0: {} is not".format(
+        assert element > 0, "For `{}`, the field `{}` must be strictly greater than 0: {} is not".format(
             clazz.__qualname__, name, element
         )
 
@@ -133,6 +124,8 @@ NoneType = type(None)
 
 
 class OObject:
+    """A base object for sanic_openapi3e. Internal."""
+
     @staticmethod
     def _serialize(value: Any, for_repr=False) -> Union[Dict, List[Dict], Any]:
         """
@@ -144,10 +137,7 @@ class OObject:
             return value.serialize(for_repr=for_repr)
 
         if isinstance(value, dict):
-            return {
-                openapi_keyname(k): OObject._serialize(v, for_repr=for_repr)
-                for k, v in value.items()
-            }
+            return {openapi_keyname(k): OObject._serialize(v, for_repr=for_repr) for k, v in value.items()}
 
         if isinstance(value, list):
             return [OObject._serialize(v, for_repr=for_repr) for v in value]
@@ -161,38 +151,33 @@ class OObject:
         :return: A dict serialisation of self.
         :rtype: OrderedDict
         """
-        r = OrderedDict()
-        for k, v in self.__dict__.items():
+        _repr = OrderedDict()
+        for key, value in self.__dict__.items():
 
-            if v is None or v == []:
+            if value is None or value == []:
                 continue
-            if k.startswith("x_") and not for_repr:
+            if key.startswith("x_") and not for_repr:
                 continue
-            k2 = openapi_keyname(k)
-            if k2 == "parameters" and self.__class__.__qualname__ in (
-                "PathItem",
-                "Operation",
-            ):
-                v2 = list(OObject._serialize(e, for_repr=for_repr) for e in v)
-            elif k2 == "security":
-                v2 = list(
-                    SecurityRequirement._serialize(sr, for_repr=for_repr) for sr in v
+            key2 = openapi_keyname(key)
+            if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
+                value2 = list(OObject._serialize(e, for_repr=for_repr) for e in value)
+            elif key2 == "security":
+                value2 = list(
+                    SecurityRequirement._serialize(sr, for_repr=for_repr)  # pylint: disable=protected-access
+                    for sr in value
                 )
             else:
-                v2 = OObject._serialize(v)
-            if not v2:
+                value2 = OObject._serialize(value)
+            if not value2:
                 continue
-            r[k2] = v2
-        return r
+            _repr[key2] = value2
+        return _repr
 
     def __str__(self):
         return json.dumps(self.serialize(), sort_keys=True)
 
     def __repr__(self):
-        return "{}{}".format(
-            self.__class__.__qualname__,
-            json.dumps(self.serialize(for_repr=True), sort_keys=True),
-        )
+        return "{}{}".format(self.__class__.__qualname__, json.dumps(self.serialize(for_repr=True), sort_keys=True),)
 
 
 # --------------------------------------------------------------- #
@@ -201,11 +186,15 @@ class OObject:
 
 
 class OType(OObject):
-    name: str
-    formats: List[str]
+    """A sanic_openapi3e class to hold OpenAPI types. Internal."""
+
+    name: str = "otype"
+    formats: List[str] = []
 
 
 class OInteger(OType):
+    """A sanic_openapi3e class to hold OpenAPI integer types of formats `int32` and/or `int64`."""
+
     name = "integer"
     formats = ["int32", "int64"]
 
@@ -220,6 +209,8 @@ class OInteger(OType):
 
 
 class ONumber(OType):
+    """A sanic_openapi3e class to hold OpenAPI non-integer numeric types of formats `float` and `double`."""
+
     name = "number"
     formats = ["float", "double"]
 
@@ -234,6 +225,11 @@ class ONumber(OType):
 
 
 class OString(OType):
+    """
+    A sanic_openapi3e class to hold OpenAPI string types of formats `byte`, `binary`, `date`, `date-time` and
+    `password`.
+    """
+
     name = "string"
     formats = ["byte", "binary", "date", "date-time", "password"]
 
@@ -248,6 +244,11 @@ class OString(OType):
 
 
 class OBoolean(OType):
+    """
+    A sanic_openapi3e class to hold OpenAPI string types of formats `byte`, `binary`, `date`, `date-time` and
+    `password`.
+    """
+
     name = "boolean"
     formats: List[str] = []
 
@@ -270,11 +271,10 @@ class OBoolean(OType):
 # Info Object
 # --------------------------------------------------------------- #
 class Contact(OObject):
+    """Contact information for the exposed API."""
+
     def __init__(
-        self,
-        name: Optional[str] = None,
-        url: Optional[str] = None,
-        email: Optional[str] = None,
+        self, name: Optional[str] = None, url: Optional[str] = None, email: Optional[str] = None,
     ):
         """
         Contact information for the exposed API.
@@ -298,6 +298,8 @@ class Contact(OObject):
 
 
 class License(OObject):
+    """License information for the exposed API."""
+
     def __init__(self, name: str, url: Optional[str] = None):
         """
         License information for the exposed API.
@@ -318,7 +320,12 @@ class License(OObject):
 
 
 class Info(OObject):
-    def __init__(
+    """
+    The object provides metadata about the API. The metadata MAY be used by the clients if needed, and MAY be
+    presented in editing or documentation generation tools for convenience.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         title: str,
         version: str,
@@ -378,9 +385,9 @@ class Info(OObject):
 # Server Object. Since v3
 # --------------------------------------------------------------- #
 class ServerVariable(OObject):
-    def __init__(
-        self, default: str, enum: List[str] = None, description: Optional[str] = None
-    ):
+    """An object representing a Server Variable for server URL template substitution."""
+
+    def __init__(self, default: str, enum: List[str] = None, description: Optional[str] = None):
         """
         An object representing a Server Variable for server URL template substitution.
 
@@ -400,18 +407,10 @@ class ServerVariable(OObject):
         if enum:
             # All strings
             if not set(type(e) for e in enum) == {type("str")}:
-                raise AssertionError(
-                    "For `{}`, all enum values must be str.".format(
-                        self.__class__.__qualname__
-                    )
-                )
+                raise AssertionError("For `{}`, all enum values must be str.".format(self.__class__.__qualname__))
             # All unique
             if not len(set(enum)) == len(enum):
-                raise AssertionError(
-                    "For `{}`, all enum values must be unique.".format(
-                        self.__class__.__qualname__
-                    )
-                )
+                raise AssertionError("For `{}`, all enum values must be unique.".format(self.__class__.__qualname__))
         self.enum = enum
         """An enumeration of string values to be used if the substitution options are from a limited set."""
 
@@ -429,11 +428,10 @@ class ServerVariable(OObject):
 
 
 class Server(OObject):
+    """An object representing a Server."""
+
     def __init__(
-        self,
-        url: str,
-        description: Optional[str] = None,
-        variables: Optional[Dict[str, ServerVariable]] = None,
+        self, url: str, description: Optional[str] = None, variables: Optional[Dict[str, ServerVariable]] = None,
     ):
         """
         An object representing a Server.
@@ -473,6 +471,15 @@ class Server(OObject):
 # Components Object. Since v3
 # --------------------------------------------------------------- #
 class Reference(OObject):
+    """
+    A simple object to allow referencing other components in the specification, internally and externally.
+
+    The Reference Object is defined by JSON Reference and follows the same structure, behavior and rules.
+
+    For this specification, reference resolution is accomplished as defined by the JSON Reference specification and not
+    by the JSON Schema specification.
+    """
+
     def __init__(self, _ref: str):
         """
         A simple object to allow referencing other components in the specification, internally and externally.
@@ -493,6 +500,17 @@ class Reference(OObject):
 
 
 class Discriminator(OObject):
+    """
+    When request bodies or response payloads may be one of a number of different schemas, a discriminator object can be
+    used to aid in serialization, deserialization, and validation. The discriminator is a specific object in a schema
+    which is used to inform the consumer of the specification of an alternative schema based on the value associated
+    with it.
+
+    When using the discriminator, inline schemas will not be considered.
+
+    Note: in sanic_openapi3e, this object is not well tested.
+    """
+
     def __init__(self, property_name: str, mapping: Optional[Dict[str, str]] = None):
         """
         When request bodies or response payloads may be one of a number of different schemas, a discriminator object can
@@ -514,9 +532,7 @@ class Discriminator(OObject):
             for m_name, m_value in mapping.items():
                 if not isinstance(m_value, str):
                     raise AssertionError(
-                        "For `{}.mapping[{}]` the value must be a str.".format(
-                            self.__class__.__qualname__, m_name
-                        )
+                        "For `{}.mapping[{}]` the value must be a str.".format(self.__class__.__qualname__, m_name)
                     )
 
         self.property_name = property_name
@@ -527,7 +543,14 @@ class Discriminator(OObject):
 
 
 class XML(OObject):
-    def __init__(
+    """
+    A metadata object that allows for more fine-tuned XML model definitions.
+
+    When using arrays, XML element names are not inferred (for singular/plural forms) and the name property SHOULD be
+    used to add that information. See examples for expected behavior.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         name: Optional[str] = None,
         namespace: Optional[str] = None,
@@ -588,6 +611,8 @@ class XML(OObject):
 
 
 class ExternalDocumentation(OObject):
+    """Allows referencing an external resource for extended documentation."""
+
     def __init__(self, url: str, description: Optional[str] = None):
         """
         Allows referencing an external resource for extended documentation.
@@ -611,6 +636,14 @@ class ExternalDocumentation(OObject):
 
 
 class Example(OObject):
+    """
+    In the `spec <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#example-object>`_ there is
+    no top-line description, but there is supplemental doc.
+
+    In all cases, the example value is expected to be compatible with the type schema of its associated value. Tooling
+    implementations MAY choose to validate compatibility automatically, and reject the example value(s) if incompatible.
+    """
+
     def __init__(
         self,
         summary: Optional[str] = None,
@@ -665,8 +698,16 @@ class Example(OObject):
         """
 
 
-class Header(OObject):
-    def __init__(
+class Header(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    The Header Object follows the structure of the Parameter Object with the following changes:
+
+    - name MUST NOT be specified, it is given in the corresponding headers map.
+    - o-in (`in`) MUST NOT be specified, it is implicitly in header.
+    - All traits that are affected by the location MUST be applicable to a location of header (for example, style).
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         description: Optional[str] = None,
         required: bool = False,
@@ -737,22 +778,18 @@ class Header(OObject):
             for ex_name, ex in examples.items():
                 if not isinstance(ex, (Example, Reference)):
                     raise AssertionError(
-                        "For `{}.examples`, all values must be either an `Example` or a `Reference`".format(
-                            self.__class__.__qualname__
+                        "For `{}.examples`, values must be an `Example` or a `Reference`. For {} it is a {}".format(
+                            self.__class__.__qualname__, ex_name, type(ex)
                         )
                     )
         if content:
             if len(content) != 1:
-                raise AssertionError(
-                    "For `{}.content` MUST only contain one entry".format(
-                        self.__class__.__qualname__
-                    )
-                )
+                raise AssertionError("For `{}.content` MUST only contain one entry".format(self.__class__.__qualname__))
             for c_name, media_type in content.items():
                 if not isinstance(c_name, MediaType):
                     raise AssertionError(
-                        "For `{}.content`, the value must be a `MediaType`".format(
-                            self.__class__.__qualname__
+                        "For `{}.content`, values must be a `MediaType`. For {} it is a {}".format(
+                            self.__class__.__qualname__, c_name, type(media_type)
                         )
                     )
 
@@ -825,7 +862,9 @@ class Header(OObject):
 
 
 class Encoding(OObject):
-    def __init__(
+    """A single encoding definition applied to a single schema property."""
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         content_type: Optional[str] = None,
         headers: Optional[Dict[str, Union[Header, Reference]]] = None,
@@ -875,21 +914,10 @@ class Encoding(OObject):
                 #         "Content-Type is described separately and SHALL be ignored in `Encoding.headers`."
                 #     )
         if style:
-            assert style in (
-                "matrix",
-                "label",
-                "form",
-                "simple",
-                "spaceDelimited",
-                "pipeDelimited",
-                "deepObject",
-            )
+            assert style in ("matrix", "label", "form", "simple", "spaceDelimited", "pipeDelimited", "deepObject",)
             # TODO - add (where?) check that the style is suitable for this type+location.
         if explode is None:
-            if style == "form":
-                explode = True
-            else:
-                explode = False
+            explode = bool(style == "form")
 
         _assert_type(explode, (bool,), "explode", self.__class__)
         _assert_type(allow_reserved, (bool,), "allow_reserved", self.__class__)
@@ -932,6 +960,8 @@ class Encoding(OObject):
 
 
 class MediaType(OObject):
+    """Each Media Type Object provides schema and examples for the media type identified by its key."""
+
     def __init__(
         self,
         schema: Optional[Union["Schema", Reference]] = None,
@@ -966,16 +996,16 @@ class MediaType(OObject):
             for ex_name, ex in examples.items():
                 if not isinstance(ex, (Example, Reference)):
                     raise AssertionError(
-                        "For `{}.examples, each value should be an `Example` or a `Reference`".format(
-                            self.__class__.__qualname__
+                        "For `{}.examples, values should be an `Example` or a `Reference`. For {} it is a {}".format(
+                            self.__class__.__qualname__, ex_name, ex
                         )
                     )
         if encoding:
             for e_name, enc in encoding.items():
                 if not isinstance(enc, Encoding):
                     raise AssertionError(
-                        "For `{}.encoding, each value should be an `Encoding`.".format(
-                            self.__class__.__qualname__
+                        "For `{}.encoding, values should be an `Encoding`. For {} it is a {}".format(
+                            self.__class__.__qualname__, e_name, type(enc)
                         )
                     )
 
@@ -1005,7 +1035,62 @@ class MediaType(OObject):
         """
 
 
-class Schema(OObject):
+class Schema(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    The Schema Object allows the definition of input and output data types. These types can be objects, but also
+    primitives and arrays. This object is an extended subset of the `JSON Schema Specification Wright Draft 00
+    <https://tools.ietf.org/html/draft-wright-json-schema-validation-00>`_.
+
+    For more information about the properties, see JSON Schema Core and JSON Schema Validation. Unless stated
+    otherwise, the property definitions follow the JSON Schema.
+
+    The following properties are taken directly from the JSON Schema definition and follow the same specifications:
+
+    - title
+    - multiple_of
+    - maximum
+    - exclusive_maximum
+    - minimum
+    - exclusive_minimum
+    - max_length
+    - min_length
+    - pattern
+    - max_items
+    - min_items
+    - unique_items
+    - max_properties
+    - min_properties
+    - required
+    - enum
+
+    The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
+    OpenAPI Specification.
+
+    - type - Value MUST be a string. Multiple types via an array are not supported.
+    - all_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+    - one_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+    - any_of - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+    - _not - Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema.
+    - items - Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and
+        not a standard JSON Schema. items MUST be present if the type is array.
+    - properties - Property definitions MUST be a Schema Object and not a standard JSON Schema (inline or
+        referenced).
+    - additional_properties - Inline or referenced schema MUST be of a Schema
+        Object and not a standard JSON Schema. Consistent with JSON Schema.
+    - description - CommonMark syntax MAY be used for rich text representation.
+    - _format - See Data Type Formats for further details. While relying on JSON Schema's defined formats, the
+        OAS offers a few additional predefined formats.
+    - default - The default value represents what would be assumed by the consumer of the input as the value of the
+        schema if one is not provided. Unlike JSON Schema, the value MUST conform to the defined type for the Schema
+        Object defined at the same level. For example, if type is string, then default can be "foo" but cannot be 1.
+
+    Alternatively, any time a Schema Object can be used, a Reference Object can be used in its place. This allows
+    referencing definitions instead of defining them inline.
+
+    Additional properties defined by the JSON Schema specification that are not mentioned here are strictly
+    unsupported.
+    """
+
     Integer = None  # type: Schema
     """A pre-defined Integer Schema. Very simple, no properties other than `format` of `int64`."""
 
@@ -1024,7 +1109,7 @@ class Schema(OObject):
     Strings = None  # type: Schema
     """A pre-defined String Schema. An array of (simple) String elements."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements
         self,
         _type: str,
         #
@@ -1249,10 +1334,7 @@ class Schema(OObject):
         # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
         _assert_type(properties, (Schema, Reference), "properties", self.__class__)
         _assert_type(
-            additional_properties,
-            (Schema, Reference),
-            "additional_properties",
-            self.__class__,
+            additional_properties, (Schema, Reference), "additional_properties", self.__class__,
         )
         _assert_type(description, (str,), "description", self.__class__)
         _assert_type(_format, (str,), "_format", self.__class__)
@@ -1264,29 +1346,21 @@ class Schema(OObject):
         _assert_type(read_only, (bool,), "read_only", self.__class__)
         _assert_type(write_only, (bool,), "write_only", self.__class__)
         _assert_type(xml, (XML,), "xml", self.__class__)
-        _assert_type(
-            external_docs, (ExternalDocumentation,), "external_docs", self.__class__
-        )
+        _assert_type(external_docs, (ExternalDocumentation,), "external_docs", self.__class__)
         # Note: example is defined to have the type `Any`
         _assert_type(deprecated, (bool,), "deprecated", self.__class__)
         _assert_strictly_greater_than_zero(multiple_of, "multiple_of", self.__class__)
         _assert_strictly_greater_than_zero(max_length, "max_length", self.__class__)
         _assert_strictly_greater_than_zero(min_length, "min_length", self.__class__)
         _assert_strictly_greater_than_zero(max_items, "max_items", self.__class__)
-        _assert_strictly_greater_than_zero(
-            min_properties, "min_properties", self.__class__
-        )
+        _assert_strictly_greater_than_zero(min_properties, "min_properties", self.__class__)
 
         if required is not None:
             assert required, "MUST have at least one element."
             assert set(type(e) for e in required) == {
                 type("str")
-            }, "For `{}.required`, all elements MUST be strings.".format(
-                self.__class__.__qualname__
-            )
-            assert len(set(required)) == len(
-                required
-            ), "For `{}.required`, all elements MUST be unique.".format(
+            }, "For `{}.required`, all elements MUST be strings.".format(self.__class__.__qualname__)
+            assert len(set(required)) == len(required), "For `{}.required`, all elements MUST be unique.".format(
                 self.__class__.__qualname__
             )
         # if enum:
@@ -1546,9 +1620,7 @@ class Schema(OObject):
 
         if _type == "array" and not items:
             raise AssertionError(
-                "For `{}`, items MUST be present if the type is array.".format(
-                    self.__class__.__qualname__
-                )
+                "For `{}`, items MUST be present if the type is array.".format(self.__class__.__qualname__)
             )
         if _format:
             # TODO - must these be in OTypeFormat[_type]?
@@ -1582,7 +1654,7 @@ class Schema(OObject):
     @classmethod
     def get_enum_type(cls, enum: List) -> str:
         _assert_type(enum, (list,), "enum", cls)
-        assert len(enum)
+        assert enum
         enum_types = {type(e) for e in enum}
         if len(enum_types) != 1:
             raise AssertionError(
@@ -1594,14 +1666,16 @@ class Schema(OObject):
         # At definition, the Schema.String is set to `None`, but below (and before code gets to use it) it is set to
         # `Schema(_type="string")`. This is for python3.6 reasons. Thus, mypy needs to be silenced for the next line and
         # the line just before the return.
-        _enum_type: str = Schema.String._type  # type: ignore
-        enum0_schema: Optional[Schema] = {
-            int: Schema.Integer,
-            str: Schema.String,
-            float: Schema.Number,
-        }.get(type(enum[0]))
+        schema_string_type = Schema.String._type  # pylint: disable=protected-access
+        assert schema_string_type
+        _enum_type: str = schema_string_type
+        enum0_schema: Optional[Schema] = {int: Schema.Integer, str: Schema.String, float: Schema.Number,}.get(
+            type(enum[0])
+        )
         if enum0_schema:
-            _enum_type = enum0_schema._type  # type: ignore
+            enum0_schema_type = enum0_schema._type  # pylint: disable=protected-access
+            assert enum0_schema_type
+            _enum_type = enum0_schema_type
 
         return _enum_type
 
@@ -1614,8 +1688,27 @@ Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize())
 Schema.Strings = Schema(_type="array", items=Schema.String.serialize())
 
 
-class Parameter(OObject):
-    def __init__(
+class Parameter(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    Describes a single operation parameter.
+
+    A unique parameter is defined by a combination of a name and location.
+
+    Parameter Locations
+    -------------------
+
+    There are four possible parameter locations specified by the `location` ("in" in the spec) field:
+
+    - path - Used together with Path Templating, where the parameter value is actually part of the operation's URL.
+             This does not include the host or base path of the API. For example, in /items/{itemId}, the path
+             parameter is itemId.
+    - query - Parameters that are appended to the URL. For example, in /items?id=###, the query parameter is id.
+    - header - Custom headers that are expected as part of the request. Note that RFC7230 states header names are
+               case insensitive.
+    - cookie - Used to pass a specific cookie value to the API.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements
         self,
         name: str,
         _in: str,
@@ -1654,6 +1747,7 @@ class Parameter(OObject):
             Templating for further information. If in is "header" and the name field is "Accept", "Content-Type" or
             "Authorization", the parameter definition SHALL be ignored. For all other cases, the name corresponds to the
             parameter name used by the in property.
+
         :param _in: REQUIRED. The location of the parameter. Possible values are "query", "header", "path" or
             "cookie".
         :param description: A brief description of the parameter. This could contain examples of use. CommonMark syntax
@@ -1714,9 +1808,7 @@ class Parameter(OObject):
         _assert_required(name, "name", self.__class__)
         if _in == "requestBody":
             raise AssertionError(
-                """For `{}`, the OpenAPI spec requires you to use a `@doc.requestBody` and not a `@doc.parameter`""".format(
-                    name
-                )
+                """For `{}`, the OpenAPI spec requires a `@doc.requestBody` and not a `@doc.parameter`""".format(name)
             )
         if _in not in ("query", "header", "path", "cookie"):
             raise AssertionError(
@@ -1734,23 +1826,17 @@ class Parameter(OObject):
             for ex_name, ex in examples.items():
                 if not isinstance(ex, (Example, Reference)):
                     raise AssertionError(
-                        "For `{}.examples`, all values must be either an `Example` or a `Reference`".format(
-                            self.__class__.__qualname__
+                        "For `{}.examples`, values must be either an `Example` or a `Reference`. {} is a {}".format(
+                            self.__class__.__qualname__, ex_name, type(ex)
                         )
                     )
         if content:
             if len(content) != 1:
-                raise AssertionError(
-                    "For `{}.content` MUST only contain one entry".format(
-                        self.__class__.__qualname__
-                    )
-                )
-            for c_name, media_type in content.items():
+                raise AssertionError("For `{}.content` MUST only contain one entry".format(self.__class__.__qualname__))
+            for c_name, _media_type in content.items():
                 if not isinstance(c_name, MediaType):
                     raise AssertionError(
-                        "For `{}.content`, the value must be a `MediaType`".format(
-                            self.__class__.__qualname__
-                        )
+                        "For `{}.content`, the value must be a `MediaType`".format(self.__class__.__qualname__)
                     )
 
         # Assignments and docs
@@ -1848,49 +1934,57 @@ class Parameter(OObject):
     def __add__(self, other):
         assert isinstance(other, Parameter)
         _d = dict()
-        for k, v in self.__dict__.items():
-            if not v:
-                _d[k] = getattr(other, k)
+        for key, value in self.__dict__.items():  # pylint: disable=too-many-nested-blocks
+            if not value:
+                _d[key] = getattr(other, key)
             else:
-                _d[k] = v
-                ov = getattr(other, k)
-                if ov:
-                    if v != ov:
+                _d[key] = value
+                other_value = getattr(other, key)
+                if other_value:
+                    if value != other_value:
                         # TODO - this should be done recursively. Move __add__ up to OObject?
                         # eg: schema:
                         # Schema{"type": "integer"} != Schema{"format": "int32", "minimum": 4, "type": "integer"}
-                        if isinstance(ov, Reference):
+                        if isinstance(other_value, Reference):
                             # Simple replace.
                             # TODO - check that the ref actually exists in the components.
                             # TODO - check that the ref is compatible
-                            _d[k] = ov
+                            _d[key] = other_value
 
-                        elif isinstance(v, OObject):
+                        elif isinstance(value, OObject):
                             v_d = dict()
-                            for v_k, v_v in v.__dict__.items():
+                            for v_k, v_v in value.__dict__.items():
                                 if not v_v:
-                                    v_d[v_k] = getattr(ov, v_k)
+                                    v_d[v_k] = getattr(other_value, v_k)
                                 else:
                                     v_d[v_k] = v_v
-                                    v_ov = getattr(ov, v_k)
+                                    v_ov = getattr(other_value, v_k)
                                     if v_ov:
-                                        assert v_v == v_ov, "{}.{}: {} != {}".format(
-                                            k, v_k, v_v, v_ov
-                                        )
+                                        assert v_v == v_ov, "{}.{}: {} != {}".format(key, v_k, v_v, v_ov)
 
                             # TODO: this use of globals is _OK_ but it would be nice to not need it.
-                            _d[k] = globals()[v.__class__.__qualname__](**v_d)
+                            _d[key] = globals()[value.__class__.__qualname__](**v_d)
 
                         else:
-                            raise AssertionError(
-                                "{}: {} != {}".format(k, getattr(self, k), ov)
-                            )
+                            raise AssertionError("{}: {} != {}".format(key, getattr(self, key), other_value))
 
         return Parameter(**_d)
 
 
 class Link(OObject):
-    def __init__(
+    """
+    The Link object represents a possible design-time link for a response. The presence of a link does not guarantee
+    the caller's ability to successfully invoke it, rather it provides a known relationship and traversal mechanism
+    between responses and other operations.
+
+    Unlike dynamic links (i.e. links provided in the response payload), the OAS linking mechanism does not require
+    link information in the runtime response.
+
+    For computing links, and providing instructions to execute them, a runtime expression is used for accessing
+    values in an operation and using them as parameters while invoking the linked operation.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         operation_ref: Optional[str] = None,
         operation_id: Optional[str] = None,
@@ -1967,6 +2061,11 @@ class Link(OObject):
 
 
 class Response(OObject):
+    """
+    Describes a single response from an API Operation, including design-time, static links to operations based on the
+    response.
+    """
+
     # This is reset from None to a Response directly after the class definition.
     DEFAULT_SUCCESS = None  # type: Response
 
@@ -2036,11 +2135,10 @@ Response.DEFAULT_SUCCESS = Response(description="Success")
 
 
 class RequestBody(OObject):
+    """Describes a single request body."""
+
     def __init__(
-        self,
-        content: Dict[str, MediaType],
-        description: Optional[str] = None,
-        required: bool = False,
+        self, content: Dict[str, MediaType], description: Optional[str] = None, required: bool = False,
     ):
         """
         Describes a single request body.
@@ -2075,12 +2173,19 @@ class RequestBody(OObject):
 
 
 class OAuthFlow(OObject):
+    """
+    Configuration details for a supported OAuth Flow.
+
+    Note: there is an ``Applies To`` column in the spec and its full meaning is not clear. Be advised that you may
+    need to check again how this applies to you. See `OAuth Flow Object
+    <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#oauth-flow-object>`_.
+    Specifically unclear (and inconsistent with some other sections of the docs) is whether the "REQUIRED"
+    terminology only applies to the value in the ``Applies To`` column. For this reason, there is no validation that
+    (possibly) REQUIRED values are presented.
+    """
+
     def __init__(
-        self,
-        authorization_url: str,
-        token_url: str,
-        scopes: Dict[str, str],
-        refresh_url: Optional[str] = None,
+        self, authorization_url: str, token_url: str, scopes: Dict[str, str], refresh_url: Optional[str] = None,
     ):
         """
         Configuration details for a supported OAuth Flow.
@@ -2123,6 +2228,8 @@ class OAuthFlow(OObject):
 
 
 class OAuthFlows(OObject):
+    """Allows configuration of the supported OAuth Flows."""
+
     def __init__(
         self,
         implicit: Optional[OAuthFlow] = None,
@@ -2157,8 +2264,21 @@ class OAuthFlows(OObject):
         """Configuration for the OAuth Authorization Code flow. Previously called accessCode in OpenAPI 2.0."""
 
 
-class SecurityScheme(OObject):
-    def __init__(
+class SecurityScheme(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    Defines a security scheme that can be used by the operations. Supported schemes are HTTP authentication, an API
+    key (either as a header, a cookie parameter or as a query parameter), OAuth2's common flows (implicit, password,
+    application and access code) as defined in RFC6749, and OpenID Connect Discovery.
+
+    Note: there is an ``Applies To`` column in the spec and its full meaning is not clear. Be advised that you may
+    need to check again how this applies to you. See `Security Scheme Object
+    <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#security-scheme-object>`_.
+    Specifically unclear (and inconsistent with some other sections of the docs) is whether the "REQUIRED"
+    terminology only applies to the ``_type`` value in the ``Applies To`` column. For this reason, there is not
+    validation that (possibly) REQUIRED values are presented.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         _type: str,
         name: str,
@@ -2232,7 +2352,7 @@ class SecurityScheme(OObject):
         self.flows = flows
         """REQUIRED (but not checked). An object containing configuration information for the flow types supported."""
 
-        self.openid_Connect_url = openid_connect_url
+        self.openid_connect_url = openid_connect_url
         """
         REQUIRED (but not checked). OpenId Connect URL to discover OAuth2 configuration values. This MUST be in the form 
         of a URL.
@@ -2240,6 +2360,16 @@ class SecurityScheme(OObject):
 
 
 class Callback(OObject):
+    """
+    A map of possible out-of band callbacks related to the parent operation. Each value in the map is a PathItem
+    Object that describes a set of requests that may be initiated by the API provider and the expected responses.
+    The key value used to identify the callback object is an expression, evaluated at runtime, that identifies a URL
+    to use for the callback operation.
+
+    Note: there is a _lot_ more documentation available in the spec for callbacks. `See
+    <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#callback-object>`_ .
+    """
+
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
     def __init__(self, callbacks: Dict[Any, "PathItem"]):
         """
@@ -2309,8 +2439,14 @@ class Callback(OObject):
         return iter(self.__dict__)
 
 
-class Components(OObject):
-    def __init__(
+class Components(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    Holds a set of reusable objects for different aspects of the OAS. All objects defined within the components
+    object will have no effect on the API unless they are explicitly referenced from properties outside the
+    components object.
+    """
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         schemas: Optional[Dict[str, Union[Schema, Reference]]] = None,
         responses: Optional[Dict[str, Union[Response, Reference]]] = None,
@@ -2380,6 +2516,34 @@ class Components(OObject):
 
 
 class Responses(OObject):
+    """
+    A container for the expected responses of an operation. The container maps a HTTP response code to the expected
+    response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
+    may not be known in advance. However, documentation is expected to cover a successful operation response and any
+    known errors.
+
+    The default MAY be used as a default response object for all HTTP codes that are not covered individually by the
+    specification.
+
+    The Responses Object MUST contain at least one response code, and it SHOULD be the response for a successful
+    operation call.
+
+    "default" key in responses
+    --------------------------
+    The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to
+    cover undeclared responses. A Reference Object can link to a response that the OpenAPI Object's
+    components/responses section defines.
+
+    HTTP status code keys in responses
+    ----------------------------------
+    Any HTTP status code can be used as the property name, but only one property per code, to describe the expected
+    response for that HTTP status code. A Reference Object can link to a response that is defined in the OpenAPI
+    Object's components/responses section. This field MUST be enclosed in quotation marks (for example, "200") for
+    compatibility between JSON and YAML. To define a range of response codes, this field MAY contain the uppercase
+    wildcard character X. For example, 2XX represents all response codes between [200-299]. Only the following range
+    definitions are allowed: 1XX, 2XX, 3XX, 4XX, and 5XX. If a response is defined using an explicit code, the
+    explicit code definition takes precedence over the range definition for that code.
+    """
 
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
     def __init__(self, responses: Optional[Dict[str, Response]] = None):
@@ -2456,8 +2620,8 @@ class Responses(OObject):
     def pop(self, *args):
         return self.__dict__.pop(*args)
 
-    def __cmp__(self, other):
-        return self.__dict__.__cmp__(other)
+    # def __cmp__(self, other):
+    #     return self.__dict__.__cmp__(other)
 
     def __contains__(self, item):
         return item in self.__dict__
@@ -2466,7 +2630,19 @@ class Responses(OObject):
         return iter(self.__dict__)
 
 
-class SecurityRequirement(OObject):
+class SecurityRequirement(OObject):  # pylint: disable=missing-function-docstring
+    """
+    Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a
+    security scheme declared in the Security Schemes under the Components Object.
+
+    Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a
+    request to be authorized. This enables support for scenarios where multiple query parameters or HTTP headers are
+    required to convey security information.
+
+    When a list of Security Requirement Objects is defined on the OpenAPI Object or Operation Object, only one of
+    the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+    """
+
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
     def __init__(self, names: Dict[str, List[str]]):
         """
@@ -2541,12 +2717,12 @@ class SecurityRequirement(OObject):
         return iter(self.__dict__)
 
 
-class Operation(OObject):
-    OPERATION_NAMES = frozenset(
-        ("get", "put", "post", "delete", "options", "head", "patch", "trace")
-    )
+class Operation(OObject):  # pylint: disable=too-many-instance-attributes
+    """Describes a single API operation on a path."""
 
-    def __init__(
+    OPERATION_NAMES = frozenset(("get", "put", "post", "delete", "options", "head", "patch", "trace"))
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         operation_id: str,
         responses: Responses,
@@ -2677,11 +2853,13 @@ class Operation(OObject):
 
 
 class Tag(OObject):
+    """
+    Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a Tag Object per tag
+    defined in the Operation Object instances.
+    """
+
     def __init__(
-        self,
-        name: str,
-        description: Optional[str] = None,
-        external_docs: Optional[ExternalDocumentation] = None,
+        self, name: str, description: Optional[str] = None, external_docs: Optional[ExternalDocumentation] = None,
     ):
         """
         Adds metadata to a single tag that is used by the Operation Object. It is not mandatory to have a Tag Object per
@@ -2718,15 +2896,17 @@ class Tag(OObject):
     def __lt__(self, other):
         if not isinstance(other, type(self)):
             raise NotImplementedError()
-        return (self.name, self.description, self.external_docs) < (
-            other.name,
-            other.description,
-            other.external_docs,
-        )
+        return (self.name, self.description, self.external_docs) < (other.name, other.description, other.external_docs,)
 
 
-class PathItem(OObject):
-    def __init__(
+class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
+    """
+    Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
+    itself is still exposed to the documentation viewer but they will not know which operations and parameters are
+    available.
+    """
+
+    def __init__(  # pylint: disable=too-many-locals, too-many-arguments
         self,
         dollar_ref: Optional[str] = None,
         summary: Optional[str] = None,
@@ -2744,9 +2924,9 @@ class PathItem(OObject):
         request_body: Optional[Union[RequestBody, Reference]] = None,
         # TODO = add hide/suppress?
         x_tags_holder: Optional[List[Tag]] = None,
-        x_deprecated_holder: Optional[bool] = None,
+        x_deprecated_holder: bool = False,
         x_responses_holder: Optional[Dict[str, Response]] = None,
-        x_exclude: Optional[bool] = None,
+        x_exclude: bool = False,
     ):
         """
         Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
@@ -2833,9 +3013,7 @@ class PathItem(OObject):
         self.servers = servers
         """An alternative server array to service all operations in this path."""
 
-        self.parameters: List[
-            Union[Parameter, Reference]
-        ] = parameters if parameters is not None else []
+        self.parameters: List[Union[Parameter, Reference]] = parameters if parameters is not None else []
         """
         A list of parameters that are applicable for all the operations described under this path. These 
         parameters can be overridden at the operation level, but cannot be removed there. The list MUST NOT 
@@ -2845,15 +3023,18 @@ class PathItem(OObject):
         """
 
         self.request_body = request_body
-        self.x_tags_holder: List[
-            Tag
-        ] = x_tags_holder if x_tags_holder is not None else []
+        self.x_tags_holder: List[Tag] = x_tags_holder if x_tags_holder is not None else []
         self.x_deprecated_holder = x_deprecated_holder
         self.x_responses_holder: Responses = Responses(x_responses_holder)
         self.x_exclude = x_exclude
 
 
 class Paths(OObject):
+    """
+    Holds the relative endpoints to the individual endpoints and their operations. The path is appended to the URL
+    from the Server Object in order to construct the full URL. The Paths MAY be empty, due to ACL constraints.
+    """
+
     def __init__(self, path_items: Optional[List[Tuple[str, PathItem]]] = None):
         """
         Holds the relative endpoints to the individual endpoints and their operations. The path is appended to the URL
@@ -2892,8 +3073,7 @@ class Paths(OObject):
             path_item = PathItem()
             self._paths.append((item, path_item))
             return self._paths[-1][1]
-        else:
-            raise KeyError(item)
+        raise KeyError(item)
 
     def __contains__(self, item):
         for _parsed_uri, _path_item in self._paths:
@@ -2916,18 +3096,18 @@ class Paths(OObject):
         else:
             raise ValueError("locked")
 
-    def serialize(self, for_repr=False):
+    def serialize(self, for_repr=False) -> OrderedDict:
         """
         Serialisation to a dict.
 
         :return: A dict serialisation of self.
-        :rtype: OrderedDict
         """
-        r = OrderedDict()
+        serialised = OrderedDict()
         for (uri, path_item) in self._paths:
             # Until the spec is being built, these `uri` are the decorated methods in your `app` or blueprints.
-            r[str(uri) if callable(uri) else uri] = path_item.serialize()
-        return r
+            assert not callable(uri), type(uri)
+            serialised[str(uri) if callable(uri) else uri] = path_item.serialize()
+        return serialised
 
     def __str__(self):
         return json.dumps(self.serialize())
@@ -2936,10 +3116,12 @@ class Paths(OObject):
         return "{}{}".format(self.__class__.__qualname__, json.dumps(self.serialize()))
 
 
-class OpenAPIv3(OObject):
+class OpenAPIv3(OObject):  # pylint: disable=too-many-instance-attributes
+    """The root document object of the OpenAPI document."""
+
     version = "3.0.2"
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         openapi: str,
         info: Info,
@@ -2979,9 +3161,7 @@ class OpenAPIv3(OObject):
         _assert_type(components, (Components,), "components", self.__class__)
         _assert_type(security, (list,), "security", self.__class__)
         _assert_type(tags, (list,), "tags", self.__class__)
-        _assert_type(
-            external_docs, (ExternalDocumentation,), "external_docs", self.__class__
-        )
+        _assert_type(external_docs, (ExternalDocumentation,), "external_docs", self.__class__)
 
         _assert_required(openapi, "openapi", self.__class__)
         _assert_required(info, "info", self.__class__)

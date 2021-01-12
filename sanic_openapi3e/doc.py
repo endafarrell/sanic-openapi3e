@@ -1,36 +1,29 @@
 """
 TODO - note: everything is documented at the PathItem level, not the Operation level.
 """
-from .oas_types import *  # <<-- here for users
+from .oas_types import *  # pylint: disable=unused-wildcard-import, wildcard-import  # <<-- here for users
 
 tags: Dict[str, Tag] = {}
 endpoints: Paths = Paths()
 
 
-def deprecated(boolean=True):
-    """
-    Deprecate a route by marking it as `@doc.deprecated()`, or `@doc.deprecated`.
-    """
-    if callable(boolean):
-        # As "boolean" is a callable, and the decorator is expected to be given a bool,
-        # it's fair (in this case) to assume that the sanic route handler was decorated
-        # like:
-        #
-        # >>> @doc.deprecated
-        # >>> async def a_deprecated_route_handler( ...)
-        #
-        # So, this time we note the function that was deprecated, and return it.
-        endpoints[boolean].x_deprecated_holder = True
-        return boolean
+def deprecated():
+    """Deprecate a route by marking it as `@doc.deprecated()`."""
 
-    # Not a callable? Ensure it's a bool
-    assert isinstance(
-        boolean, bool
-    ), "Only `True` or `False` are bool, {} ({}) is not.".format(boolean, type(boolean))
-
-    # Decorator called with a param, so we need to return a wrapped fn which will set the endpoint's value.
     def inner(func):
-        endpoints[func].x_deprecated_holder = boolean
+        endpoints[func].x_deprecated_holder = True
+        return func
+
+    return inner
+
+
+def exclude():
+    """
+    Deprecate a route by marking them as `@doc.exclude()`.
+    """
+
+    def inner(func):
+        endpoints[func].x_exclude = True
         return func
 
     return inner
@@ -48,42 +41,13 @@ def description(text: str):
     return inner
 
 
-def exclude(boolean=True):
-    """
-    Deprecate a route by marking them as `@doc.exclude()`, or `@doc.exclude`.
-    """
-    if callable(boolean):
-        # As "boolean" it's a callable, and the decorator is expected to be given a bool,
-        # it's fair (in this case) to assume that the sanic route handler was decorated
-        # like:
-        #
-        # >>> @doc.exclude
-        # >>> async def an_excluded_route_handler( ...)
-        #
-        # So, this time we note the function that was excluded, and return it.
-        endpoints[boolean].x_exclude = True
-        return boolean
-
-    # Not a callable? Ensure it's a bool
-    assert isinstance(
-        boolean, bool
-    ), "Only `True` or `False` are bool, {} ({}) is not.".format(boolean, type(boolean))
-
-    # Decorator called with a param, so we need to return a wrapped fn which will set the endpoint's value.
-    def inner(func):
-        endpoints[func].x_exclude = boolean
-        return func
-
-    return inner
-
-
 # noinspection PyShadowingNames
-def parameter(
+def parameter(  # pylint: disable=too-many-arguments
     name: str,
     _in="query",
-    description: Optional[str] = None,
+    description: Optional[str] = None,  # pylint: disable=redefined-outer-name
     required: Optional[bool] = None,
-    deprecated: bool = False,
+    deprecated: bool = False,  # pylint: disable=redefined-outer-name
     allow_empty_value: Optional[bool] = None,
     choices: Optional[List] = None,
     style: Optional[str] = None,
@@ -178,9 +142,7 @@ def parameter(
             if isinstance(schema, Schema):
                 schema.add_enum(choices)
             else:
-                raise ValueError(
-                    "Cannot add choices to a Reference schema: define a new one with these choices."
-                )
+                raise ValueError("Cannot add choices to a Reference schema: define a new one with these choices.")
 
     assert schema
 
@@ -208,12 +170,10 @@ def parameter(
 
 # noinspection PyShadowingNames
 def request_body(
-    description=None, required=False, content=None,
+    description=None, required=False, content=None,  # pylint: disable=redefined-outer-name
 ):
     def inner(func):
-        _request_body = RequestBody(
-            description=description, required=required, content=content,
-        )
+        _request_body = RequestBody(description=description, required=required, content=content,)
         endpoints[func].request_body = _request_body
         return func
 
@@ -221,7 +181,13 @@ def request_body(
 
 
 # noinspection PyShadowingNames
-def response(status_code, description=None, headers=None, content=None, links=None):
+def response(
+    status_code: Union[int, str],
+    description: str,
+    headers: Optional[Dict[str, Union[Header, Reference]]] = None,
+    content: Optional[Dict[str, MediaType]] = None,
+    links: Optional[Dict[str, Union[Link, Reference]]] = None,
+):  # pylint: disable=redefined-outer-name
     """
     Add a response to the route.
     """
@@ -248,7 +214,7 @@ def summary(text):
 
 
 # noinspection PyShadowingNames
-def tag(name, description=None):
+def tag(name, description=None):  # pylint: disable=redefined-outer-name
     """
     Add a tag - which gives Swagger grouping - to the route by marking them `@doc.tag("Tag", "Optional description")`
     """

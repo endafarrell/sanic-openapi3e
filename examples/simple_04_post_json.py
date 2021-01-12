@@ -29,9 +29,7 @@ async def get_user(request, user_id):
 @app.post("/user")
 @doc.summary("Creates a new user")
 @doc.request_body(
-    description="A (JSON) user object",
-    required=True,
-    content={"application/json": {"schema": {"type": "object"}}},
+    description="A (JSON) user object", required=True, content={"application/json": {"schema": {"type": "object"}}},
 )
 @doc.response(201, "User created")
 async def post_user(request):

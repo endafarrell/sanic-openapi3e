@@ -24,9 +24,7 @@ def test_otype():
 
 
 def test_contact():
-    contact = sanic_openapi3e.oas_types.Contact(
-        name="name", url="www.url.com", email="email@url.com"
-    )
+    contact = sanic_openapi3e.oas_types.Contact(name="name", url="www.url.com", email="email@url.com")
     assert contact.serialize() == {
         "name": "name",
         "url": "www.url.com",

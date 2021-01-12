@@ -20,9 +20,7 @@ an_id_ex1 = sanic_openapi3e.oas_types.Example(
 )  # type: sanic_openapi3e.oas_types.Example
 
 an_id_ex2 = sanic_openapi3e.oas_types.Example(
-    summary="A big number",
-    description="description: Numbers more than one million!",
-    value=123456789,
+    summary="A big number", description="description: Numbers more than one million!", value=123456789,
 )  # type: sanic_openapi3e.oas_types.Example
 
 strict_slashes = True
@@ -67,10 +65,7 @@ def openapi__mod_bp_doc():
 
 def run_asserts(
     response: Union[
-        sanic.response.HTTPResponse,
-        sanic.response.StreamingHTTPResponse,
-        Dict,
-        sanic_openapi3e.oas_types.OpenAPIv3,
+        sanic.response.HTTPResponse, sanic.response.StreamingHTTPResponse, Dict, sanic_openapi3e.oas_types.OpenAPIv3,
     ],
     expected: Dict,
 ):
@@ -93,9 +88,7 @@ def run_asserts(
         print("\n   actual:", json.dumps(spec, sort_keys=True))
         print("expected:", json.dumps(expected, sort_keys=True))
 
-    assert json.loads(json.dumps(spec, sort_keys=True)) == json.loads(
-        json.dumps(expected, sort_keys=True)
-    )
+    assert json.loads(json.dumps(spec, sort_keys=True)) == json.loads(json.dumps(expected, sort_keys=True))
 
 
 def test_fundamentals(openapi__mod_bp_doc):
@@ -106,11 +99,7 @@ def test_fundamentals(openapi__mod_bp_doc):
 
     @app.get("/test/102/anId/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        _in="path",
-        schema=sanic_openapi3e.oas_types.Schema.Integer,
+        name="an_id", description="An ID", required=True, _in="path", schema=sanic_openapi3e.oas_types.Schema.Integer,
     )
     def test_id(request, an_id: int):
         return sanic.response.json(locals())
@@ -143,17 +132,12 @@ def test_fundamentals(openapi__mod_bp_doc):
 
 def test_path_integer_min(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_consumes_from_path_does_not_duplicate_parameters",
-        strict_slashes=strict_slashes,
-    )
+    app = Sanic("test_consumes_from_path_does_not_duplicate_parameters", strict_slashes=strict_slashes,)
 
     app.blueprint(openapi_blueprint)
 
     @app.get("/test/148/anId/<an_id:int>")
-    @doc.parameter(
-        name="an_id", description="An ID", required=True, _in="path", schema=int_min_4
-    )
+    @doc.parameter(name="an_id", description="An ID", required=True, _in="path", schema=int_min_4)
     def test_id(request, an_id: int):
         return sanic.response.json(locals())
 
@@ -190,10 +174,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
 
 def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_path_integer_examples_w_summary_and_description",
-        strict_slashes=strict_slashes,
-    )
+    app = Sanic("test_path_integer_examples_w_summary_and_description", strict_slashes=strict_slashes,)
 
     app.blueprint(openapi_blueprint)
 
@@ -263,6 +244,7 @@ def test_path__deprecated(openapi__mod_bp_doc):
     app.blueprint(openapi_blueprint)
 
     @app.get("/examples/260/test_path__deprecated/<an_id:int>")
+    @doc.deprecated()  # <<-- detail under test
     @doc.parameter(
         name="an_id",
         description="An ID",
@@ -273,7 +255,6 @@ def test_path__deprecated(openapi__mod_bp_doc):
     )
     @doc.summary("A path with parameter examples")
     @doc.description("This should be marked as being deprecated")
-    @doc.deprecated  # <<-- detail under test
     def path__deprecated(request, an_id: int):
         return sanic.response.json(locals())
 
@@ -386,11 +367,7 @@ def test_tag_unique_description__conflicts(openapi__mod_bp_doc):
 
     @app.get("/test/382/anId/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -402,17 +379,11 @@ def test_tag_unique_description__conflicts(openapi__mod_bp_doc):
 
         @app.get("/test/398/anId2/<an_id:int>")
         @doc.parameter(
-            name="an_id",
-            description="An ID",
-            required=True,
-            choices=[1, 3, 5, 7, 11, 13],
-            _in="path",
+            name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
         )
         @doc.response(200, description="A 200 description")
         @doc.response(201, description="A 201 description")
-        @doc.tag(
-            "Described tag", description="This same tag has a conflicting description"
-        )  # <<-- detail under test
+        @doc.tag("Described tag", description="This same tag has a conflicting description")  # <<-- detail under test
         def test_id2(_, an_id: int):
             return sanic.response.json(locals())
 
@@ -427,11 +398,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
 
     @app.get("/test/423/anId/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -441,11 +408,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
 
     @app.get("/test/437/anId2/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -497,12 +460,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                 }
             },
         },
-        "tags": [
-            {
-                "description": "This tag has a lovely description.",
-                "name": "Described tag",
-            }
-        ],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
     }
 
     run_asserts(response, expected)
@@ -519,11 +477,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
 
     @app.get("/test/515/anId/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -533,17 +487,11 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
 
     @app.get("/test/529/anId2/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
-    @doc.tag(
-        "Described tag", description="This tag has a lovely description."
-    )  # <<-- the detail under test.
+    @doc.tag("Described tag", description="This tag has a lovely description.")  # <<-- the detail under test.
     def test_id2(_, an_id: int):
         return sanic.response.json(locals())
 
@@ -591,12 +539,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                 }
             },
         },
-        "tags": [
-            {
-                "description": "This tag has a lovely description.",
-                "name": "Described tag",
-            }
-        ],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
     }
 
     run_asserts(response, expected)
@@ -607,20 +550,13 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
     Test tags on paths with multiple methods are not repeated
     """
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_path_with_multiple_methods_does_not_repeat_tags",
-        strict_slashes=strict_slashes,
-    )
+    app = Sanic("test_path_with_multiple_methods_does_not_repeat_tags", strict_slashes=strict_slashes,)
 
     app.blueprint(openapi_blueprint)
 
     @app.get("/test/609/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -630,11 +566,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
 
     @app.post("/test/609/<an_id:int>")  # <<-- the detail under test.
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
@@ -684,12 +616,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                 },
             }
         },
-        "tags": [
-            {
-                "description": "This tag has a lovely description.",
-                "name": "Described tag",
-            }
-        ],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
     }
 
     run_asserts(response, expected)
@@ -700,27 +627,18 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
     Test duplicated tags on paths  are not repeated
     """
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_path_with_multiple_equal_tags_does_not_repeat_tags",
-        strict_slashes=strict_slashes,
-    )
+    app = Sanic("test_path_with_multiple_equal_tags_does_not_repeat_tags", strict_slashes=strict_slashes,)
 
     app.blueprint(openapi_blueprint)
 
     @app.get("/test/609/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     @doc.response(200, description="A 200 description")
     @doc.response(201, description="A 201 description")
     @doc.tag("Described tag", description="This tag has a lovely description.")
-    @doc.tag(
-        "Described tag", description="This tag has a lovely description."
-    )  # <<-- the detail under test.
+    @doc.tag("Described tag", description="This tag has a lovely description.")  # <<-- the detail under test.
     def test_id(_, an_id: int):
         return sanic.response.json(locals())
 
@@ -749,12 +667,7 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
                 },
             }
         },
-        "tags": [
-            {
-                "description": "This tag has a lovely description.",
-                "name": "Described tag",
-            }
-        ],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
     }
 
     run_asserts(response, expected)
@@ -832,11 +745,7 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
                             "in": "query",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "items": {"type": "integer"},
-                                "type": "array",
-                                "enum": [1, 3, 5, 7, 11, 13],
-                            },
+                            "schema": {"items": {"type": "integer"}, "type": "array", "enum": [1, 3, 5, 7, 11, 13],},
                         }
                     ],
                     "responses": {"200": {"description": "Success"}},
@@ -865,11 +774,7 @@ def test_param__name_in(openapi__mod_bp_doc):
 
     @app.get("/test/699/some_ids/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        choices=[0, 2, 4, 8, 16],
-        _in="path",
+        name="an_id", description="An ID", required=True, choices=[0, 2, 4, 8, 16], _in="path",
     )
     @doc.parameter(
         name="an_id",
@@ -974,14 +879,7 @@ def test_path_without_parameter(openapi__mod_bp_doc):
             "/test/798/anId/{an_id}": {
                 "get": {
                     "operationId": "GET~~~test~798~anId~an_id",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             }
@@ -1027,11 +925,7 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "items": {"type": "integer"},
-                                "type": "array",
-                                "enum": [1, 3, 5, 7, 11, 13],
-                            },
+                            "schema": {"items": {"type": "integer"}, "type": "array", "enum": [1, 3, 5, 7, 11, 13],},
                         }
                     ],
                     "responses": {"200": {"description": "Success"}},
@@ -1055,20 +949,14 @@ def test_path_exclude(openapi__mod_bp_doc):
     @app.get("/test/878/path_exclude/<an_id:int>")
     @doc.exclude()
     @doc.parameter(
-        name="an_id",
-        description="An ID w/ desx",
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID w/ desx", choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     def path_exclude(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.get("/test/889/test_path_not_exclude/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID w/desc",
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID w/desc", choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     def path_not_exclude(_, an_id: int):
         return sanic.response.json(locals())
@@ -1106,30 +994,22 @@ def test_path_methods(openapi__mod_bp_doc):
     app.blueprint(openapi_blueprint)
 
     @app.get("/test/925/item/<an_id:int>")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def get_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.put("/test/925/item/<an_id:int>")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def put_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.post("/test/925/item/<an_id:int>")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def post_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.delete("/test/925/item/<an_id:int>")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def delete_item(_, an_id: int):
         return sanic.response.json(locals())
 
@@ -1198,9 +1078,7 @@ def test_path_methods(openapi__mod_bp_doc):
     run_asserts(response, expected)
 
 
-@pytest.mark.xfail(
-    reason="This works when in use by a single app, it seems that testing it needs more work"
-)
+@pytest.mark.xfail(reason="This works when in use by a single app, it seems that testing it needs more work")
 def test_show_unused_tag_v1(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_show_unused_tag_v1", strict_slashes=strict_slashes)
@@ -1209,34 +1087,26 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
 
     @app.get("/test/1033/getitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def get_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.put("/test/1041/putitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def put_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.post("/test/1049/postitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def post_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.delete("/test/1057/deleteitem/<an_id:int>")
     @doc.tag("Tag 2 - not used")
     @doc.exclude()
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def delete_item(_, an_id: int):
         return sanic.response.json(locals())
 
@@ -1251,42 +1121,21 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
             "/test/getitem/{an_id}": {
                 "get": {
                     "operationId": "test_openapi3e::get_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
             "/test/postitem/{an_id}": {
                 "post": {
                     "operationId": "test_openapi3e::post_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
             "/test/putitem/{an_id}": {
                 "put": {
                     "operationId": "test_openapi3e::put_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
@@ -1296,9 +1145,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
     run_asserts(spec, expected)
 
 
-@pytest.mark.xfail(
-    reason="This works when in use by a single app, it seems that testing it needs more work"
-)
+@pytest.mark.xfail(reason="This works when in use by a single app, it seems that testing it needs more work")
 def test_show_unused_tag_v2(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_show_unused_tag_v2", strict_slashes=strict_slashes)
@@ -1307,34 +1154,26 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
 
     @app.get("/test/1131/getitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def get_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.put("/test/1139/putitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def put_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.post("/test/1147/postitem/<an_id:int>")
     @doc.tag("Tag 1 - used")
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def post_item(_, an_id: int):
         return sanic.response.json(locals())
 
     @app.delete("/test/1155/deleteitem/<an_id:int>")
     @doc.tag("Tag 2 - not used")
     @doc.exclude()
-    @doc.parameter(
-        name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path"
-    )
+    @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def delete_item(_, an_id: int):
         return sanic.response.json(locals())
 
@@ -1349,42 +1188,21 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/getitem/{an_id}": {
                 "get": {
                     "operationId": "test_openapi3e::get_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
             "/test/postitem/{an_id}": {
                 "post": {
                     "operationId": "test_openapi3e::post_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
             "/test/putitem/{an_id}": {
                 "put": {
                     "operationId": "test_openapi3e::put_item",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {"type": "integer"},
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
                     "responses": {"200": {"description": "Success"}},
                 }
             },
@@ -1463,11 +1281,7 @@ def test_path_param_w_reference(openapi__mod_bp_doc):
     app.blueprint(openapi_blueprint)
     schemas = {
         "int.min4": sanic_openapi3e.oas_types.Schema(
-            title="int.min4",
-            _type="integer",
-            _format="int32",
-            minimum=4,
-            description="Minimum: 4",
+            title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",
         )
     }
     components = sanic_openapi3e.oas_types.Components(schemas=schemas)
@@ -1476,20 +1290,16 @@ def test_path_param_w_reference(openapi__mod_bp_doc):
 
     @app.get("/examples/1300/test_id_min/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID",
-        required=True,
-        _in="path",
-        schema=int_min_4_ref,
+        name="an_id", description="An ID", required=True, _in="path", schema=int_min_4_ref,
     )
     def test_id_min(request, an_id: int):
         return sanic.response.json(locals())
 
     _, response = app.test_client.get("/openapi/spec.json")
     assert response.json["components"]["schemas"]["int.min4"], response.json
-    assert response.json["paths"]["/examples/1300/test_id_min/{an_id}"]["get"][
-        "parameters"
-    ][0]["schema"] == {"$ref": "#/components/schemas/int.min4"}
+    assert response.json["paths"]["/examples/1300/test_id_min/{an_id}"]["get"]["parameters"][0]["schema"] == {
+        "$ref": "#/components/schemas/int.min4"
+    }
 
 
 #######################################################################################################################
@@ -1517,18 +1327,13 @@ def test_post_with_body(openapi__mod_bp_doc):
 def test_camel_case_operation_id(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_camel_case_operation_id", strict_slashes=strict_slashes)
-    app.config.OPENAPI_OPERATION_ID_FN = (
-        sanic_openapi3e.openapi.camel_case_operation_id_fn
-    )  # <<-- item under test
+    app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.camel_case_operation_id_fn  # <<-- item under test
 
     app.blueprint(openapi_blueprint)
 
     @app.get("/test/1523/path_exclude/<an_id:int>")
     @doc.parameter(
-        name="an_id",
-        description="An ID w/ desx",
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID w/ desx", choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     def get_test_line_path_element(_, an_id: int):
         return sanic.response.json(locals())
@@ -1561,21 +1366,14 @@ def test_camel_case_operation_id(openapi__mod_bp_doc):
 
 def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
-    app = Sanic(
-        "test_camel_case_operation_id_for_composite_view", strict_slashes=strict_slashes
-    )
-    app.config.OPENAPI_OPERATION_ID_FN = (
-        sanic_openapi3e.openapi.camel_case_operation_id_fn
-    )  # <<-- item under test
+    app = Sanic("test_camel_case_operation_id_for_composite_view", strict_slashes=strict_slashes)
+    app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.camel_case_operation_id_fn  # <<-- item under test
 
     app.blueprint(openapi_blueprint)
 
     @app.route("/test/1570/path_exclude/<an_id:int>", {"GET", "PUT", "delete"})
     @doc.parameter(
-        name="an_id",
-        description="An ID w/ desx",
-        choices=[1, 3, 5, 7, 11, 13],
-        _in="path",
+        name="an_id", description="An ID w/ desx", choices=[1, 3, 5, 7, 11, 13], _in="path",
     )
     def test_line_path_element(_, an_id: int):
         return sanic.response.json(locals())

@@ -221,7 +221,7 @@ def param__deprecated(request, an_id: int):
 app.go_fast()
 ```
 
-as can a whole route with ``@doc.deprecated``:
+as can a whole route with ``@doc.deprecated()``:
 
 ```python
 import sanic
@@ -242,7 +242,7 @@ app.blueprint(swagger_blueprint)
 )
 @doc.summary("A path with parameter examples")
 @doc.description("This is marked as being deprecated")
-@doc.deprecated
+@doc.deprecated()
 def path__deprecated(request, an_id: int):
     d = locals()
     del d["request"]  # not JSON serializable
@@ -250,6 +250,9 @@ def path__deprecated(request, an_id: int):
     
 app.go_fast()
 ```
+
+Please note, that while many python decorators can be called without the `()`, this one really
+does require the `()` at the end of `@doc.deprecated()`.
 
 
 ### Exclude routes from appearing in the OpenAPI spec (and swagger)

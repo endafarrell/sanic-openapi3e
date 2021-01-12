@@ -14,17 +14,9 @@ from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
 # isort: on
 
 
-int_min_4 = doc.Schema(
-    _type="integer", _format="int32", minimum=4, description="Minimum value: 4"
-)
-an_id_ex1 = doc.Example(
-    summary="A small number", description="Desc: Numbers less than ten", value=7
-)
-an_id_ex2 = doc.Example(
-    summary="A big number",
-    description="Desc: Numbers more than one million!",
-    value=123456789,
-)
+int_min_4 = doc.Schema(_type="integer", _format="int32", minimum=4, description="Minimum value: 4")
+an_id_ex1 = doc.Example(summary="A small number", description="Desc: Numbers less than ten", value=7)
+an_id_ex2 = doc.Example(summary="A big number", description="Desc: Numbers more than one million!", value=123456789,)
 days_of_week = doc.Schema(
     _type="string",
     description="Days of the week, short, English",
@@ -36,13 +28,7 @@ app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
 schemas = {
-    "int.min4": doc.Schema(
-        title="int.min4",
-        _type="integer",
-        _format="int32",
-        minimum=4,
-        description="Minimum: 4",
-    )
+    "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",)
 }
 components = doc.Components(schemas=schemas)
 app.config.OPENAPI_COMPONENTS = components
@@ -52,11 +38,7 @@ int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 
 @app.get("/41/test_id/<an_id:int>")
 @doc.parameter(
-    name="an_id",
-    description="An ID",
-    required=True,
-    _in="path",
-    schema=doc.Schema.Integer,
+    name="an_id", description="An ID", required=True, _in="path", schema=doc.Schema.Integer,
 )
 @doc.tag("Tag 1", description="A tag desc")
 def test_id(request, an_id: int):
@@ -66,9 +48,7 @@ def test_id(request, an_id: int):
 
 
 @app.get("/47/test_id_min/<an_id:int>")
-@doc.parameter(
-    name="an_id", description="An ID", required=True, _in="path", schema=int_min_4_ref
-)
+@doc.parameter(name="an_id", description="An ID", required=True, _in="path", schema=int_min_4_ref)
 def test_id_min(request, an_id: int):
     d = locals()
     del d["request"]  # not JSON serializable
@@ -96,7 +76,7 @@ def test_id_examples(request, an_id: int):
     return sanic.response.json(d)
 
 
-@app.get("/74/test_path__deprecated/<an_id:int>")
+@app.get("/74/test_path__deprecated/<an_id:int>/<another>")
 @doc.parameter(
     name="an_id",
     description="An ID",
@@ -108,7 +88,7 @@ def test_id_examples(request, an_id: int):
 @doc.summary("A path with parameter examples")
 @doc.description("This should be marked as being deprecated")
 @doc.deprecated()
-def path__deprecated(request, an_id: int):
+def path__deprecated(request, an_id: int, another: str):
     d = locals()
     del d["request"]  # not JSON serializable
     return sanic.response.json(d)
@@ -116,12 +96,7 @@ def path__deprecated(request, an_id: int):
 
 @app.get("/90/test_parameter__deprecated/<an_id:int>")
 @doc.parameter(
-    name="an_id",
-    description="An ID",
-    required=True,
-    _in="path",
-    deprecated=True,
-    schema=doc.Schema.Integer,
+    name="an_id", description="An ID", required=True, _in="path", deprecated=True, schema=doc.Schema.Integer,
 )
 @doc.summary("A path deprecated parameter")
 @doc.description("The parameter should be marked as deprecated")

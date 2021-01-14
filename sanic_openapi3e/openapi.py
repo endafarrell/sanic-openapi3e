@@ -11,10 +11,11 @@ Known limitations:
 import re
 from collections import OrderedDict
 from itertools import repeat
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import sanic
 import sanic.exceptions
+import sanic.request
 import sanic.response
 import sanic.router
 import yaml
@@ -48,14 +49,14 @@ NOT_YET_IMPLEMENTED = None
 
 # Note: python3.6 cannot use OrderedDict as a type hint (that was fixed in 3.7+...)
 _OPENAPI_JSON = OrderedDict()  # type: OrderedDict[str, Any]
-_OPENAPI_YAML = {}
+_OPENAPI_YAML: Dict[str, Any] = {}
 """
 Module-level container to hold the OAS spec that will be served-up on request. See `build_openapi_spec` for how it is
 built.
 """
 
 _OPENAPI_ALL_JSON = OrderedDict()  # type: OrderedDict[str, Any]
-_OPENAPI_ALL_YAML = {}
+_OPENAPI_ALL_YAML: Dict[str, Any] = {}
 """
 Module-level container to hold the OAS spec that may be served-up on request. The difference with this one is that it 
 contains all endpoints, including those marked as `exclude`.
@@ -119,7 +120,7 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
     global _OPENAPI_JSON  # pylint: disable=global-statement
     _OPENAPI_JSON = openapi.serialize()
     global _OPENAPI_YAML  # pylint: disable=global-statement
-    _OPENAPI_YAML = openapi.as_yamlable_dict()
+    _OPENAPI_YAML = openapi.as_yamlable_object()
 
     if show_excluded:
         openapi_all = _build_openapi_spec(
@@ -396,11 +397,14 @@ def spec_all_json(_):
 
 
 @blueprint.route("/spec.yml")
-def spec_v3_yaml(_):
-
+def spec_v3_yaml(request: sanic.request.Request):
+    default_yaml_content_type = "application/x-yaml"
+    content_type: Optional[str] = request.app.config.get("OPENAPI_YAML_CONTENTTYPE", default_yaml_content_type)
+    if not content_type:
+        content_type = default_yaml_content_type
     return sanic.response.HTTPResponse(
-        # content_type="application/x-yaml",
-        content_type="text/plain",
+        content_type=content_type,
+        # content_type="text/plain",
         body=yaml.dump(
             _OPENAPI_YAML, Dumper=yaml.CDumper, default_flow_style=False, explicit_start=False, sort_keys=False
         ),

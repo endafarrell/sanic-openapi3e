@@ -43,7 +43,7 @@ Run these simple examples and point your browser to
 http://127.0.0.1:8000/swagger/ to see this in action.
 
 
-### Describe route path parameters
+## Describe route path parameters
 
 ```python
 import sanic
@@ -111,7 +111,7 @@ def test_id_min(request, an_id: int):
 app.go_fast()
 ```
 
-### Describe your tags
+## Describe your tags
 OpenAPI uses "tags" (there can be more than one per route) to group the 
 endpoints. It's nice to be able to group your endpoints into tags given
 by the blueprint's name, but sometimes you will want to give them better
@@ -193,7 +193,7 @@ def get_start_end_hops(request, start: str, end: str, hops: int):
 app.go_fast()
 ```
 
-### Deprecate route paths or parameters
+## Deprecate route paths or parameters
 
 A parameter can be marked as ``deprecated=True``:
 
@@ -290,7 +290,13 @@ def test_some_ids(request: sanic.request.Request):
 app.go_fast()
 ```
 
-### Configure some of the things
+## Predefined components for responses
+There are predefimed components for common responses. You can overwrite and append these per route.
+
+## Experimental (v0.8) YAML spec
+There is a new endpoint `/openapi/spec.yml` which delivers a YAML version of your spec. 
+
+## Configure some of the things
 
 ```python
 app.config.API_VERSION = '1.0.0'
@@ -318,7 +324,11 @@ Setting `components`, `security` and `externalDocs` requires you to
   `app.config.OPENAPI_SECURITY`,  
   `app.config.OPENAPI_EXTERNAL_DOCS`.
   
-#### Configure how the operationId is made
+By default, the YAML spec is served on `/openapi/spec.yml` with the content-type of `application/x-yaml` but you can
+overwrite that by setting `app.config.OPENAPI_YAML_CONTENTTYPE` to something like `text/plain`. This lets you view
+your spec in a browser, and it still works with `/swagger` :-)
+   
+### Configure how the operationId is made
 
 The default code for creating the operationId creates unique (as they must be) strings from
 the following code:
@@ -369,7 +379,7 @@ and set it like `app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.ca
 
 Note that this does not change the `parameter`'s  names.
 
-**control spec generation**
+### Control spec generation
 
     hide_openapi_self = app.config.get("HIDE_OPENAPI_SELF", True)
     show_excluded = app.config.get("SHOW_OPENAPI_EXCLUDED", False)

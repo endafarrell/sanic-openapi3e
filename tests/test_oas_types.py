@@ -30,7 +30,7 @@ def test_contact():
         "url": "www.url.com",
         "email": "email@url.com",
     }
-    assert contact.as_yamlable_dict() == {
+    assert contact.as_yamlable_object() == {
         "name": "name",
         "url": "www.url.com",
         "email": "email@url.com",

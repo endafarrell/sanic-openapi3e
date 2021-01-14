@@ -31,7 +31,6 @@ schemas = {
     "str.min4": doc.Schema(title="str.min4", _type="string", minimum=4, description="A string of len >= 4",),
     "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",),
 }
-responses = doc.Responses()
 components = doc.Components(schemas=schemas)
 app.config.OPENAPI_COMPONENTS = components
 app.config.SHOW_OPENAPI_EXCLUDED = True

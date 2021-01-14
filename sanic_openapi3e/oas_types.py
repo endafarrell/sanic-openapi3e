@@ -149,40 +149,34 @@ class OObject:
         value: Any, sort=False, opt_key: Optional[str] = None
     ) -> Union[Dict, str, bytes, int, float, List]:
         if isinstance(value, OObject):
-            return value.as_yamlable_dict(sort=sort, opt_key=opt_key)
+            return value.as_yamlable_object(sort=sort, opt_key=opt_key)
         if isinstance(value, (str, bytes, int, float)):
             return value
         if isinstance(value, list):
+            if sort:
+                value = sorted(value)
             return [OObject._as_yamlable_dict(v, sort=sort, opt_key=opt_key) for v in value]
         if isinstance(value, (dict, OrderedDict)):
+            items = list(value.items())
+            if sort:
+                items = sorted(items)
             return {
                 key2: OObject._as_yamlable_dict(value2, sort=sort, opt_key=f"{opt_key}.{key2}")
-                for key2, value2 in value.items()
+                for key2, value2 in items
             }
         if isinstance(value, tuple) and str(opt_key).endswith("paths"):
-            return {value[0]: value[1].as_yamlable_dict(sort=False, opt_key=f"{opt_key}.{value[0]}")}
+            # Note - explicitly not sorting here ...
+            return {value[0]: value[1].as_yamlable_object(sort=False, opt_key=f"{opt_key}.{value[0]}")}
 
         raise TypeError(f"{type(value)}, value={value} opt_key={opt_key}")
 
-    def as_yamlable_dict(
+    def as_yamlable_object(  # pylint: disable=too-many-branches
         self, sort=False, opt_key: Optional[str] = None
-    ) -> Union[Dict, str, bytes, int, float]:  # pylint: disable=too-many-branches
+    ) -> Union[Dict, str, bytes, int, float, List]:
         _repr = {}
 
         if not hasattr(self, "__dict__"):
-            print(f"*** {self.__class__.__qualname__} {opt_key}")
-            if isinstance(self, (str, bytes, int, float)):
-                return self
-            if isinstance(self, tuple):
-                self_tuple: Tuple[Any, Any] = self
-                if isinstance(self_tuple[1], PathItem):
-                    print("\n\n\n!!! 168 ", repr(self), "\n!!!\n\n")
-                    _repr[self_tuple[0]] = self_tuple[1].as_yamlable_dict(sort=sort)
-                else:
-                    print("\n\n\n!!! 171 ", repr(self), opt_key, "\n!!!\n\n")
-            else:
-                print("\n\n\n!!! 173 ", repr(self), opt_key, "\n!!!\n\n")
-            return _repr
+            raise TypeError(repr(self))
 
         for key, value in self.__dict__.items():
             if not value:
@@ -190,25 +184,28 @@ class OObject:
             if key.startswith("x_"):
                 continue
             key2 = openapi_keyname(key)
+            value2: Union[Dict, List, str, bytes, int, float]
             if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
                 value2 = list(OObject._as_yamlable_dict(e, sort=sort, opt_key=f"{opt_key}.{key2}") for e in value)
             elif key2 == "responses" and self.__class__ == Components:
                 value2 = {
-                    key: value.as_yamlable_dict(opt_key=f"{opt_key}.{key2}")
+                    key: value.as_yamlable_object(opt_key=f"{opt_key}.{key2}")
                     for key, value in Responses.DEFAULT_RESPONSES.items()
                 }
             elif key2 == "security":
                 value2 = list(
-                    SecurityRequirement._as_yamlable_dict(sr, opt_key=f"{opt_key}.{key2}")
-                    for sr in value  # pylint: disable=protected-access
+                    SecurityRequirement._as_yamlable_dict(  # pylint: disable=protected-access
+                        sr, opt_key=f"{opt_key}.{key2}"
+                    )
+                    for sr in value
                 )
             elif key2 == "schemas":
                 # Everyone wants sorted schema entries!
                 value2 = OObject._as_yamlable_dict(value, sort=True, opt_key=f"{opt_key}.{key2}")
             elif key2 == "paths":
-                value2 = OObject._as_yamlable_dict(
-                    value._paths, opt_key=f"{opt_key}.{key2}"
-                )  # pylint: disable=protected-access
+                value2 = {}
+                for uri, path_item in value._paths:  # pylint: disable=protected-access
+                    value2[uri] = OObject._as_yamlable_dict(path_item, opt_key=f"{opt_key}.{uri}")
             elif key2 == "examples":
                 value2 = {
                     key3: OObject._as_yamlable_dict(value3, opt_key=f"{opt_key}.{key2}")
@@ -234,7 +231,7 @@ class OObject:
         :return: A dict serialisation of self.
         :rtype: OrderedDict
         """
-        _repr = OrderedDict()
+        _repr = OrderedDict()  # type: OrderedDict[str, Union[Dict, List]]
         for key, value in self.__dict__.items():
 
             if value is None or value == []:
@@ -242,6 +239,7 @@ class OObject:
             if key.startswith("x_") and not for_repr:
                 continue
             key2 = openapi_keyname(key)
+            value2: Union[Dict, List] = []
             if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
                 value2 = list(OObject._serialize(e, for_repr=for_repr, sort=sort) for e in value)
             elif key2 == "security":
@@ -3338,3 +3336,8 @@ class OpenAPIv3(OObject):  # pylint: disable=too-many-instance-attributes
 
         self.external_docs = external_docs
         """Additional external documentation."""
+
+    def as_yamlable_object(self, sort=False, opt_key: Optional[str] = None):
+        # This one is here to allow mypy to accept that the root `yaml`-able object really is always a dict. That
+        # annotation is found near the top of `openapi.py`.
+        return super().as_yamlable_object(sort=False, opt_key=".")

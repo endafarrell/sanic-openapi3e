@@ -106,7 +106,7 @@ def test_fundamentals(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/102/anId/{an_id}": {
@@ -121,7 +121,16 @@ def test_fundamentals(openapi__mod_bp_doc):
                             "schema": {"type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -143,7 +152,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/148/anId/{an_id}": {
@@ -155,15 +164,19 @@ def test_path_integer_min(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "description": "Minimum: 4",
-                                "format": "int32",
-                                "minimum": 4,
-                                "type": "integer",
-                            },
+                            "schema": {"description": "Minimum: 4", "format": "int32", "minimum": 4, "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -173,8 +186,9 @@ def test_path_integer_min(openapi__mod_bp_doc):
 
 
 def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
-    _, openapi_blueprint, doc = openapi__mod_bp_doc
+    openapi_mod, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_path_integer_examples_w_summary_and_description", strict_slashes=strict_slashes,)
+    app.config.OPENAPI_OPERATION_ID_FN = openapi_mod.camel_case_operation_id_fn
 
     app.blueprint(openapi_blueprint)
 
@@ -194,13 +208,13 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/examples/195/test_id_examples/{an_id}": {
                 "get": {
                     "description": "Swagger UIs do not show examples",
-                    "operationId": "GET~~~examples~195~test_id_examples~an_id",
+                    "operationId": "testIdExamples",
                     "parameters": [
                         {
                             "description": "An ID",
@@ -219,15 +233,19 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "description": "Minimum: 4",
-                                "format": "int32",
-                                "minimum": 4,
-                                "type": "integer",
-                            },
+                            "schema": {"description": "Minimum: 4", "format": "int32", "minimum": 4, "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                     "summary": "A path with parameter examples",
                 }
             }
@@ -260,7 +278,7 @@ def test_path__deprecated(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/examples/260/test_path__deprecated/{an_id}": {
@@ -294,7 +312,16 @@ def test_path__deprecated(openapi__mod_bp_doc):
                             },
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                     "summary": "A path with parameter examples",
                 }
             }
@@ -326,7 +353,7 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/examples/327/test_parameter__deprecated/{an_id}": {
@@ -343,7 +370,16 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
                             "schema": {"type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                     "summary": "A path deprecated parameter",
                 }
             }
@@ -418,7 +454,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/423/anId/{an_id}": {
@@ -436,6 +472,13 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 }
@@ -455,14 +498,20 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 }
             },
         },
-        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag"}],
     }
-
     run_asserts(response, expected)
 
 
@@ -497,7 +546,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/515/anId/{an_id}": {
@@ -515,6 +564,13 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 }
@@ -534,12 +590,19 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 }
             },
         },
-        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag"}],
     }
 
     run_asserts(response, expected)
@@ -576,7 +639,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/609/{an_id}": {
@@ -594,6 +657,13 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 },
@@ -611,12 +681,19 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
                 },
             }
         },
-        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag"}],
     }
 
     run_asserts(response, expected)
@@ -644,7 +721,7 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/609/{an_id}": {
@@ -662,12 +739,19 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
-                },
+                }
             }
         },
-        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag",}],
+        "tags": [{"description": "This tag has a lovely description.", "name": "Described tag"}],
     }
 
     run_asserts(response, expected)
@@ -693,7 +777,7 @@ def test_responses_takes_description(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/612/anId": {
@@ -702,6 +786,13 @@ def test_responses_takes_description(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
                     },
                 }
             }
@@ -733,7 +824,7 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/644/some_ids": {
@@ -745,10 +836,19 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
                             "in": "query",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"items": {"type": "integer"}, "type": "array", "enum": [1, 3, 5, 7, 11, 13],},
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "items": {"type": "integer"}, "type": "array"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -837,7 +937,7 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/759/anId2/{an_id}": {
@@ -848,11 +948,20 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
                             "description": "An ID",
                             "in": "path",
                             "name": "an_id",
-                            "required": true,
+                            "required": true,  # <<-- note: detail under test
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -873,14 +982,23 @@ def test_path_without_parameter(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/798/anId/{an_id}": {
                 "get": {
                     "operationId": "GET~~~test~798~anId~an_id",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"},}],
-                    "responses": {"200": {"description": "Success"}},
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -963,7 +1081,7 @@ def test_path_exclude(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/889/test_path_not_exclude/{an_id}": {
@@ -978,12 +1096,20 @@ def test_path_exclude(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
     }
-
     run_asserts(response, expected)
 
 
@@ -1015,7 +1141,7 @@ def test_path_methods(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/925/item/{an_id}": {
@@ -1030,7 +1156,16 @@ def test_path_methods(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
                 "get": {
                     "operationId": "GET~~~test~925~item~an_id",
@@ -1043,7 +1178,16 @@ def test_path_methods(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
                 "post": {
                     "operationId": "POST~~~test~925~item~an_id",
@@ -1056,7 +1200,16 @@ def test_path_methods(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
                 "put": {
                     "operationId": "PUT~~~test~925~item~an_id",
@@ -1069,12 +1222,20 @@ def test_path_methods(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
             }
         },
     }
-
     run_asserts(response, expected)
 
 
@@ -1340,7 +1501,7 @@ def test_camel_case_operation_id(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/1523/path_exclude/{an_id}": {
@@ -1355,7 +1516,16 @@ def test_camel_case_operation_id(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 }
             }
         },
@@ -1380,7 +1550,7 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "info": {"description": "Description", "title": "API", "version": "1.0.0"},
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
             "/test/1570/path_exclude/{an_id}": {
@@ -1395,7 +1565,16 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
                 "get": {
                     "operationId": "getTestLinePathElement",
@@ -1408,7 +1587,16 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
                 "put": {
                     "operationId": "putTestLinePathElement",
@@ -1421,7 +1609,16 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
-                    "responses": {"200": {"description": "Success"}},
+                    "responses": {
+                        "200": {"$ref": "#/components/responses/200"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "401": {"$ref": "#/components/responses/401"},
+                        "403": {"$ref": "#/components/responses/403"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "405": {"$ref": "#/components/responses/405"},
+                        "410": {"$ref": "#/components/responses/410"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
                 },
             }
         },

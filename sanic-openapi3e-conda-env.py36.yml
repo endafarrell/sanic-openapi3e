@@ -15,6 +15,7 @@ dependencies:
   - pylint
   - pytest
   - pytest-cov
+  - pyyaml
   - requests-async >=0.5.0
   - pip:
       - sanic >=19.6.0

@@ -30,6 +30,11 @@ def test_contact():
         "url": "www.url.com",
         "email": "email@url.com",
     }
+    assert contact.as_yamlable_dict() == {
+        "name": "name",
+        "url": "www.url.com",
+        "email": "email@url.com",
+    }
 
 
 def test_license():

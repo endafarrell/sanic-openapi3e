@@ -28,8 +28,10 @@ app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
 schemas = {
-    "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",)
+    "str.min4": doc.Schema(title="str.min4", _type="string", minimum=4, description="A string of len >= 4",),
+    "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",),
 }
+responses = doc.Responses()
 components = doc.Components(schemas=schemas)
 app.config.OPENAPI_COMPONENTS = components
 app.config.SHOW_OPENAPI_EXCLUDED = True
@@ -49,6 +51,7 @@ def test_id(request, an_id: int):
 
 @app.get("/47/test_id_min/<an_id:int>")
 @doc.parameter(name="an_id", description="An ID", required=True, _in="path", schema=int_min_4_ref)
+@doc.response("200", description="You got a 200!", headers={"x-prize": doc.Header(description="free money")})
 def test_id_min(request, an_id: int):
     d = locals()
     del d["request"]  # not JSON serializable

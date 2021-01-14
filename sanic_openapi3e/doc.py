@@ -193,9 +193,10 @@ def response(
     """
 
     def inner(func):
-        endpoints[func].x_responses_holder[str(status_code)] = Response(
-            description=description, headers=headers, content=content, links=links
-        )
+        if any((description, headers, content, links)):
+            endpoints[func].x_responses_holder[str(status_code)] = Response(
+                description=description, headers=headers, content=content, links=links
+            )
         return func
 
     return inner

@@ -127,31 +127,111 @@ class OObject:
     """A base object for sanic_openapi3e. Internal."""
 
     @staticmethod
-    def _serialize(value: Any, for_repr=False) -> Union[Dict, List[Dict], Any]:
+    def _serialize(value: Any, for_repr=False, sort=False) -> Union[Dict, List[Dict], Any]:
         """
         Internal serialisation to a dict
         :param value: Any
         :return: dict
         """
         if isinstance(value, OObject):
-            return value.serialize(for_repr=for_repr)
+            return value.serialize(for_repr=for_repr, sort=sort)
 
         if isinstance(value, dict):
-            return {openapi_keyname(k): OObject._serialize(v, for_repr=for_repr) for k, v in value.items()}
+            return {openapi_keyname(k): OObject._serialize(v, for_repr=for_repr, sort=sort) for k, v in value.items()}
 
         if isinstance(value, list):
-            return [OObject._serialize(v, for_repr=for_repr) for v in value]
+            return [OObject._serialize(v, for_repr=for_repr, sort=sort) for v in value]
 
         return value
 
-    def serialize(self, for_repr=False):
+    @staticmethod
+    def _as_yamlable_dict(
+        value: Any, sort=False, opt_key: Optional[str] = None
+    ) -> Union[Dict, str, bytes, int, float, List]:
+        if isinstance(value, OObject):
+            return value.as_yamlable_object(sort=sort, opt_key=opt_key)
+        if isinstance(value, (str, bytes, int, float)):
+            return value
+        if isinstance(value, list):
+            if sort:
+                value = sorted(value)
+            return [OObject._as_yamlable_dict(v, sort=sort, opt_key=opt_key) for v in value]
+        if isinstance(value, (dict, OrderedDict)):
+            items = list(value.items())
+            if sort:
+                items = sorted(items)
+            return {
+                key2: OObject._as_yamlable_dict(value2, sort=sort, opt_key=f"{opt_key}.{key2}")
+                for key2, value2 in items
+            }
+        if isinstance(value, tuple) and str(opt_key).endswith("paths"):
+            # Note - explicitly not sorting here ...
+            return {value[0]: value[1].as_yamlable_object(sort=False, opt_key=f"{opt_key}.{value[0]}")}
+
+        raise TypeError(f"{type(value)}, value={value} opt_key={opt_key}")
+
+    def as_yamlable_object(  # pylint: disable=too-many-branches
+        self, sort=False, opt_key: Optional[str] = None
+    ) -> Union[Dict, str, bytes, int, float, List]:
+        _repr = {}
+
+        if not hasattr(self, "__dict__"):
+            raise TypeError(repr(self))
+
+        for key, value in self.__dict__.items():
+            if not value:
+                continue
+            if key.startswith("x_"):
+                continue
+            key2 = openapi_keyname(key)
+            value2: Union[Dict, List, str, bytes, int, float]
+            if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
+                value2 = list(OObject._as_yamlable_dict(e, sort=sort, opt_key=f"{opt_key}.{key2}") for e in value)
+            elif key2 == "responses" and self.__class__ == Components:
+                value2 = {
+                    key: value.as_yamlable_object(opt_key=f"{opt_key}.{key2}")
+                    for key, value in Responses.DEFAULT_RESPONSES.items()
+                }
+            elif key2 == "security":
+                value2 = list(
+                    SecurityRequirement._as_yamlable_dict(  # pylint: disable=protected-access
+                        sr, opt_key=f"{opt_key}.{key2}"
+                    )
+                    for sr in value
+                )
+            elif key2 == "schemas":
+                # Everyone wants sorted schema entries!
+                value2 = OObject._as_yamlable_dict(value, sort=True, opt_key=f"{opt_key}.{key2}")
+            elif key2 == "paths":
+                value2 = {}
+                for uri, path_item in value._paths:  # pylint: disable=protected-access
+                    value2[uri] = OObject._as_yamlable_dict(path_item, opt_key=f"{opt_key}.{uri}")
+            elif key2 == "examples":
+                value2 = {
+                    key3: OObject._as_yamlable_dict(value3, opt_key=f"{opt_key}.{key2}")
+                    for key3, value3 in value.items()
+                }
+            else:
+                value2 = OObject._as_yamlable_dict(value, opt_key=f"{opt_key}.{key2}")
+            if not value2:
+                continue
+            _repr[key2] = value2
+
+        if sort:
+            # Note: py36 does not have any (eternally dependable) ordering for dicts, but py37+
+            # remembers insert-order.
+            return {key: value for key, value in sorted(_repr.items())}  # pylint: disable=unnecessary-comprehension
+
+        return _repr
+
+    def serialize(self, for_repr=False, sort=False) -> OrderedDict:
         """
         Serialisation to a dict.
 
         :return: A dict serialisation of self.
         :rtype: OrderedDict
         """
-        _repr = OrderedDict()
+        _repr = OrderedDict()  # type: OrderedDict[str, Union[Dict, List]]
         for key, value in self.__dict__.items():
 
             if value is None or value == []:
@@ -159,18 +239,26 @@ class OObject:
             if key.startswith("x_") and not for_repr:
                 continue
             key2 = openapi_keyname(key)
+            value2: Union[Dict, List] = []
             if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
-                value2 = list(OObject._serialize(e, for_repr=for_repr) for e in value)
+                value2 = list(OObject._serialize(e, for_repr=for_repr, sort=sort) for e in value)
             elif key2 == "security":
                 value2 = list(
                     SecurityRequirement._serialize(sr, for_repr=for_repr)  # pylint: disable=protected-access
                     for sr in value
                 )
+            elif key2 == "schemas":
+                # Everyone wants sorted schema entries!
+                value2 = OObject._serialize(value, sort=True)
             else:
                 value2 = OObject._serialize(value)
             if not value2:
                 continue
             _repr[key2] = value2
+        if sort:
+            _sorted_repr = OrderedDict()
+            for key in sorted(_repr.keys()):
+                _sorted_repr[key] = _repr[key]
         return _repr
 
     def __str__(self):
@@ -2068,6 +2156,13 @@ class Response(OObject):
 
     # This is reset from None to a Response directly after the class definition.
     DEFAULT_SUCCESS = None  # type: Response
+    BAD_REQUEST = None  # type: Response
+    UNAUTHORIZED = None  # type: Response
+    FORBIDDEN = None  # type: Response
+    NOT_FOUND = None  # type: Response
+    METHOD_NOT_ALLOWED = None  # type: Response
+    GONE = None  # type: Response
+    INTERNAL_SERVER_ERROR = None  # type: Response
 
     def __init__(
         self,
@@ -2131,7 +2226,14 @@ class Response(OObject):
         """
 
 
-Response.DEFAULT_SUCCESS = Response(description="Success")
+Response.DEFAULT_SUCCESS = Response(description="OK")
+Response.BAD_REQUEST = Response(description="Bad Request")
+Response.UNAUTHORIZED = Response(description="Unauthorized")
+Response.FORBIDDEN = Response(description="Forbidden")
+Response.NOT_FOUND = Response(description="Not Found")
+Response.METHOD_NOT_ALLOWED = Response(description="Method Not Allowed")
+Response.GONE = Response(description="Gone")
+Response.INTERNAL_SERVER_ERROR = Response(description="Internal Server Error")
 
 
 class RequestBody(OObject):
@@ -2439,6 +2541,142 @@ class Callback(OObject):
         return iter(self.__dict__)
 
 
+class Responses(OObject):
+    """
+    A container for the expected responses of an operation. The container maps a HTTP response code to the expected
+    response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
+    may not be known in advance. However, documentation is expected to cover a successful operation response and any
+    known errors.
+
+    The default MAY be used as a default response object for all HTTP codes that are not covered individually by the
+    specification.
+
+    The Responses Object MUST contain at least one response code, and it SHOULD be the response for a successful
+    operation call.
+
+    "default" key in responses
+    --------------------------
+    The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to
+    cover undeclared responses. A Reference Object can link to a response that the OpenAPI Object's
+    components/responses section defines.
+
+    HTTP status code keys in responses
+    ----------------------------------
+    Any HTTP status code can be used as the property name, but only one property per code, to describe the expected
+    response for that HTTP status code. A Reference Object can link to a response that is defined in the OpenAPI
+    Object's components/responses section. This field MUST be enclosed in quotation marks (for example, "200") for
+    compatibility between JSON and YAML. To define a range of response codes, this field MAY contain the uppercase
+    wildcard character X. For example, 2XX represents all response codes between [200-299]. Only the following range
+    definitions are allowed: 1XX, 2XX, 3XX, 4XX, and 5XX. If a response is defined using an explicit code, the
+    explicit code definition takes precedence over the range definition for that code.
+    """
+
+    DEFAULT_RESPONSES = {
+        "200": Response.DEFAULT_SUCCESS,
+        "400": Response.BAD_REQUEST,
+        "401": Response.UNAUTHORIZED,
+        "403": Response.FORBIDDEN,
+        "404": Response.NOT_FOUND,
+        "405": Response.METHOD_NOT_ALLOWED,
+        "410": Response.GONE,
+        "500": Response.INTERNAL_SERVER_ERROR,
+    }
+
+    # TODO - may need to reimplement the ``serialise`` and ``schema``.
+    def __init__(self, responses: Optional[Dict[str, Union[Response, Reference]]] = None):
+        """
+        A container for the expected responses of an operation. The container maps a HTTP response code to the expected
+        response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
+        may not be known in advance. However, documentation is expected to cover a successful operation response and any
+        known errors.
+
+        The default MAY be used as a default response object for all HTTP codes that are not covered individually by the
+        specification.
+
+        The Responses Object MUST contain at least one response code, and it SHOULD be the response for a successful
+        operation call.
+
+        "default" key in responses
+        --------------------------
+        The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to
+        cover undeclared responses. A Reference Object can link to a response that the OpenAPI Object's
+        components/responses section defines.
+
+        HTTP status code keys in responses
+        ----------------------------------
+        Any HTTP status code can be used as the property name, but only one property per code, to describe the expected
+        response for that HTTP status code. A Reference Object can link to a response that is defined in the OpenAPI
+        Object's components/responses section. This field MUST be enclosed in quotation marks (for example, "200") for
+        compatibility between JSON and YAML. To define a range of response codes, this field MAY contain the uppercase
+        wildcard character X. For example, 2XX represents all response codes between [200-299]. Only the following range
+        definitions are allowed: 1XX, 2XX, 3XX, 4XX, and 5XX. If a response is defined using an explicit code, the
+        explicit code definition takes precedence over the range definition for that code.
+
+        :param responses: A mapping of response code (as str) to a Response.
+        """
+        # TODO - types
+        # TODO - validations
+        _init_responses: Dict[str, Union[Response, Reference]] = {
+            key: Reference("#/components/responses/{}".format(key)) for key in Responses.DEFAULT_RESPONSES
+        }
+        if responses:
+            for status_code, response in responses.items():
+                _init_responses[str(status_code)] = response
+        self.__dict__ = _init_responses
+
+    @property
+    def as_dict(self) -> Dict[str, Union[Response, Reference]]:
+        return self.__dict__
+
+    def __setitem__(self, key, item):
+        self.__dict__[key] = item
+
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __repr__(self):
+        return repr(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __delitem__(self, key):
+        del self.__dict__[key]
+
+    def clear(self):
+        return self.__dict__.clear()
+
+    def copy(self):
+        return self.__dict__.copy()
+
+    def has_key(self, k):
+        return k in self.__dict__
+
+    def update(self, *args, **kwargs):
+        return self.__dict__.update(*args, **kwargs)
+
+    def keys(self):
+        return self.__dict__.keys()
+
+    def values(self):
+        return self.__dict__.values()
+
+    def items(self):
+        return self.__dict__.items()
+
+    def pop(self, *args):
+        return self.__dict__.pop(*args)
+
+    # def __cmp__(self, other):
+    #     return self.__dict__.__cmp__(other)
+
+    def __contains__(self, item):
+        return item in self.__dict__
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+
 class Components(OObject):  # pylint: disable=too-many-instance-attributes
     """
     Holds a set of reusable objects for different aspects of the OAS. All objects defined within the components
@@ -2490,7 +2728,7 @@ class Components(OObject):  # pylint: disable=too-many-instance-attributes
         self.schemas = schemas
         """An object to hold reusable Schema Objects."""
 
-        self.responses = responses
+        self.responses = responses or Responses.DEFAULT_RESPONSES
         """An object to hold reusable Response Objects."""
 
         self.parameters = parameters
@@ -2513,121 +2751,6 @@ class Components(OObject):  # pylint: disable=too-many-instance-attributes
 
         self.callbacks = callbacks
         """An object to hold reusable Callback Objects."""
-
-
-class Responses(OObject):
-    """
-    A container for the expected responses of an operation. The container maps a HTTP response code to the expected
-    response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
-    may not be known in advance. However, documentation is expected to cover a successful operation response and any
-    known errors.
-
-    The default MAY be used as a default response object for all HTTP codes that are not covered individually by the
-    specification.
-
-    The Responses Object MUST contain at least one response code, and it SHOULD be the response for a successful
-    operation call.
-
-    "default" key in responses
-    --------------------------
-    The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to
-    cover undeclared responses. A Reference Object can link to a response that the OpenAPI Object's
-    components/responses section defines.
-
-    HTTP status code keys in responses
-    ----------------------------------
-    Any HTTP status code can be used as the property name, but only one property per code, to describe the expected
-    response for that HTTP status code. A Reference Object can link to a response that is defined in the OpenAPI
-    Object's components/responses section. This field MUST be enclosed in quotation marks (for example, "200") for
-    compatibility between JSON and YAML. To define a range of response codes, this field MAY contain the uppercase
-    wildcard character X. For example, 2XX represents all response codes between [200-299]. Only the following range
-    definitions are allowed: 1XX, 2XX, 3XX, 4XX, and 5XX. If a response is defined using an explicit code, the
-    explicit code definition takes precedence over the range definition for that code.
-    """
-
-    # TODO - may need to reimplement the ``serialise`` and ``schema``.
-    def __init__(self, responses: Optional[Dict[str, Response]] = None):
-        """
-        A container for the expected responses of an operation. The container maps a HTTP response code to the expected
-        response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
-        may not be known in advance. However, documentation is expected to cover a successful operation response and any
-        known errors.
-
-        The default MAY be used as a default response object for all HTTP codes that are not covered individually by the
-        specification.
-
-        The Responses Object MUST contain at least one response code, and it SHOULD be the response for a successful
-        operation call.
-
-        "default" key in responses
-        --------------------------
-        The documentation of responses other than the ones declared for specific HTTP response codes. Use this field to
-        cover undeclared responses. A Reference Object can link to a response that the OpenAPI Object's
-        components/responses section defines.
-
-        HTTP status code keys in responses
-        ----------------------------------
-        Any HTTP status code can be used as the property name, but only one property per code, to describe the expected
-        response for that HTTP status code. A Reference Object can link to a response that is defined in the OpenAPI
-        Object's components/responses section. This field MUST be enclosed in quotation marks (for example, "200") for
-        compatibility between JSON and YAML. To define a range of response codes, this field MAY contain the uppercase
-        wildcard character X. For example, 2XX represents all response codes between [200-299]. Only the following range
-        definitions are allowed: 1XX, 2XX, 3XX, 4XX, and 5XX. If a response is defined using an explicit code, the
-        explicit code definition takes precedence over the range definition for that code.
-
-        :param responses: A mapping of response code (as str) to a Response.
-        """
-        # TODO - types
-        # TODO - validations
-        self.__dict__ = responses if responses else {"200": Response.DEFAULT_SUCCESS}
-
-    def __setitem__(self, key, item):
-        self.__dict__[key] = item
-
-    def __getitem__(self, key):
-        return self.__dict__[key]
-
-    def __repr__(self):
-        return repr(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __delitem__(self, key):
-        del self.__dict__[key]
-
-    def clear(self):
-        return self.__dict__.clear()
-
-    def copy(self):
-        return self.__dict__.copy()
-
-    def has_key(self, k):
-        return k in self.__dict__
-
-    def update(self, *args, **kwargs):
-        return self.__dict__.update(*args, **kwargs)
-
-    def keys(self):
-        return self.__dict__.keys()
-
-    def values(self):
-        return self.__dict__.values()
-
-    def items(self):
-        return self.__dict__.items()
-
-    def pop(self, *args):
-        return self.__dict__.pop(*args)
-
-    # def __cmp__(self, other):
-    #     return self.__dict__.__cmp__(other)
-
-    def __contains__(self, item):
-        return item in self.__dict__
-
-    def __iter__(self):
-        return iter(self.__dict__)
 
 
 class SecurityRequirement(OObject):  # pylint: disable=missing-function-docstring
@@ -2674,7 +2797,7 @@ class SecurityRequirement(OObject):  # pylint: disable=missing-function-docstrin
     def __repr__(self):
         return repr(self.__dict__)
 
-    def serialize(self, for_repr=False):
+    def serialize(self, for_repr=False, sort=False):
         return self.__dict__
 
     def __len__(self):
@@ -2925,7 +3048,7 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
         # TODO = add hide/suppress?
         x_tags_holder: Optional[List[Tag]] = None,
         x_deprecated_holder: bool = False,
-        x_responses_holder: Optional[Dict[str, Response]] = None,
+        x_responses_holder: Optional[Dict[str, Union[Response, Reference]]] = None,
         x_exclude: bool = False,
     ):
         """
@@ -3096,7 +3219,7 @@ class Paths(OObject):
         else:
             raise ValueError("locked")
 
-    def serialize(self, for_repr=False) -> OrderedDict:
+    def serialize(self, for_repr=False, sort=False) -> OrderedDict:
         """
         Serialisation to a dict.
 
@@ -3105,8 +3228,11 @@ class Paths(OObject):
         serialised = OrderedDict()
         for (uri, path_item) in self._paths:
             # Until the spec is being built, these `uri` are the decorated methods in your `app` or blueprints.
-            assert not callable(uri), type(uri)
-            serialised[str(uri) if callable(uri) else uri] = path_item.serialize()
+            serialised[uri] = path_item.serialize(sort=sort)
+        if sort:
+            _sorted_repr = OrderedDict()
+            for key in sorted(serialised.keys()):
+                _sorted_repr[key] = serialised[key]
         return serialised
 
     def __str__(self):
@@ -3210,3 +3336,8 @@ class OpenAPIv3(OObject):  # pylint: disable=too-many-instance-attributes
 
         self.external_docs = external_docs
         """Additional external documentation."""
+
+    def as_yamlable_object(self, sort=False, opt_key: Optional[str] = None):
+        # This one is here to allow mypy to accept that the root `yaml`-able object really is always a dict. That
+        # annotation is found near the top of `openapi.py`.
+        return super().as_yamlable_object(sort=False, opt_key=".")

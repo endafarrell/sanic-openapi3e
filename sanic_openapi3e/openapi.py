@@ -11,12 +11,14 @@ Known limitations:
 import re
 from collections import OrderedDict
 from itertools import repeat
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import sanic
 import sanic.exceptions
+import sanic.request
 import sanic.response
 import sanic.router
+import yaml
 from sanic.blueprints import Blueprint
 from sanic.views import CompositionView
 
@@ -32,8 +34,6 @@ from .doc import (
     PathItem,
     Paths,
     Reference,
-    Response,
-    Responses,
     Schema,
     SecurityRequirement,
     Server,
@@ -46,16 +46,17 @@ from .swagger import blueprint as swagger_bp
 blueprint = Blueprint("openapi", url_prefix="openapi")
 
 NOT_YET_IMPLEMENTED = None
-NotYetImplementedResponses = Responses({"200": Response(description="A successful response")})
 
 # Note: python3.6 cannot use OrderedDict as a type hint (that was fixed in 3.7+...)
-_OPENAPI = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI_JSON = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI_YAML: Dict[str, Any] = {}
 """
 Module-level container to hold the OAS spec that will be served-up on request. See `build_openapi_spec` for how it is
 built.
 """
 
-_OPENAPI_ALL = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI_ALL_JSON = OrderedDict()  # type: OrderedDict[str, Any]
+_OPENAPI_ALL_YAML: Dict[str, Any] = {}
 """
 Module-level container to hold the OAS spec that may be served-up on request. The difference with this one is that it 
 contains all endpoints, including those marked as `exclude`.
@@ -116,8 +117,10 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
         show_unused_tags=show_unused_tags,
         hide_sanic_static=hide_sanic_static,
     )
-    global _OPENAPI  # pylint: disable=global-statement
-    _OPENAPI = openapi.serialize()
+    global _OPENAPI_JSON  # pylint: disable=global-statement
+    _OPENAPI_JSON = openapi.serialize()
+    global _OPENAPI_YAML  # pylint: disable=global-statement
+    _OPENAPI_YAML = openapi.as_yamlable_object()
 
     if show_excluded:
         openapi_all = _build_openapi_spec(
@@ -128,8 +131,8 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
             show_unused_tags=True,
             hide_sanic_static=False,
         )
-        global _OPENAPI_ALL  # pylint: disable=global-statement
-        _OPENAPI_ALL = openapi_all.serialize()
+        global _OPENAPI_ALL_JSON  # pylint: disable=global-statement
+        _OPENAPI_ALL_JSON = openapi_all.serialize()
 
 
 def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,(too-many-branches
@@ -309,7 +312,7 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
         terms_of_service=app.config.get("API_TERMS_OF_SERVICE_URL"),
         contact=contact,
         _license=_license,
-        version=app.config.get("API_VERSION", "1.0.0"),
+        version=app.config.get("API_VERSION", "v1.0.0"),
     )
 
     _v3_paths = Paths(_oas_paths)
@@ -382,12 +385,27 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
 
 
 @blueprint.route("/spec.json")
-def spec_v3(_):
-    return sanic.response.json(_OPENAPI)
+def spec_v3_json(_):
+    return sanic.response.json(_OPENAPI_JSON)
 
 
 @blueprint.route("/spec.all.json")
-def spec_all(_):
-    if _OPENAPI_ALL:
-        return sanic.response.json(_OPENAPI_ALL)
+def spec_all_json(_):
+    if _OPENAPI_ALL_JSON:
+        return sanic.response.json(_OPENAPI_ALL_JSON)
     raise sanic.exceptions.NotFound("Not found")
+
+
+@blueprint.route("/spec.yml")
+def spec_v3_yaml(request: sanic.request.Request):
+    default_yaml_content_type = "application/x-yaml"
+    content_type: Optional[str] = request.app.config.get("OPENAPI_YAML_CONTENTTYPE", default_yaml_content_type)
+    if not content_type:
+        content_type = default_yaml_content_type
+    return sanic.response.HTTPResponse(
+        content_type=content_type,
+        # content_type="text/plain",
+        body=yaml.dump(
+            _OPENAPI_YAML, Dumper=yaml.CDumper, default_flow_style=False, explicit_start=False, sort_keys=False
+        ),
+    )

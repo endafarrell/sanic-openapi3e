@@ -6,17 +6,16 @@ channels:
 
 dependencies:
   - python>=3.6.0,<3.7
-  - aiohttp
-  - black
-  - isort
-  - loguru
-  - mypy
+  - aiohttp  # testing only
+  - black  # build only
+  - isort  # build only
+  - mypy  # testing only
   - pip
-  - pylint
-  - pytest
-  - pytest-cov
-  - pyyaml
-  - requests-async >=0.5.0
+  - pylint  # build only
+  - pytest  # testing only
+  - pytest-cov  # testing only
+  - pyyaml >= 5.3.1
+  # - requests-async >=0.5.0
   - pip:
       - sanic >=19.6.0
 

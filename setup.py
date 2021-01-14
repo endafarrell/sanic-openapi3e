@@ -4,7 +4,7 @@ Sanic OpenAPI extension.
 import pathlib
 import re
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 module_init_path = pathlib.Path.cwd() / "sanic_openapi3e" / "__init__.py"
 assert module_init_path.exists()
@@ -29,24 +29,25 @@ setup(
     description=desc,
     long_description=long_description,
     long_description_content_type=long_description_content_type,
-    packages=["sanic_openapi3e"],
+    packages=find_packages(exclude=["*tests*", "*examples*"]),
     package_data={"sanic_openapi3e": ["ui/*"]},
     platforms="any",
-    install_requires=["sanic>=0.6.0", "loguru"],
+    install_requires=["sanic>=19.6.0", "pyyaml >= 5.3.1"],
     extras_require={"testing": ["pytest", "pytest-cov"]},
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
-        "Development Status :: 4 - Beta",
+        "Framework :: Sanic",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )

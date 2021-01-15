@@ -127,6 +127,9 @@ def parameter(  # pylint: disable=too-many-arguments
     if _in == "path":
         required = True
 
+    # NOTE: the `schema` being passed in is __probably__ one of the "class static" ones, like `Schema.Integer` or
+    #       `Schema.Strings`. If so, we __really__ do not want to modify those "class static" objects, instead we
+    #       must make sure to only ever modify a copy. Not getting this right was the cause of a Heisenbug ....
     if schema is None:
         if choices is None:
             schema = Schema.String  # A basic default
@@ -140,6 +143,7 @@ def parameter(  # pylint: disable=too-many-arguments
         else:
             # both schema and choices
             if isinstance(schema, Schema):
+                schema = schema.clone()
                 schema.add_enum(choices)
             else:
                 raise ValueError("Cannot add choices to a Reference schema: define a new one with these choices.")
@@ -170,8 +174,21 @@ def parameter(  # pylint: disable=too-many-arguments
 
 # noinspection PyShadowingNames
 def request_body(
-    description=None, required=False, content=None,  # pylint: disable=redefined-outer-name
+    content: Dict[str, MediaType],
+    description: Optional[str] = None,  # pylint: disable=redefined-outer-name
+    required: bool = False,
 ):
+    """
+    Describes a single request body.
+
+    :param content: REQUIRED. The content of the request body. The key is a media type or media type range and the
+        value describes it. For requests that match multiple keys, only the most specific key is applicable. e.g.
+        ``text/plain`` overrides ``text/*``
+    :param description: A brief description of the request body. This could contain examples of use. CommonMark
+        syntax MAY be used for rich text representation.
+    :param required: Determines if the request body is required in the request. Defaults to false.
+    """
+
     def inner(func):
         _request_body = RequestBody(description=description, required=required, content=content,)
         endpoints[func].request_body = _request_body

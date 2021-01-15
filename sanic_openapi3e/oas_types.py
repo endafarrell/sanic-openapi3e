@@ -32,7 +32,10 @@ This implementation has some known limitations:
 
 """
 # pylint: disable=too-few-public-methods
+import copy
+import functools
 import json
+import warnings
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
@@ -72,15 +75,13 @@ def _assert_strictly_greater_than_zero(element, name, clazz):
         )
 
 
-# def underscore_to_camelcase(text):
-#     """
-#     Converts underscore_delimited_text to camelCase.
-#     """
-#     return "".join(
-#         word.title() if i else word for i, word in enumerate(text.split("_"))
-#     )
+@functools.lru_cache(maxsize=64)
+def simple_snake2camel(string: str) -> str:
+    first, *rest = string.strip().lower().split("_")
+    return first + "".join(ele.capitalize() for ele in rest)
 
 
+@functools.lru_cache(maxsize=64)
 def openapi_keyname(key: str) -> str:
     """
     Returns the OpenAPI name for keys.
@@ -116,7 +117,7 @@ def openapi_keyname(key: str) -> str:
         "terms_of_service": "termsOfService",
         "unique_items": "uniqueItems",
         "write_only": "writeOnly",
-    }.get(key, key)
+    }.get(key, simple_snake2camel(key))
     return _key
 
 
@@ -1098,6 +1099,12 @@ class MediaType(OObject):
                     )
 
         # Assignment and Docs
+        if not schema:
+            warnings.warn(
+                "A MediaType without a schema is not shown in Swagger. {}".format(
+                    {"encoding": encoding, "example": example, "examples": examples, "schema": schema}
+                )
+            )
         self.schema = schema
         """The schema defining the content of the request, response, or parameter."""
 
@@ -1242,6 +1249,9 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         external_docs: Optional[ExternalDocumentation] = None,
         example: Optional[Any] = None,
         deprecated: bool = False,
+        #
+        # sanic-openapi3e extension
+        x_frozen: bool = False,
     ):
         """
         The Schema Object allows the definition of input and output data types. These types can be objects, but also
@@ -1392,6 +1402,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
             escaping where necessary.
         :param deprecated: Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value
             is false.
+        :param x_frozen: Specifies that no modifications should be applied to this instance. Default is false.
         """
 
         # JSON Schema definition
@@ -1706,6 +1717,9 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         self.deprecated = deprecated
         """ Specifies that a schema is deprecated and SHOULD be transitioned out of usage. Default value is false."""
 
+        self.x_frozen = x_frozen
+        """Specifies that no modifications should be applied to this instance. Default is false."""
+
         if _type == "array" and not items:
             raise AssertionError(
                 "For `{}`, items MUST be present if the type is array.".format(self.__class__.__qualname__)
@@ -1722,6 +1736,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
             )
 
     def add_enum(self, enum: List):
+        assert not self.x_frozen, "Please do not modify a frozen Schema: {}".format(self)
         enum0_type: str = self.get_enum_type(enum)
 
         if self._type:
@@ -1738,6 +1753,11 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         else:
             self._type = enum0_type
         self.enum = enum
+
+    def clone(self) -> "Schema":
+        _clone = copy.deepcopy(self)
+        _clone.x_frozen = False
+        return _clone
 
     @classmethod
     def get_enum_type(cls, enum: List) -> str:
@@ -1768,12 +1788,12 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         return _enum_type
 
 
-Schema.Integer = Schema(_type="integer")
-Schema.Number = Schema(_type="number", _format="double")
-Schema.String = Schema(_type="string")
-Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize())
-Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize())
-Schema.Strings = Schema(_type="array", items=Schema.String.serialize())
+Schema.Integer = Schema(_type="integer", x_frozen=True)
+Schema.Number = Schema(_type="number", _format="double", x_frozen=True)
+Schema.String = Schema(_type="string", x_frozen=True)
+Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize(), x_frozen=True)
+Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize(), x_frozen=True)
+Schema.Strings = Schema(_type="array", items=Schema.String.serialize(), x_frozen=True)
 
 
 class Parameter(OObject):  # pylint: disable=too-many-instance-attributes

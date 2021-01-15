@@ -3,7 +3,7 @@ from typing import Set
 import pytest
 
 import sanic_openapi3e.oas_types
-from sanic_openapi3e.oas_types import Tag
+from sanic_openapi3e.oas_types import OAuthFlow, OAuthFlows, Tag
 
 
 def test_otype():
@@ -43,19 +43,12 @@ def test_license():
 
 
 def test_pathitem():
-    pi = sanic_openapi3e.oas_types.PathItem()
-    pi.x_exclude = True
+    pi = sanic_openapi3e.oas_types.PathItem(x_exclude=True)
     assert pi.x_exclude
 
-    ps = sanic_openapi3e.oas_types.Paths()
-    pi = ps[test_pathitem]
-    pi.x_exclude = True
+    ps = sanic_openapi3e.oas_types.Paths([("test_pathitem", pi)])
+    pi = ps["test_pathitem"]
     assert pi.x_exclude
-    assert test_pathitem in ps
-    assert ps[test_pathitem] == pi
-    assert ps[test_pathitem].x_exclude
-    ps[test_pathitem] = pi
-    assert ps[test_pathitem].x_exclude
 
 
 def test_tag_eq():
@@ -69,3 +62,17 @@ def test_set_of_tags():
     tags.add(Tag("name", "desc"))
     tags.add(Tag("name", "desc"))
     assert len(tags) == 1, tags
+
+
+def test_oauthflows_keys_casing__issue9():
+    assert OAuthFlows(
+        authorization_code=OAuthFlow(
+            authorization_url="authorization_url", token_url="token_url", scopes={"scope1": "", "scope2": ""},
+        )
+    ).as_yamlable_object() == {
+        "authorizationCode": {
+            "authorizationUrl": "authorization_url",
+            "tokenUrl": "token_url",
+            "scopes": {"scope1": "", "scope2": ""},
+        }
+    }

@@ -39,6 +39,7 @@ from .doc import (
     Server,
     Tag,
     endpoints,
+    simple_snake2camel,
 )
 from .doc import tags as doc_tags  # these originate in oas_types
 from .swagger import blueprint as swagger_bp
@@ -61,11 +62,6 @@ _OPENAPI_ALL_YAML: Dict[str, Any] = {}
 Module-level container to hold the OAS spec that may be served-up on request. The difference with this one is that it 
 contains all endpoints, including those marked as `exclude`.
 """
-
-
-def simple_snake2camel(string: str) -> str:
-    first, *rest = string.strip().lower().split("_")
-    return first + "".join(ele.capitalize() for ele in rest)
 
 
 CAST_2_SCHEMA = {int: Schema.Integer, float: Schema.Number, str: Schema.String}

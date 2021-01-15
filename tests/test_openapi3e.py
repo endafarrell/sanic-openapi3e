@@ -1757,7 +1757,7 @@ def test_yaml_spec(openapi__mod_bp_doc):
         del d["request"]  # not JSON serializable
         return sanic.response.json(d)
 
-    @app.get("/90/test_parameter__deprecated/<an_id:int>")
+    @app.get("/1760/test_parameter__deprecated/<an_id:int>")
     @doc.parameter(
         name="an_id", description="An ID", required=True, _in="path", deprecated=True, schema=doc.Schema.Integer,
     )
@@ -2036,11 +2036,11 @@ def test_yaml_spec(openapi__mod_bp_doc):
         """        '500':""",
         """          $ref: '#/components/responses/500'""",
         """      deprecated: true""",
-        """  /90/test_parameter__deprecated/{an_id}:""",
+        """  /1760/test_parameter__deprecated/{an_id}:""",
         """    get:""",
         """      summary: A path deprecated parameter""",
         """      description: The parameter should be marked as deprecated""",
-        """      operationId: GET~~~90~test_parameter__deprecated~an_id""",
+        """      operationId: GET~~~1760~test_parameter__deprecated~an_id""",
         """      parameters:""",
         """      - name: an_id""",
         """        description: An ID""",

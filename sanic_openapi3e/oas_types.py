@@ -35,6 +35,7 @@ This implementation has some known limitations:
 import copy
 import functools
 import json
+import traceback
 import warnings
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
@@ -998,10 +999,6 @@ class Encoding(OObject):
         if headers:
             for _header_name, header_spec in headers.items():
                 assert isinstance(header_spec, (Header, Reference))
-                # if header_name.lower == "Content-Type".lower():
-                #     logger.warning(
-                #         "Content-Type is described separately and SHALL be ignored in `Encoding.headers`."
-                #     )
         if style:
             assert style in ("matrix", "label", "form", "simple", "spaceDelimited", "pipeDelimited", "deepObject",)
             # TODO - add (where?) check that the style is suitable for this type+location.
@@ -1105,6 +1102,7 @@ class MediaType(OObject):
                     {"encoding": encoding, "example": example, "examples": examples, "schema": schema}
                 )
             )
+            traceback.print_stack()
         self.schema = schema
         """The schema defining the content of the request, response, or parameter."""
 
@@ -1233,7 +1231,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         one_of: Optional[Union["Schema", Reference]] = None,
         any_of: Optional[Union["Schema", Reference]] = None,
         _not: Optional[Union["Schema", Reference]] = None,
-        items: Optional[Dict[str, str]] = None,
+        items: Optional[Dict[str, Union["Schema", Reference]]] = None,
         properties: Optional[Union["Schema", Reference]] = None,
         additional_properties: Optional[Union["Schema", Reference]] = None,
         description: Optional[str] = None,
@@ -1747,7 +1745,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
                         enum0_type,
                     )
                 else:
-                    self.items = {"type": enum0_type}
+                    self.items = {"items": Schema(_type=enum0_type)}
             else:
                 assert self._type == enum0_type, (self._type, enum0_type)
         else:

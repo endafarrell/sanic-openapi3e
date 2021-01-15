@@ -84,7 +84,9 @@ def run_asserts(
         assert response.status == 200
         spec = json.loads(response.body.decode())
 
-    if not json.dumps(spec, sort_keys=True) == json.dumps(expected, sort_keys=True):
+    if json.dumps(spec, sort_keys=True) != json.dumps(
+        expected, sort_keys=True
+    ):
         print("\n   actual:", json.dumps(spec, sort_keys=True))
         print("expected:", json.dumps(expected, sort_keys=True))
 

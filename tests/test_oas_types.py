@@ -63,6 +63,13 @@ def test_set_of_tags():
     assert len(tags) == 1, tags
 
 
+def test_sorted_tags():
+    tags: Set[Tag] = set()
+    tags.add(Tag("nameB", "descB"))
+    tags.add(Tag("nameA", "descA"))
+    assert sorted(tags) == [Tag("nameA", "descA"), Tag("nameB", "descB")]
+
+
 def test_oauthflows_keys_casing__issue9():
     assert OAuthFlows(
         authorization_code=OAuthFlow(

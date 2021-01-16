@@ -40,6 +40,8 @@ import warnings
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
+import sanic.router
+
 
 def _assert_type(element: Any, types: Sequence[Any], name: str, clazz: Type[Any]) -> None:
     """
@@ -236,12 +238,12 @@ class OObject:
         _repr = OrderedDict()  # type: OrderedDict[str, Union[Dict, List]]
         for key, value in self.__dict__.items():
 
-            if value is None or value == []:
+            if value is None or value == [] or callable(value):
                 continue
             if key.startswith("x_") and not for_repr:
                 continue
             key2 = openapi_keyname(key)
-            value2: Union[Dict, List] = []
+            value2: Union[Dict, List]
             if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
                 value2 = list(OObject._serialize(e, for_repr=for_repr, sort=sort) for e in value)
             elif key2 == "security":
@@ -254,8 +256,10 @@ class OObject:
                 value2 = OObject._serialize(value, sort=True)
             else:
                 value2 = OObject._serialize(value)
-            if not value2:
+            if not value2 or callable(value2):
+
                 continue
+
             _repr[key2] = value2
         if sort:
             _sorted_repr = OrderedDict()
@@ -2038,6 +2042,7 @@ class Parameter(OObject):  # pylint: disable=too-many-instance-attributes
         """
 
     def __add__(self, other):
+        print(2045, self, other)
         assert isinstance(other, Parameter)
         _d = dict()
         for key, value in self.__dict__.items():  # pylint: disable=too-many-nested-blocks
@@ -2877,6 +2882,7 @@ class Operation(OObject):  # pylint: disable=too-many-instance-attributes
         deprecated: bool = False,
         security: Optional[List[SecurityRequirement]] = None,
         servers: Optional[List[Server]] = None,
+        x_handler_route: sanic.router.Route = None,
     ):
         """
         Describes a single API operation on a path.
@@ -2991,6 +2997,8 @@ class Operation(OObject):  # pylint: disable=too-many-instance-attributes
         An alternative server array to service this operation. If an alternative server object is specified at the 
         PathItem Object or Root level, it will be overridden by this value.
         """
+
+        self.x_handler_route = x_handler_route
 
 
 class Tag(OObject):
@@ -3168,6 +3176,10 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
         self.x_deprecated_holder = x_deprecated_holder
         self.x_responses_holder: Responses = Responses(x_responses_holder)
         self.x_exclude = x_exclude
+
+    def x_operations(self) -> List[Operation]:
+        _ops = [self.get, self.get, self.put, self.post, self.delete, self.options, self.head, self.patch, self.trace]
+        return [_op for _op in _ops if _op]
 
 
 class Paths(OObject):

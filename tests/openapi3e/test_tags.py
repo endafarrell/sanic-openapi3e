@@ -13,6 +13,7 @@ from tests.conftest import run_asserts, strict_slashes, true
 @pytest.mark.xfail(reason="Works for apps, but within multiple tests refactoring is needed")
 def test_show_unused_tag_v1(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
+    assert not doc.module_tags, doc.module_tags
     app = Sanic("test_show_unused_tag_v1", strict_slashes=strict_slashes)
 
     app.blueprint(openapi_blueprint)
@@ -36,7 +37,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
         return sanic.response.json(locals())  # pragma: no cover
 
     @app.delete("/test/1057/deleteitem/<an_id:int>")
-    @doc.tag("Tag 2 - not used")
+    @doc.tag("Tag 2 - not used", description="Not used as teh only route with it is excluded")
     @doc.exclude()
     @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def delete_item(_, an_id: int):
@@ -44,11 +45,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
 
     # noinspection PyProtectedMember
     spec = sanic_openapi3e.openapi._build_openapi_spec(
-        app,
-        hide_openapi_self=True,
-        hide_excluded=True,
-        show_unused_tags=True,
-        operation_id_fn=sanic_openapi3e.openapi.default_operation_id_fn,
+        app, operation_id_fn=sanic_openapi3e.openapi.default_operation_id_fn, hide_openapi_self=True, hide_excluded=True
     )
     expected = {
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
@@ -68,6 +65,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                         "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
+                    "tags": ["Tag 1 - used"],
                 }
             },
             "/test/1041/putitem/{an_id}": {
@@ -84,6 +82,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                         "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
+                    "tags": ["Tag 1 - used"],
                 }
             },
             "/test/1049/postitem/{an_id}": {
@@ -125,7 +124,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
     run_asserts(spec, expected)
 
 
-@pytest.mark.xfail(reason="Works for apps, but within multiple tests refactoring is needed")
+# @pytest.mark.xfail(reason="Works for apps, but within multiple tests refactoring is needed")
 def test_show_unused_tag_v2(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_show_unused_tag_v2", strict_slashes=strict_slashes)
@@ -139,7 +138,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
         return sanic.response.json(locals())  # pragma: no cover
 
     @app.put("/test/1139/putitem/<an_id:int>")
-    @doc.tag("Tag 1 - used")
+    @doc.tag("Tag 1 - used", description="A desc for Tag 1")
     @doc.parameter(name="an_id", description="An ID", choices=[1, 3, 5, 7, 11, 13], _in="path")
     def put_item(_, an_id: int):
         return sanic.response.json(locals())  # pragma: no cover
@@ -160,18 +159,17 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
     # noinspection PyProtectedMember
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
+        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
-        show_unused_tags=True,
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
     )
     expected = {
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
-            "/test/1033/getitem/{an_id}": {
+            "/test/1131/getitem/{an_id}": {
                 "get": {
-                    "operationId": "GET~~~test~1033~getitem~an_id",
+                    "operationId": "getItem",
                     "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
@@ -185,9 +183,9 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     },
                 }
             },
-            "/test/1041/putitem/{an_id}": {
+            "/test/1139/putitem/{an_id}": {
                 "put": {
-                    "operationId": "PUT~~~test~1041~putitem~an_id",
+                    "operationId": "putItem",
                     "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
@@ -201,9 +199,9 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     },
                 }
             },
-            "/test/1049/postitem/{an_id}": {
+            "/test/1147/postitem/{an_id}": {
                 "post": {
-                    "operationId": "POST~~~test~1049~postitem~an_id",
+                    "operationId": "postItem",
                     "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
@@ -217,9 +215,9 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     },
                 }
             },
-            "/test/1057/deleteitem/{an_id}": {
+            "/test/1155/deleteitem/{an_id}": {
                 "delete": {
-                    "operationId": "DELETE~~~test~1057~deleteitem~an_id",
+                    "operationId": "deleteItem",
                     "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
@@ -242,10 +240,9 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
     # noinspection PyProtectedMember
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
+        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
-        show_unused_tags=False,  # <<-- notice show_unused_tags is False
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
     )
     expected = {
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},

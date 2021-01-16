@@ -312,23 +312,7 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
     )
 
     _v3_paths: Paths = Paths(_oas_paths)
-    _v3_tags: List[Tag] = sorted(doc_tags.values())
-
-    if not show_unused_tags:  # pylint: disable=too-many-nested-blocks
-        # Check that the tags are in use. This can depend on `hide_excluded`, so we re-use the _v3_paths.
-        in_use_tags: Set[Tag] = set()
-        for tag in _v3_tags:
-            for _path, path_item in _v3_paths:
-                for op_name in Operation.OPERATION_NAMES:
-                    operation: Operation = getattr(path_item, op_name)
-                    if operation:
-                        op_tag_names = operation.tags
-                        if op_tag_names:
-                            for op_tag_name in op_tag_names:
-                                if tag.name == op_tag_name:
-                                    if not any([t.name == op_tag_name for t in in_use_tags]):
-                                        in_use_tags.add(tag)
-        _v3_tags = sorted(in_use_tags)
+    _v3_tags = _build_openapi_tags(_oas_paths, show_unused_tags)
 
     servers = app.config.get("OPENAPI_SERVERS", None)
     if servers:
@@ -378,6 +362,19 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
         external_docs=external_docs,
     )
     return openapi
+
+
+def _build_openapi_tags(_paths: List[Tuple[str, PathItem]], show_unused_tags: bool = False) -> List[Tag]:
+    _tags: Set[Tag] = set(doc_tags.values())
+    if not show_unused_tags:
+        # Check that the tags are in use. This can depend on `hide_excluded`, so we re-use the _paths.
+        in_use_tag_names: Set[str] = set()
+        for _path, path_item in _paths:
+            for operation in path_item.x_operations():
+                for op_tag_name in operation.tags or []:
+                    in_use_tag_names.add(op_tag_name)
+        _tags = {tag for tag in _tags if tag.name in in_use_tag_names}
+    return sorted(_tags)
 
 
 @blueprint.route("/spec.json")

@@ -54,6 +54,16 @@ test: good
 		--cov sanic_openapi3e --cov tests \
 		--verbose --verbose \
 		--failed-first
+.PHONY: test_inc_xfail
+test_inc_xfail: good
+	PYTHONPATH=. py.test \
+		--cov-report term:skip-covered \
+		--cov-report html \
+		--cov sanic_openapi3e --cov tests \
+		--verbose --verbose \
+		--runxfail \
+		--failed-first
+
 
 
 

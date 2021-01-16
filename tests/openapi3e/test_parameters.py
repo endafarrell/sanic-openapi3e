@@ -154,6 +154,7 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
 
 @pytest.mark.xfail(reason="The type is not being updated as expected yet.")
 def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
+    # The param was not explicitly typed, but the
     _, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_path_parameter_conflicting_types", strict_slashes=strict_slashes)
 
@@ -173,10 +174,9 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
 
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
+        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
-        show_unused_tags=False,
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
     )
 
     expected = {

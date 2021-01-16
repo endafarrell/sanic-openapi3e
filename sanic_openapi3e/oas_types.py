@@ -89,7 +89,7 @@ def openapi_keyname(key: str) -> str:
     """
     Returns the OpenAPI name for keys.
     """
-    _key = {
+    return {
         "_format": "format",
         "_in": "in",
         "_license": "license",
@@ -121,7 +121,6 @@ def openapi_keyname(key: str) -> str:
         "unique_items": "uniqueItems",
         "write_only": "writeOnly",
     }.get(key, simple_snake2camel(key))
-    return _key
 
 
 NoneType = type(None)
@@ -190,26 +189,37 @@ class OObject:
             key2 = openapi_keyname(key)
             value2: Union[Dict, List, str, bytes, int, float]
             if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
-                value2 = list(OObject._as_yamlable_dict(e, sort=sort, opt_key=f"{opt_key}.{key2}") for e in value)
+                value2 = [
+                    OObject._as_yamlable_dict(
+                        e, sort=sort, opt_key=f"{opt_key}.{key2}"
+                    )
+                    for e in value
+                ]
+
             elif key2 == "responses" and self.__class__ == Components:
                 value2 = {
                     key: value.as_yamlable_object(opt_key=f"{opt_key}.{key2}")
                     for key, value in Responses.DEFAULT_RESPONSES.items()
                 }
             elif key2 == "security":
-                value2 = list(
+                value2 = [
                     SecurityRequirement._as_yamlable_dict(  # pylint: disable=protected-access
                         sr, opt_key=f"{opt_key}.{key2}"
                     )
                     for sr in value
-                )
+                ]
+
             elif key2 == "schemas":
                 # Everyone wants sorted schema entries!
                 value2 = OObject._as_yamlable_dict(value, sort=True, opt_key=f"{opt_key}.{key2}")
             elif key2 == "paths":
-                value2 = {}
-                for uri, path_item in value._paths:  # pylint: disable=protected-access
-                    value2[uri] = OObject._as_yamlable_dict(path_item, opt_key=f"{opt_key}.{uri}")
+                value2 = {
+                    uri: OObject._as_yamlable_dict(
+                        path_item, opt_key=f"{opt_key}.{uri}"
+                    )
+                    for uri, path_item in value._paths
+                }
+
             elif key2 == "examples":
                 value2 = {
                     key3: OObject._as_yamlable_dict(value3, opt_key=f"{opt_key}.{key2}")
@@ -500,10 +510,10 @@ class ServerVariable(OObject):
 
         if enum:
             # All strings
-            if not set(type(e) for e in enum) == {type("str")}:
+            if {type(e) for e in enum} != {type("str")}:
                 raise AssertionError("For `{}`, all enum values must be str.".format(self.__class__.__qualname__))
             # All unique
-            if not len(set(enum)) == len(enum):
+            if len(set(enum)) != len(enum):
                 raise AssertionError("For `{}`, all enum values must be unique.".format(self.__class__.__qualname__))
         self.enum = enum
         """An enumeration of string values to be used if the substitution options are from a limited set."""
@@ -2044,41 +2054,40 @@ class Parameter(OObject):  # pylint: disable=too-many-instance-attributes
     def __add__(self, other):
         print(2045, self, other)
         assert isinstance(other, Parameter)
-        _d = dict()
+        _d = {}
         for key, value in self.__dict__.items():  # pylint: disable=too-many-nested-blocks
-            if not value:
-                _d[key] = getattr(other, key)
-            else:
+            if value:
                 _d[key] = value
                 other_value = getattr(other, key)
-                if other_value:
-                    if value != other_value:
+                if other_value and value != other_value:
                         # TODO - this should be done recursively. Move __add__ up to OObject?
                         # eg: schema:
                         # Schema{"type": "integer"} != Schema{"format": "int32", "minimum": 4, "type": "integer"}
-                        if isinstance(other_value, Reference):
-                            # Simple replace.
-                            # TODO - check that the ref actually exists in the components.
-                            # TODO - check that the ref is compatible
-                            _d[key] = other_value
+                    if isinstance(other_value, Reference):
+                        # Simple replace.
+                        # TODO - check that the ref actually exists in the components.
+                        # TODO - check that the ref is compatible
+                        _d[key] = other_value
 
-                        elif isinstance(value, OObject):
-                            v_d = dict()
-                            for v_k, v_v in value.__dict__.items():
-                                if not v_v:
-                                    v_d[v_k] = getattr(other_value, v_k)
-                                else:
-                                    v_d[v_k] = v_v
-                                    v_ov = getattr(other_value, v_k)
-                                    if v_ov:
-                                        assert v_v == v_ov, "{}.{}: {} != {}".format(key, v_k, v_v, v_ov)
+                    elif isinstance(value, OObject):
+                        v_d = {}
+                        for v_k, v_v in value.__dict__.items():
+                            if v_v:
+                                v_d[v_k] = v_v
+                                v_ov = getattr(other_value, v_k)
+                                if v_ov:
+                                    assert v_v == v_ov, "{}.{}: {} != {}".format(key, v_k, v_v, v_ov)
 
-                            # TODO: this use of globals is _OK_ but it would be nice to not need it.
-                            _d[key] = globals()[value.__class__.__qualname__](**v_d)
+                            else:
+                                v_d[v_k] = getattr(other_value, v_k)
+                        # TODO: this use of globals is _OK_ but it would be nice to not need it.
+                        _d[key] = globals()[value.__class__.__qualname__](**v_d)
 
-                        else:
-                            raise AssertionError("{}: {} != {}".format(key, getattr(self, key), other_value))
+                    else:
+                        raise AssertionError("{}: {} != {}".format(key, getattr(self, key), other_value))
 
+            else:
+                _d[key] = getattr(other, key)
         return Parameter(**_d)
 
 
@@ -3229,10 +3238,7 @@ class Paths(OObject):
         raise KeyError(item)
 
     def __contains__(self, item):
-        for _parsed_uri, _path_item in self._paths:
-            if _parsed_uri == item:
-                return True
-        return False
+        return any(_parsed_uri == item for _parsed_uri, _path_item in self._paths)
 
     def __iter__(self):
         yield from self._paths
@@ -3355,7 +3361,7 @@ class OpenAPIv3(OObject):  # pylint: disable=too-many-instance-attributes
         """
 
         if tags:
-            assert sorted(set(t.name for t in tags)) == sorted(t.name for t in tags)
+            assert sorted({t.name for t in tags}) == sorted(t.name for t in tags)
         self.tags = tags
         """
         A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect 

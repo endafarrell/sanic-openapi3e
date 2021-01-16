@@ -39,9 +39,9 @@ from .doc import (
     Server,
     Tag,
     endpoints,
-    simple_snake2camel,
 )
-from .doc import tags as doc_tags  # these originate in oas_types
+from .doc import module_tags as doc_tags  # these originate in oas_types
+from .doc import simple_snake2camel
 from .swagger import blueprint as swagger_bp
 
 blueprint = Blueprint("openapi", url_prefix="openapi")
@@ -278,8 +278,8 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
                 tags=sorted(pathitem_tag_names),
                 deprecated=path_item.x_deprecated_holder,
                 request_body=path_item.request_body,
+                servers=path_item.servers,
                 # TODO
-                servers=NOT_YET_IMPLEMENTED,
                 security=NOT_YET_IMPLEMENTED,
                 callbacks=NOT_YET_IMPLEMENTED,
             )
@@ -311,7 +311,7 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
         version=app.config.get("API_VERSION", "v1.0.0"),
     )
 
-    _v3_paths = Paths(_oas_paths)
+    _v3_paths: Paths = Paths(_oas_paths)
     _v3_tags: List[Tag] = sorted(doc_tags.values())
 
     if not show_unused_tags:  # pylint: disable=too-many-nested-blocks

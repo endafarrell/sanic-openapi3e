@@ -13,6 +13,7 @@ from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
 
 # isort: on
 
+example_port = 8002
 days_of_week = doc.Schema(
     _type="string",
     description="Days of the week, short, English",
@@ -23,6 +24,8 @@ app = Sanic(name=__file__, strict_slashes=True)
 app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
+servers = [doc.Server(f"http://localhost:{example_port}", "this server")]
+app.config.OPENAPI_SERVERS = servers
 schemas = {
     "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",),
     "days": days_of_week,
@@ -39,13 +42,11 @@ dow_ref = doc.Reference("#/components/schemas/days")
 @doc.parameter(
     name="hops", description="hops to use", required=True, _in="path", schema=int_min_4_ref,
 )
+@doc.servers(servers + [doc.Server("https://my-server.url", description="An alt server")])
 def get_start_end_hops(request, start: str, end: str, hops: int):
     d = locals()
     del d["request"]  # not JSON serializable
     return sanic.response.json(d)
-
-
-example_port = 8002
 
 
 @app.listener("after_server_start")

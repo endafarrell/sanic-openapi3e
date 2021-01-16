@@ -3,7 +3,7 @@ TODO - note: everything is documented at the PathItem level, not the Operation l
 """
 from .oas_types import *  # pylint: disable=unused-wildcard-import, wildcard-import  # <<-- here for users
 
-tags: Dict[str, Tag] = {}
+module_tags: Dict[str, Tag] = {}
 endpoints: Paths = Paths()
 
 
@@ -219,6 +219,20 @@ def response(
     return inner
 
 
+def servers(server_list: List[Server]):
+    """
+    Add an alternative server array to service all operations in this path. Note that if you have not set the top-level
+    `Servers` (via `app.config.OPENAPI_SERVERS = [doc.Server(f"http://localhost:8000", "this server")]`) then this
+    path-level `Servers` will not be shown in Swagger.
+    """
+
+    def inner(func):
+        endpoints[func].servers = server_list
+        return func
+
+    return inner
+
+
 def summary(text):
     """
     Add a summary to the route by marking them `@doc.summary("Summary text")`
@@ -238,19 +252,19 @@ def tag(name, description=None):  # pylint: disable=redefined-outer-name
     """
 
     def inner(func):
-        if name not in tags:
-            tags[name] = Tag(name=name, description=description)
+        if name not in module_tags:
+            module_tags[name] = Tag(name=name, description=description)
         else:
-            if not tags[name].description:
-                tags[name] = Tag(name=name, description=description)
+            if not module_tags[name].description:
+                module_tags[name] = Tag(name=name, description=description)
             else:
                 if description:
-                    if not tags[name].description == description:
+                    if not module_tags[name].description == description:
                         msg = "Conflicting tag.description for tag `{}`: existing: `{}`, conflicting: `{}`".format(
-                            name, tags[name].description, description
+                            name, module_tags[name].description, description
                         )
-                        assert tags[name].description == description, msg
-        endpoints[func].x_tags_holder.append(tags[name])
+                        assert module_tags[name].description == description, msg
+        endpoints[func].x_tags_holder.append(module_tags[name])
         return func
 
     return inner

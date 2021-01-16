@@ -9,8 +9,7 @@ from sanic_openapi3e.oas_types import OAuthFlow, OAuthFlows, Tag
 def test_otype():
     with pytest.raises(TypeError):
         # noinspection PyArgumentList
-        o = sanic_openapi3e.oas_types.OType(value=2)
-        assert o.serialize(for_repr=False) == {"value": 2}
+        sanic_openapi3e.oas_types.OType(value=2)
 
     o_int = sanic_openapi3e.oas_types.OInteger(value=2, _format="int32")
     assert o_int.serialize(for_repr=False) == {"value": 2, "format": "int32"}

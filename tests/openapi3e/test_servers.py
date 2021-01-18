@@ -1,7 +1,7 @@
 import sanic.response
 from sanic import Sanic
 
-from tests.conftest import run_asserts, true
+from tests.conftest import false, run_asserts, true
 
 
 def test_servers(openapi__mod_bp_doc):
@@ -57,14 +57,26 @@ def test_servers(openapi__mod_bp_doc):
                 "days": {
                     "description": "Days of the week, short, English",
                     "enum": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    "exclusiveMaximum": false,
+                    "exclusiveMinimum": false,
+                    "nullable": false,
+                    "readOnly": false,
                     "type": "string",
+                    "uniqueItems": false,
+                    "writeOnly": false,
                 },
                 "int.min4": {
                     "description": "Minimum: 4",
+                    "exclusiveMaximum": false,
+                    "exclusiveMinimum": false,
                     "format": "int32",
                     "minimum": 4,
+                    "nullable": false,
+                    "readOnly": false,
                     "title": "int.min4",
                     "type": "integer",
+                    "uniqueItems": false,
+                    "writeOnly": false,
                 },
             },
         },

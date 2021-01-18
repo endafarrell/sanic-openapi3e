@@ -29,6 +29,19 @@ def exclude():
     return inner
 
 
+def external_docs(url: str, description: Optional[str] = None):  # pylint: disable=redefined-outer-name
+    """
+    Add an externalDoc to the route. Note that some UIs do not show route/operation external_docs.
+    """
+
+    def inner(func):
+
+        endpoints[func].x_external_docs_holder = ExternalDocumentation(url, description=description)
+        return func
+
+    return inner
+
+
 def description(text: str):
     """
     Add a description to the route by marking them `@doc.description("Descriptive text")`
@@ -252,18 +265,17 @@ def tag(name, description=None):  # pylint: disable=redefined-outer-name
     """
 
     def inner(func):
-        if name not in module_tags:
-            module_tags[name] = Tag(name=name, description=description)
-        else:
-            if not module_tags[name].description:
-                module_tags[name] = Tag(name=name, description=description)
+        if name in module_tags:
+            if module_tags[name].description:
+                if description and module_tags[name].description != description:
+                    msg = "Conflicting tag.description for tag `{}`: existing: `{}`, conflicting: `{}`".format(
+                        name, module_tags[name].description, description
+                    )
+                    assert module_tags[name].description == description, msg
             else:
-                if description:
-                    if not module_tags[name].description == description:
-                        msg = "Conflicting tag.description for tag `{}`: existing: `{}`, conflicting: `{}`".format(
-                            name, module_tags[name].description, description
-                        )
-                        assert module_tags[name].description == description, msg
+                module_tags[name] = Tag(name=name, description=description)
+        else:
+            module_tags[name] = Tag(name=name, description=description)
         endpoints[func].x_tags_holder.append(module_tags[name])
         return func
 

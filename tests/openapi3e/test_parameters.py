@@ -7,7 +7,7 @@ from sanic import Sanic
 
 import sanic_openapi3e
 import sanic_openapi3e.oas_types
-from tests.conftest import null, run_asserts, strict_slashes, true
+from tests.conftest import false, null, run_asserts, strict_slashes, true
 
 
 @pytest.mark.asyncio
@@ -73,7 +73,25 @@ def test_param_in_query(openapi__mod_bp_doc):
                             "in": "query",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "items": {"type": "integer"}, "type": "array"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "items": {
+                                    "exclusiveMaximum": false,
+                                    "exclusiveMinimum": false,
+                                    "nullable": false,
+                                    "readOnly": false,
+                                    "type": "integer",
+                                    "uniqueItems": false,
+                                    "writeOnly": false,
+                                },
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "array",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -130,8 +148,17 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
                             "description": "An ID",
                             "in": "path",
                             "name": "an_id",
-                            "required": true,  # <<-- note: detail under test
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "required": true,
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -244,8 +271,16 @@ def test_path_params_w_schema_wo_choices(openapi__mod_bp_doc):
                             "description": "An ID",
                             "in": "path",
                             "name": "an_id",
-                            "required": true,  # <<-- note: detail under test
-                            "schema": {"type": "integer"},
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -293,7 +328,16 @@ def test_path_params_wo_schema_w_choices(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": ["a", "b", "o"], "type": "string"},
+                            "schema": {
+                                "enum": ["a", "b", "o"],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "string",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -339,7 +383,15 @@ def test_path_params_wo_schema_wo_choices(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"type": "string"},
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "string",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {

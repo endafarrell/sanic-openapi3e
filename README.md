@@ -396,3 +396,61 @@ spec at `/openapi/spec.all.json` is created. You generally won't want
 these to be on your production deployment, but you may want it for dev
 and test purposes. 
 
+| app.config | Purpose |
+|---|---|
+app.config.get("HIDE_OPENAPI_SELF", True) | If True, hide the /openapi and /swagger endpoints from the swagger UI. Usually set to True.
+app.config.get("HIDE_SANIC_STATIC", True) | If True, hide any sanic paths designed to serve up static files like images. Usually set to True.
+app.config.get("SHOW_OPENAPI_EXCLUDED", False) | See above.
+app.config.get("SHOW_OPENAPI_UNUSED_TAGS", False) | If True, your spec will include tags which have no visible routes. Usually set to False.
+app.config.get("OPENAPI_OPERATION_ID_FN", default_operation_id_fn) | See above.
+app.config.get("OPENAPI_COMPONENTS") | Allows you to build your own `Components` for the spec.
+app.config.get("API_CONTACT_NAME") | If set, creates a `Contact` with a `.name`. Combines with the other `Contact` attributes.
+app.config.get("API_CONTACT_URL") | If set, creates a `Contact` with a `.url`. Combines with the other `Contact` attributes.
+app.config.get("API_CONTACT_EMAIL") | If set, creates a `Contact` with a `.email`. Combines with the other `Contact` attributes.
+app.config.get("API_LICENSE_NAME") | If set, creates a `License` with a `.name`. Combines with the other `License` attributes.
+app.config.get("API_LICENSE_URL") | If set, creates a `License` with a `.url`. Combines with the other `License` attributes.
+app.config.get("API_TITLE", "API") | Set a better `.name` than "API" for your API!
+app.config.get("API_DESCRIPTION", "Description") | Set a better `.description` than "Description" for your API!
+app.config.get("API_TERMS_OF_SERVICE_URL") | If set, adds a `termsOfService` to your `.info`
+app.config.get("API_VERSION", "v1.0.0") | Set a better `.version` for your API!
+app.config.get("OPENAPI_SERVERS") | Allows you to build your own `Servers` for the spec.
+app.config.get("OPENAPI_SECURITY") | Allows you to build your own `Security` for the spec.
+app.config.get("OPENAPI_EXTERNAL_DOCS") | If set, adds an `ExternalDocumentation` to your spec
+app.config.get("OPENAPI_YAML_CONTENTTYPE", default_yaml_content_type) | See your `/openapi/spec.yml` in a browser by setting this to `text/plain`
+
+# OAS Object maturity
+`sanic-openapi3e` is being used in production, and all of the spec is implemented. Most of the spec is known to be in
+production use, but some of the spec's objects are marked here as "beta" due to no known production use.
+
+| Class | sanic-openapi3e maturity | notes |
+|---|---|---|
+Callback | beta | no known usage
+Components | production/stable |  |
+Contact | production/stable |  |
+Discriminator | beta | no known usage
+Encoding | stable | no known usage |
+Example | production/stable |  |
+ExternalDocumentation | production/stable |  |
+Header | beta | no known usage
+Info | production/stable |  |
+License | production/stable |  |
+Link | beta | no known usage
+MediaType | production/stable |  |
+OAuthFlow | production/stable |  |
+OAuthFlows | production/stable |  |
+OpenAPIv3 | production/stable |  |
+Operation | production/stable |  |
+Parameter | production/stable |  |
+PathItem | production/stable |  |
+Paths | production/stable |  |
+Reference | production/stable |  |
+RequestBody | production/stable |  |
+Response | production/stable |  |
+Responses | production/stable |  |
+Schema | production/stable |  |
+SecurityRequirement | beta | no known usage
+SecurityScheme | production/stable |  |
+Server | production/stable |  |
+ServerVariable | beta | no known usage
+Tag | production/stable |  |
+XML | beta | no known usage

@@ -32,6 +32,7 @@ schemas = {
     "int.min4": doc.Schema(title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",),
 }
 components = doc.Components(schemas=schemas)
+app.config.API_TITLE = __file__
 app.config.OPENAPI_COMPONENTS = components
 app.config.SHOW_OPENAPI_EXCLUDED = True
 int_min_4_ref = doc.Reference("#/components/schemas/int.min4")

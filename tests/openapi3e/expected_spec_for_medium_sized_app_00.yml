@@ -1,0 +1,604 @@
+openapi: 3.0.2
+info:
+  title: API
+  version: v1.0.0
+  description: Description
+paths:
+  /41/test_id/{an_id}:
+    get:
+      tags:
+      - Tag 1
+      operationId: testId
+      parameters:
+      - name: an_id
+        description: An ID
+        in: path
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          type: integer
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /47/test_id_min/{an_id}:
+    get:
+      operationId: testIdMin
+      parameters:
+      - name: an_id
+        description: An ID
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/int.min4'
+      responses:
+        '200':
+          description: You got a 200!
+          headers:
+            x-prize:
+              description: free money
+              required: false
+              allowEmptyValue: false
+              explode: false
+              allowReserved: false
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /55/test_id_examples/{an_id}:
+    get:
+      summary: A path with parameter examples
+      description: 'Unfortunately, the swagger UIs do not show the examples, but you
+        can see them here:
+
+
+        `{''small'': Example{"description": "Desc: Numbers less than ten", "summary":
+        "A small number", "value": 7}, ''big'': Example{"description": "Desc: Numbers
+        more than one million!", "summary": "A big number", "value": 123456789}}`'
+      operationId: testIdExamples
+      parameters:
+      - name: an_id
+        description: An ID
+        in: path
+        required: true
+        schema:
+          exclusiveMaximum: false
+          minimum: 4
+          exclusiveMinimum: false
+          uniqueItems: false
+          type: integer
+          description: 'Minimum value: 4'
+          format: int32
+          nullable: false
+          readOnly: false
+          writeOnly: false
+        examples:
+          small:
+            summary: A small number
+            description: 'Desc: Numbers less than ten'
+            value: 7
+          big:
+            summary: A big number
+            description: 'Desc: Numbers more than one million!'
+            value: 123456789
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /74/test_path__deprecated/{an_id}/{another}:
+    get:
+      summary: A path with parameter examples
+      description: This should be marked as being deprecated
+      operationId: pathDeprecated
+      parameters:
+      - name: an_id
+        description: An ID
+        in: path
+        required: true
+        schema:
+          exclusiveMaximum: false
+          minimum: 4
+          exclusiveMinimum: false
+          uniqueItems: false
+          type: integer
+          description: 'Minimum value: 4'
+          format: int32
+          nullable: false
+          readOnly: false
+          writeOnly: false
+        examples:
+          small:
+            summary: A small number
+            description: 'Desc: Numbers less than ten'
+            value: 7
+          big:
+            summary: A big number
+            description: 'Desc: Numbers more than one million!'
+            value: 123456789
+      - name: another
+        in: path
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          type: string
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+      deprecated: true
+  /90/test_parameter__deprecated/{an_id}:
+    get:
+      summary: A path deprecated parameter
+      description: The parameter should be marked as deprecated
+      operationId: paramDeprecated
+      parameters:
+      - name: an_id
+        description: An ID
+        in: path
+        required: true
+        deprecated: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          type: integer
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /109/some_ids:
+    get:
+      operationId: testSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /123/post_some_ids:
+    post:
+      operationId: testPostSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /137/put_some_ids:
+    put:
+      operationId: testPutSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /151/options_some_ids:
+    options:
+      operationId: testOptionsSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /165/delete_some_ids:
+    delete:
+      operationId: testDeleteSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /179/head_some_ids:
+    head:
+      operationId: testHeadSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+  /194/patch_some_ids:
+    patch:
+      operationId: testPatchSomeIds
+      parameters:
+      - name: ids
+        description: Some IDs
+        in: query
+        required: true
+        schema:
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          uniqueItems: false
+          enum:
+          - 1
+          - 3
+          - 5
+          - 7
+          - 11
+          - 13
+          type: array
+          items:
+            exclusiveMaximum: false
+            exclusiveMinimum: false
+            uniqueItems: false
+            type: integer
+            nullable: false
+            readOnly: false
+            writeOnly: false
+          nullable: false
+          readOnly: false
+          writeOnly: false
+      responses:
+        '200':
+          $ref: '#/components/responses/200'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '410':
+          $ref: '#/components/responses/410'
+        '500':
+          $ref: '#/components/responses/500'
+components:
+  schemas:
+    int.min4:
+      description: 'Minimum: 4'
+      exclusiveMaximum: false
+      exclusiveMinimum: false
+      format: int32
+      minimum: 4
+      nullable: false
+      readOnly: false
+      title: int.min4
+      type: integer
+      uniqueItems: false
+      writeOnly: false
+    str.min4:
+      description: A string of len >= 4
+      exclusiveMaximum: false
+      exclusiveMinimum: false
+      minimum: 4
+      nullable: false
+      readOnly: false
+      title: str.min4
+      type: string
+      uniqueItems: false
+      writeOnly: false
+  responses:
+    '200':
+      description: OK
+    '400':
+      description: Bad Request
+    '401':
+      description: Unauthorized
+    '403':
+      description: Forbidden
+    '404':
+      description: Not Found
+    '405':
+      description: Method Not Allowed
+    '410':
+      description: Gone
+    '500':
+      description: Internal Server Error
+tags:
+- name: Tag 1
+  description: A tag desc

@@ -3,7 +3,7 @@ import sanic.response
 from sanic import Sanic
 
 import sanic_openapi3e
-from tests.conftest import run_asserts, strict_slashes, true
+from tests.conftest import false, run_asserts, strict_slashes, true
 
 # ------------------------------------------------------------ #
 #  tag details
@@ -124,7 +124,6 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
     run_asserts(spec, expected)
 
 
-# @pytest.mark.xfail(reason="Works for apps, but within multiple tests refactoring is needed")
 def test_show_unused_tag_v2(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_show_unused_tag_v2", strict_slashes=strict_slashes)
@@ -170,7 +169,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1131/getitem/{an_id}": {
                 "get": {
                     "operationId": "getItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -186,7 +200,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1139/putitem/{an_id}": {
                 "put": {
                     "operationId": "putItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -202,7 +231,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1147/postitem/{an_id}": {
                 "post": {
                     "operationId": "postItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -218,7 +262,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1155/deleteitem/{an_id}": {
                 "delete": {
                     "operationId": "deleteItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -251,7 +310,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1131/getitem/{an_id}": {
                 "get": {
                     "operationId": "getItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -267,7 +341,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1139/putitem/{an_id}": {
                 "put": {
                     "operationId": "putItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -283,7 +372,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1147/postitem/{an_id}": {
                 "post": {
                     "operationId": "postItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -299,7 +403,22 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "/test/1155/deleteitem/{an_id}": {
                 "delete": {
                     "operationId": "deleteItem",
-                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
+                    "parameters": [
+                        {
+                            "in": "path",
+                            "name": "an_id",
+                            "required": true,
+                            "schema": {
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
+                        }
+                    ],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -390,7 +509,16 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -416,7 +544,16 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -482,7 +619,16 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -508,7 +654,16 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -575,7 +730,16 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -599,7 +763,16 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {
@@ -657,7 +830,16 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {
+                                "enum": [1, 3, 5, 7, 11, 13],
+                                "exclusiveMaximum": false,
+                                "exclusiveMinimum": false,
+                                "nullable": false,
+                                "readOnly": false,
+                                "type": "integer",
+                                "uniqueItems": false,
+                                "writeOnly": false,
+                            },
                         }
                     ],
                     "responses": {

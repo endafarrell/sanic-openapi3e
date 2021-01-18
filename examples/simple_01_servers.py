@@ -24,6 +24,7 @@ app = Sanic(name=__file__, strict_slashes=True)
 app.blueprint(openapi_blueprint)
 app.blueprint(swagger_blueprint)
 
+app.config.OPENAPI_EXTERNAL_DOCS = doc.ExternalDocumentation("http://wikipedia.org/", description="Fabulous resource")
 servers = [doc.Server(f"http://localhost:{example_port}", "this server")]
 app.config.OPENAPI_SERVERS = servers
 schemas = {
@@ -32,6 +33,7 @@ schemas = {
 }
 components = doc.Components(schemas=schemas)
 app.config.OPENAPI_COMPONENTS = components
+app.config.API_TITLE = __file__
 int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 dow_ref = doc.Reference("#/components/schemas/days")
 
@@ -43,6 +45,7 @@ dow_ref = doc.Reference("#/components/schemas/days")
     name="hops", description="hops to use", required=True, _in="path", schema=int_min_4_ref,
 )
 @doc.servers(servers + [doc.Server("https://my-server.url", description="An alt server")])
+@doc.external_docs("http://localhost:8002", "me! me!")
 def get_start_end_hops(request, start: str, end: str, hops: int):
     d = locals()
     del d["request"]  # not JSON serializable

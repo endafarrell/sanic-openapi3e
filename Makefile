@@ -35,9 +35,18 @@ good: pretty
 	pylint sanic_openapi3e
 	mypy -p sanic_openapi3e
 
+.PHONY: pytest
+pytest:
+	PYTHONPATH=. py.test \
+		--cov-report term:skip-covered \
+		--cov-report html \
+		--cov sanic_openapi3e --cov tests \
+		--verbose --verbose \
+		-s \
+		--failed-first
 
-.PHONY: test1
-test1:
+.PHONY: pytest1
+pytest1:
 	PYTHONPATH=. py.test \
 		--cov-report term:skip-covered \
 		--cov-report html \
@@ -46,14 +55,7 @@ test1:
 		-s \
 		--failed-first \
 		--maxfail 1
-.PHONY: test
-test: good
-	PYTHONPATH=. py.test \
-		--cov-report term:skip-covered \
-		--cov-report html \
-		--cov sanic_openapi3e --cov tests \
-		--verbose --verbose \
-		--failed-first
+
 .PHONY: test_inc_xfail
 test_inc_xfail: good
 	PYTHONPATH=. py.test \
@@ -64,6 +66,8 @@ test_inc_xfail: good
 		--runxfail \
 		--failed-first
 
+.PHONY: test
+test: good pytest
 
 
 

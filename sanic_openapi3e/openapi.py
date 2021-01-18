@@ -131,7 +131,7 @@ def build_openapi_spec(app: sanic.app.Sanic, _):
         _OPENAPI_ALL_JSON = openapi_all.serialize()
 
 
-def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,(too-many-branches
+def _build_openapi_spec(  # pylint: disable=too-many-arguments, too-many-locals
     app: sanic.app.Sanic,
     operation_id_fn: Callable[[str, str, sanic.router.Route], str],
     hide_openapi_self=True,
@@ -141,24 +141,126 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
 ) -> OpenAPIv3:
     """
     Build the OpenAPI spec.
-
-    :param app:
-    :param operation_id_fn
-    :param hide_openapi_self:
-    :param hide_excluded:
-    :return: The spec
     """
 
     # We may reuse this later
     assert callable(operation_id_fn), operation_id_fn
-    components = app.config.get("OPENAPI_COMPONENTS", None)
-    if components:
-        if not isinstance(components, Components):
-            raise AssertionError(
-                "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components))
-            )
 
-    _oas_paths: List[Tuple[str, PathItem]] = []
+    components = _build_openapi_components(app)
+    _oas_paths = _buld_openapi_paths(
+        app, components, hide_excluded, hide_openapi_self, hide_sanic_static, operation_id_fn
+    )
+    _v3_paths: Paths = Paths(_oas_paths)
+    contact = _build_openapi_contact(app)
+    _license = _build_openapi_license(app)
+    info = _buld_openapi_info(app, contact, _license)
+    _v3_tags = _build_openapi_tags(_oas_paths, show_unused_tags)
+    servers = _build_openapi_servers(app)
+    security = _build_openapi_security(app)
+    external_docs = _build_openapi_externaldocs(app)
+
+    return OpenAPIv3(
+        openapi=OpenAPIv3.version,
+        info=info,
+        paths=_v3_paths,
+        servers=servers,
+        components=components,
+        security=security,
+        tags=_v3_tags,
+        external_docs=external_docs,
+    )
+
+
+def _build_openapi_components(app):
+    components = app.config.get("OPENAPI_COMPONENTS")
+    if components and not isinstance(components, Components):
+        raise AssertionError(
+            "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components))
+        )
+    return components
+
+
+def _build_openapi_externaldocs(app):
+    external_docs = app.config.get("OPENAPI_EXTERNAL_DOCS")
+    if external_docs and not isinstance(external_docs, ExternalDocumentation):
+        raise AssertionError(
+            "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(
+                type(external_docs)
+            )
+        )
+    return external_docs
+
+
+def _build_openapi_security(app):
+    security = app.config.get("OPENAPI_SECURITY")
+    if security:
+        if not isinstance(security, list):
+            raise AssertionError(
+                "You app.config's `OPENAPI_SECURITY` is not a list (of `SecurityRequirement`): {}".format(
+                    type(security)
+                )
+            )
+        for security_element in security:
+            if not isinstance(security_element, SecurityRequirement):
+                raise AssertionError(
+                    "You app.config's `OPENAPI_SECURITY` security `{}` is not a `SecurityRequirement`: {}".format(
+                        security_element, type(security_element)
+                    )
+                )
+    return security
+
+
+def _build_openapi_servers(app):
+    servers = app.config.get("OPENAPI_SERVERS")
+    if servers:
+        if not isinstance(servers, list):
+            raise AssertionError(
+                "Your app.config's `OPENAPI_SERVERS` is not a list (of `Server`): {}".format(type(servers))
+            )
+        for server in servers:
+            if not isinstance(server, Server):
+                raise AssertionError(
+                    "You app.config's `OPENAPI_SERVERS` server `{}` is not a `Server`: {}".format(server, type(server))
+                )
+    return servers
+
+
+def _buld_openapi_info(app, contact, _license):
+    return Info(
+        title=app.config.get("API_TITLE", "API"),
+        description=app.config.get("API_DESCRIPTION", "Description"),
+        terms_of_service=app.config.get("API_TERMS_OF_SERVICE_URL"),
+        contact=contact,
+        _license=_license,
+        version=app.config.get("API_VERSION", "v1.0.0"),
+    )
+
+
+def _build_openapi_license(app):
+    # Possible license
+    _license: Optional[License] = None
+    _license_name = app.config.get("API_LICENSE_NAME")
+    _license_url = app.config.get("API_LICENSE_URL")
+    if any((_license_name, _license_url)):
+        _license = License(name=_license_name, url=_license_url)
+    return _license
+
+
+def _build_openapi_contact(app):
+    # Possible contact
+    contact: Optional[Contact] = None
+    _contact_name = app.config.get("API_CONTACT_NAME")
+    _contact_url = app.config.get("API_CONTACT_URL")
+    _contact_email = app.config.get("API_CONTACT_EMAIL")
+    if any((_contact_email, _contact_name, _contact_url)):
+        contact = Contact(name=_contact_name, email=_contact_email, url=_contact_url)
+    return contact
+
+
+def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches.too-many-statements
+    app, components, hide_excluded, hide_openapi_self, hide_sanic_static, operation_id_fn
+) -> List[Tuple[str, PathItem]]:
+    paths: List[Tuple[str, PathItem]] = []
     for _uri, _route in app.router.routes_all.items():  # pylint: disable=too-many-nested-blocks
         assert isinstance(_uri, str)
         assert isinstance(_route, sanic.router.Route), type(_route)
@@ -271,97 +373,25 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments,too-many-locals,t
             operation_id = operation_id_fn(_method, _uri, _route)
             operations[_method.lower()] = Operation(
                 operation_id=operation_id,
-                responses=path_item.x_responses_holder,
-                summary=path_item_summary,
-                description=path_item.description,
-                parameters=[p[1] for p in parameters],
-                tags=sorted(pathitem_tag_names),
                 deprecated=path_item.x_deprecated_holder,
+                description=path_item.description,
+                external_docs=path_item.x_external_docs_holder,
+                parameters=[p[1] for p in parameters],
                 request_body=path_item.request_body,
+                responses=path_item.x_responses_holder,
                 servers=path_item.servers,
+                summary=path_item_summary,
+                tags=sorted(pathitem_tag_names),
                 # TODO
-                security=NOT_YET_IMPLEMENTED,
                 callbacks=NOT_YET_IMPLEMENTED,
+                security=NOT_YET_IMPLEMENTED,
             )
 
+            if path_item.x_external_docs_holder:
+                print(395, operation_id, path_item.x_external_docs_holder)
             _path = PathItem(**operations)
-            _oas_paths.append((uri_parsed, _path))
-
-    # Possible contact
-    contact: Optional[Contact] = None
-    _contact_name = app.config.get("API_CONTACT_NAME")
-    _contact_url = app.config.get("API_CONTACT_URL")
-    _contact_email = app.config.get("API_CONTACT_EMAIL")
-    if any((_contact_email, _contact_name, _contact_url)):
-        contact = Contact(name=_contact_name, email=_contact_email, url=_contact_url)
-
-    # Possible license
-    _license: Optional[License] = None
-    _license_name = app.config.get("API_LICENSE_NAME")
-    _license_url = app.config.get("API_LICENSE_URL")
-    if any((_license_name, _license_url)):
-        _license = License(name=_license_name, url=_license_url)
-
-    info = Info(
-        title=app.config.get("API_TITLE", "API"),
-        description=app.config.get("API_DESCRIPTION", "Description"),
-        terms_of_service=app.config.get("API_TERMS_OF_SERVICE_URL"),
-        contact=contact,
-        _license=_license,
-        version=app.config.get("API_VERSION", "v1.0.0"),
-    )
-
-    _v3_paths: Paths = Paths(_oas_paths)
-    _v3_tags = _build_openapi_tags(_oas_paths, show_unused_tags)
-
-    servers = app.config.get("OPENAPI_SERVERS", None)
-    if servers:
-        if not isinstance(servers, list):
-            raise AssertionError(
-                "Your app.config's `OPENAPI_SERVERS` is not a list (of `Server`): {}".format(type(servers))
-            )
-        for server in servers:
-            if not isinstance(server, Server):
-                raise AssertionError(
-                    "You app.config's `OPENAPI_SERVERS` server `{}` is not a `Server`: {}".format(server, type(server))
-                )
-
-    security = app.config.get("OPENAPI_SECURITY", None)
-    if security:
-        if not isinstance(security, list):
-            raise AssertionError(
-                "You app.config's `OPENAPI_SECURITY` is not a list (of `SecurityRequirement`): {}".format(
-                    type(security)
-                )
-            )
-        for security_element in security:
-            if not isinstance(security_element, SecurityRequirement):
-                raise AssertionError(
-                    "You app.config's `OPENAPI_SECURITY` security `{}` is not a `SecurityRequirement`: {}".format(
-                        security_element, type(security_element)
-                    )
-                )
-
-    external_docs = app.config.get("OPENAPI_EXTERNAL_DOCS", None)
-    if external_docs:
-        if not isinstance(external_docs, ExternalDocumentation):
-            raise AssertionError(
-                "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(
-                    type(external_docs)
-                )
-            )
-
-    openapi = OpenAPIv3(
-        openapi=OpenAPIv3.version,
-        info=info,
-        paths=_v3_paths,
-        servers=servers,
-        components=components,
-        security=security,
-        tags=_v3_tags,
-        external_docs=external_docs,
-    )
-    return openapi
+            paths.append((uri_parsed, _path))
+    return paths
 
 
 def _build_openapi_tags(_paths: List[Tuple[str, PathItem]], show_unused_tags: bool = False) -> List[Tag]:

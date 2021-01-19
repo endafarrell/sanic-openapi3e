@@ -270,8 +270,12 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
         # NOTE: TODO: there's no order here at all to either the _uri nor the _route. OAS specs do not define an order
         # NOTE: TODO: but people do rather like having at least document order for the routes.
         if hide_openapi_self:
-            if (_uri.startswith("/" + blueprint.url_prefix) if blueprint.url_prefix else True) and any(
-                [bp_uri in _uri for bp_uri in [r.uri for r in blueprint.routes]]
+            if (
+                _uri.startswith("/" + blueprint.url_prefix)
+                if blueprint.url_prefix
+                else True
+            ) and any(
+                bp_uri in _uri for bp_uri in [r.uri for r in blueprint.routes]
             ):
                 # Remove self-documentation from the spec
                 continue
@@ -330,8 +334,8 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
                 continue
 
             path_item_summary: Optional[str] = path_item.summary
-            if path_item.x_exclude and not hide_excluded:
-                path_item_summary = "[excluded] " + (path_item.summary if path_item.summary else "")
+            if path_item.x_exclude:
+                path_item_summary = "[excluded] " + (path_item.summary or "")
 
             # Create a per-operation copy of the route params.
             _op_parameters: List[Union[Parameter, Reference]] = [*route_parameters]

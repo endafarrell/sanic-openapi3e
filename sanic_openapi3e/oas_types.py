@@ -3287,32 +3287,6 @@ class Paths(OObject):
         else:
             raise ValueError("locked")
 
-    def serialize(self, sort=False) -> OrderedDict:
-        """
-        Serialisation to a dict.
-
-        :return: A dict serialisation of self.
-        """
-        if self:
-            raise NotImplementedError()
-        serialised = OrderedDict()
-        for (uri, path_item) in self._paths:
-            # Until the spec is being built, these `uri` are the decorated methods in your `app` or blueprints.
-            serialised[uri] = path_item.serialize(sort=sort)
-            print(3285, serialised[uri])
-        if sort:
-            print(3287)
-            _sorted_repr = OrderedDict()
-            for key in sorted(serialised.keys()):
-                _sorted_repr[key] = serialised[key]
-        return serialised
-
-    def __str__(self):
-        return json.dumps(self.serialize())
-
-    def __repr__(self):
-        return "{}{}".format(self.__class__.__qualname__, json.dumps(self.serialize()))
-
 
 class OpenAPIv3(OObject):  # pylint: disable=too-many-instance-attributes
     """The root document object of the OpenAPI document."""

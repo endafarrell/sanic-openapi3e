@@ -454,3 +454,6 @@ Server | production/stable |  |
 ServerVariable | beta | no known usage
 Tag | production/stable |  |
 XML | beta | no known usage
+
+`sanic-openapi3e` is built to create [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md)
+specs. 

@@ -305,7 +305,7 @@ class OObject:
         return json.dumps(self.serialize(), sort_keys=True)
 
     def __repr__(self):
-        return "{}{}".format(self.__class__.__qualname__, json.dumps(self.serialize(), sort_keys=True),)
+        return "{}({})".format(self.__class__.__qualname__, json.dumps(self.serialize(), sort_keys=True),)
 
 
 # --------------------------------------------------------------- #
@@ -2911,7 +2911,7 @@ class Operation(OObject):  # pylint: disable=too-many-instance-attributes
         summary: Optional[str] = None,
         description: Optional[str] = None,
         external_docs: Optional[ExternalDocumentation] = None,
-        parameters: Optional[List[Parameter]] = None,
+        parameters: Optional[List[Union[Parameter, Reference]]] = None,
         request_body: Optional[Union[RequestBody, Reference]] = None,
         callbacks: Optional[Dict[str, Union[Callback, Reference]]] = None,
         deprecated: bool = False,

@@ -80,9 +80,11 @@ paths:
         can see them here:
 
 
-        `{''small'': Example{"description": "Desc: Numbers less than ten", "summary":
-        "A small number", "value": 7}, ''big'': Example{"description": "Desc: Numbers
-        more than one million!", "summary": "A big number", "value": 123456789}}`'
+        * `{''small'': Example({"description": "Desc: Numbers less than ten", "summary":
+        "A small number", "value": 7})}`,
+
+        * `{''big'': Example({"description": "Desc: Numbers more than one million!",
+        "summary": "A big number", "value": 123456789})}`'
       operationId: testIdExamples
       parameters:
       - name: an_id

@@ -106,6 +106,7 @@ def test_fundamentals(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -170,6 +171,7 @@ def test_path__deprecated(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -249,6 +251,7 @@ def test_responses_takes_description(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -296,6 +299,8 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -366,6 +371,8 @@ def test_path_without_parameter(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -429,6 +436,8 @@ def test_path_exclude(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -498,6 +507,8 @@ def test_path_methods(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -632,33 +643,6 @@ def test_path_methods(openapi__mod_bp_doc):
     run_asserts(response, expected)
 
 
-# def test_path_param_w_reference(openapi__mod_bp_doc):
-#     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-#     app = Sanic("test_path_param_w_reference", strict_slashes=strict_slashes)
-#
-#     app.blueprint(openapi_blueprint)
-#     schemas = {
-#         "int.min4": sanic_openapi3e.oas_types.Schema(
-#             title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",
-#         )
-#     }
-#     components = sanic_openapi3e.oas_types.Components(schemas=schemas)
-#     app.config.OPENAPI_COMPONENTS = components
-#     int_min_4_ref = sanic_openapi3e.oas_types.Reference("#/components/schemas/int.min4")
-#
-#     @app.get("/examples/1300/test_id_min/<an_id:int>")
-#     @doc.parameter(
-#         name="an_id", description="An ID", required=True, _in="path", schema=int_min_4_ref,
-#     )
-#     def test_id_min(request, an_id: int):
-#         return sanic.response.json(locals())  # pragma: no cover
-#
-#     _, response = app.test_client.get("/openapi/spec.json")
-#     assert response.json["components"]["schemas"]["int.min4"], response.json
-#     assert response.json["paths"]["/examples/1300/test_id_min/{an_id}"]["get"]["parameters"][0]["schema"] == {
-#         "$ref": "#/components/schemas/int.min4"
-#     }
-
 
 #######################################################################################################################
 # POST
@@ -698,6 +682,8 @@ def test_camel_case_operation_id(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -756,6 +742,8 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
+
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {

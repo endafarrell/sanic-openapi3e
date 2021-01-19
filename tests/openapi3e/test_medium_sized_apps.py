@@ -19,6 +19,8 @@ def test_yaml_spec_00(openapi__mod_bp_doc):
     expected = (Path(__file__).absolute().parent / "expected_spec_for_medium_sized_app_00.yml").read_text(
         encoding="utf8"
     )
+    if response.content.decode("utf8").splitlines() != expected.splitlines():
+        print(response.content.decode("utf8"))
     assert response.content.decode("utf8").splitlines() == expected.splitlines()
 
 
@@ -78,8 +80,8 @@ def create_medium_sized_app_00(sanic_name: str, doc, openapi_blueprint):
     )
     @doc.summary("A path with parameter examples")
     @doc.description(
-        "Unfortunately, the swagger UIs do not show the examples, but you can see them here:\n\n`{}`".format(
-            {"small": an_id_ex1, "big": an_id_ex2}
+        "Unfortunately, the swagger UIs do not show the examples, but you can see them here:\n\n* `{}`,\n* `{}`".format(
+            {"small": an_id_ex1}, {"big": an_id_ex2}
         )
     )
     def test_id_examples(request, an_id: int):

@@ -42,6 +42,7 @@ def test_servers(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
+
         "components": {
             "responses": {
                 "200": {"description": "OK"},

@@ -174,9 +174,7 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments, too-many-locals
 def _build_openapi_components(app):
     components = app.config.get("OPENAPI_COMPONENTS")
     if components and not isinstance(components, Components):
-        raise AssertionError(
-            "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components))
-        )
+        raise AssertionError("You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components)))
     return components
 
 
@@ -184,9 +182,7 @@ def _build_openapi_externaldocs(app):
     external_docs = app.config.get("OPENAPI_EXTERNAL_DOCS")
     if external_docs and not isinstance(external_docs, ExternalDocumentation):
         raise AssertionError(
-            "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(
-                type(external_docs)
-            )
+            "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(type(external_docs))
         )
     return external_docs
 

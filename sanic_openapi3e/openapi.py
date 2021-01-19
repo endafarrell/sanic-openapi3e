@@ -11,7 +11,7 @@ Known limitations:
 import re
 from collections import OrderedDict
 from itertools import repeat
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import sanic
 import sanic.exceptions
@@ -52,7 +52,7 @@ NOT_YET_IMPLEMENTED = None
 _OPENAPI_JSON = OrderedDict()  # type: OrderedDict[str, Any]
 _OPENAPI_YAML: Dict[str, Any] = {}
 """
-Module-level container to hold the OAS spec that will be served-up on request. See `build_openapi_spec` for how it is
+Module-level container to hold the OAS spec that will be served-up on request. See `_build_openapi_spec` for how it is
 built.
 """
 
@@ -146,7 +146,7 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments, too-many-locals
     # We may reuse this later
     assert callable(operation_id_fn), operation_id_fn
 
-    components = _build_openapi_components(app)
+    components: Components = _build_openapi_components(app)
     _oas_paths = _buld_openapi_paths(
         app, components, hide_excluded, hide_openapi_self, hide_sanic_static, operation_id_fn
     )
@@ -171,27 +171,25 @@ def _build_openapi_spec(  # pylint: disable=too-many-arguments, too-many-locals
     )
 
 
-def _build_openapi_components(app):
+def _build_openapi_components(app: sanic.app.Sanic) -> Components:
     components = app.config.get("OPENAPI_COMPONENTS")
     if components and not isinstance(components, Components):
-        raise AssertionError(
-            "You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components))
-        )
+        raise AssertionError("You app.config's `OPENAPI_COMPONENTS` is not a `Components`: {}".format(type(components)))
+    if not components:
+        components = Components()
     return components
 
 
-def _build_openapi_externaldocs(app):
+def _build_openapi_externaldocs(app: sanic.app.Sanic):
     external_docs = app.config.get("OPENAPI_EXTERNAL_DOCS")
     if external_docs and not isinstance(external_docs, ExternalDocumentation):
         raise AssertionError(
-            "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(
-                type(external_docs)
-            )
+            "You app.config's `OPENAPI_EXTERNAL_DOCS` is not a `ExternalDocumentation`: {}".format(type(external_docs))
         )
     return external_docs
 
 
-def _build_openapi_security(app):
+def _build_openapi_security(app: sanic.app.Sanic):
     security = app.config.get("OPENAPI_SECURITY")
     if security:
         if not isinstance(security, list):
@@ -210,7 +208,7 @@ def _build_openapi_security(app):
     return security
 
 
-def _build_openapi_servers(app):
+def _build_openapi_servers(app: sanic.app.Sanic) -> List[Server]:
     servers = app.config.get("OPENAPI_SERVERS")
     if servers:
         if not isinstance(servers, list):
@@ -225,7 +223,7 @@ def _build_openapi_servers(app):
     return servers
 
 
-def _buld_openapi_info(app, contact, _license):
+def _buld_openapi_info(app: sanic.app.Sanic, contact: Contact, _license: License) -> Info:
     return Info(
         title=app.config.get("API_TITLE", "API"),
         description=app.config.get("API_DESCRIPTION", "Description"),
@@ -236,7 +234,7 @@ def _buld_openapi_info(app, contact, _license):
     )
 
 
-def _build_openapi_license(app):
+def _build_openapi_license(app: sanic.app.Sanic) -> License:
     # Possible license
     _license: Optional[License] = None
     _license_name = app.config.get("API_LICENSE_NAME")
@@ -246,7 +244,7 @@ def _build_openapi_license(app):
     return _license
 
 
-def _build_openapi_contact(app):
+def _build_openapi_contact(app: sanic.app.Sanic) -> Contact:
     # Possible contact
     contact: Optional[Contact] = None
     _contact_name = app.config.get("API_CONTACT_NAME")
@@ -258,7 +256,12 @@ def _build_openapi_contact(app):
 
 
 def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches.too-many-statements
-    app, components, hide_excluded, hide_openapi_self, hide_sanic_static, operation_id_fn
+    app: sanic.app.Sanic,
+    components: Components,
+    hide_excluded: bool,
+    hide_openapi_self: bool,
+    hide_sanic_static: bool,
+    operation_id_fn: Callable[[str, str, sanic.router.Route], str],
 ) -> List[Tuple[str, PathItem]]:
     paths: List[Tuple[str, PathItem]] = []
     for _uri, _route in app.router.routes_all.items():  # pylint: disable=too-many-nested-blocks
@@ -283,16 +286,18 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
 
         # We document the parameters at the PathItem, not at the Operation. First get the route parameters (if any)
         uri_parsed: str = _uri
-        uri_for_opearion_id = _uri
-        parameters: List[Tuple[str, Parameter]] = []
-        for _parameter in _route.parameters:
-            uri_parsed = re.sub("<" + _parameter.name + ".*?>", "{" + _parameter.name + "}", uri_parsed)
-            uri_for_opearion_id = re.sub("<" + _parameter.name + ".*?>", _parameter.name, uri_for_opearion_id)
+        uri_for_opearation_id = _uri
+        route_parameters: List[Union[Parameter, Reference]] = []
+        for _route_parameter in _route.parameters:
+            uri_parsed = re.sub("<" + _route_parameter.name + ".*?>", "{" + _route_parameter.name + "}", uri_parsed)
+            uri_for_opearation_id = re.sub(
+                "<" + _route_parameter.name + ".*?>", _route_parameter.name, uri_for_opearation_id
+            )
 
             # Sanic route parameters can give us a name, we know that it is in the path and we may be able to establish
             # the basic schema.
             parameter = Parameter(
-                name=_parameter.name,
+                name=_route_parameter.name,
                 _in="path",
                 description=None,
                 required=True,
@@ -301,12 +306,12 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
                 style=None,
                 explode=None,
                 allow_reserved=None,
-                schema=CAST_2_SCHEMA.get(_parameter.cast),
+                schema=CAST_2_SCHEMA.get(_route_parameter.cast),
                 example=None,
                 examples=None,
                 content=None,
             )
-            parameters.append((parameter.name, parameter))
+            route_parameters.append(parameter)
 
         handler_type = type(_route.handler)
         if handler_type is CompositionView:
@@ -328,55 +333,54 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
             if path_item.x_exclude and not hide_excluded:
                 path_item_summary = "[excluded] " + (path_item.summary if path_item.summary else "")
 
-            _parameters = path_item.parameters
-            for _parameter in _parameters:
-                if isinstance(_parameter.schema, Reference):
-                    # Swagger v3.21.0 doesn't show the description for references, so ...
-                    if not _parameter.description:
-                        if components:
-                            if components.schemas:
-                                if components.schemas.get(_parameter.name):
-                                    ref = components.schemas.get(_parameter.name)
-                                    _parameter.description = ref.description
+            # Create a per-operation copy of the route params.
+            _op_parameters: List[Union[Parameter, Reference]] = [*route_parameters]
+            for _op_parameter in path_item.parameters:
+                # # Swagger v3.21.0 doesn't show the description for references, so lets try add some.
+                # if isinstance(_op_parameter, Reference):
+                #     continue
+                # if isinstance(_op_parameter.schema, Reference):
+                #     # Swagger v3.21.0 doesn't show the description for references, so ...
+                #     if not _op_parameter.description:
+                #         if not (components and components.schemas):
+                #             continue
+                #         ref = components.schemas.get(_op_parameter.name)
+                #         if isinstance(ref, Schema):
+                #             _op_parameter.description = ref.description
 
-                if _parameter.name in [p[0] for p in parameters]:
-                    # Find and merge them. Parameter has a special __add__ for this.
-                    for idx, _ in enumerate(parameters):
-                        try:
-                            if parameters[idx][0] == _parameter.name:
-                                parameters[idx] = (
-                                    _parameter.name,
-                                    parameters[idx][1] + _parameter,
-                                )
-                        except AssertionError as ex:
-                            raise AssertionError(
-                                "For `{} {}` ({}) the `{}` param is invalid: {}".format(
-                                    _method, _uri, str(_func), _parameter.name, ex
-                                )
-                            ) from ex
+
+                _orig_parameters = {(idx, p) for idx, p in enumerate(route_parameters) if p.name == _op_parameter.name}
+                if _orig_parameters:
+                    assert len(_orig_parameters) == 1, (len(_orig_parameters), _orig_parameters)
+                    _orig_parameter_idx, _orig_parameter = _orig_parameters.pop()
+                    _op_parameters[_orig_parameter_idx] = _orig_parameter + _op_parameter
+                # if _op_parameter.name in {p.name for p in _op_parameters}:
+                #     # Find and merge them. Parameter has a special __add__ for this.
+                #     _orig_parameter = {p for p in _op_parameters if p.name == _op_parameter.name}
+                #     for idx, _ in enumerate(parameters):
+                #         try:
+                #             if parameters[idx][0] == _op_parameter.name:
+                #                 parameters[idx] = (
+                #                     _op_parameter.name,
+                #                     parameters[idx][1] + _op_parameter,
+                #                 )
+                #         except AssertionError as ex:
+                #             raise AssertionError(
+                #                 "For `{} {}` ({}) the `{}` param is invalid: {}".format(
+                #                     _method, _uri, str(_func), _op_parameter.name, ex
+                #                 )
+                #             ) from ex
                 else:
-                    parameters.append((_parameter.name, _parameter))
+                    _op_parameters.append(_op_parameter)
 
-            pathitem_tag_names: Set[str] = {t.name for t in path_item.x_tags_holder}
-
-            # If the route does not have a tag, use the blueprint's name.
-            for _blueprint in app.blueprints.values():
-                if not hasattr(_blueprint, "routes"):
-                    continue
-
-                for _bproute in _blueprint.routes:
-                    if _bproute.handler != _func:
-                        continue
-                    if not pathitem_tag_names:
-                        pathitem_tag_names.add(_blueprint.name)
-
+            pathitem_tag_names: Set[str] = _build_openapi_paths_operations_tagnames(app, path_item, _func)
             operation_id = operation_id_fn(_method, _uri, _route)
             operations[_method.lower()] = Operation(
                 operation_id=operation_id,
                 deprecated=path_item.x_deprecated_holder,
                 description=path_item.description,
                 external_docs=path_item.x_external_docs_holder,
-                parameters=[p[1] for p in parameters],
+                parameters=_op_parameters,
                 request_body=path_item.request_body,
                 responses=path_item.x_responses_holder,
                 servers=path_item.servers,
@@ -387,11 +391,27 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
                 security=NOT_YET_IMPLEMENTED,
             )
 
-            if path_item.x_external_docs_holder:
-                print(395, operation_id, path_item.x_external_docs_holder)
             _path = PathItem(**operations)
             paths.append((uri_parsed, _path))
     return paths
+
+
+def _build_openapi_paths_operations_tagnames(app: sanic.app.Sanic, path_item: PathItem, _func: Callable) -> Set[str]:
+    pathitem_tag_names: Set[str] = {t.name for t in path_item.x_tags_holder}
+    if not pathitem_tag_names:
+        # If the route does not have a tag, use the blueprint's name.
+        for _blueprint in app.blueprints.values():
+            if not hasattr(_blueprint, "routes"):
+                # QQ: when was it last possible for a blueprint to not have routes ... ?
+                continue
+
+            for _bproute in _blueprint.routes:
+                if _bproute.handler == _func:
+                    pathitem_tag_names.add(_blueprint.name)
+                    break
+            if pathitem_tag_names:
+                break
+    return pathitem_tag_names
 
 
 def _build_openapi_tags(_paths: List[Tuple[str, PathItem]], show_unused_tags: bool = False) -> List[Tag]:

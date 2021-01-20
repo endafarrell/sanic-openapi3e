@@ -53,8 +53,18 @@ def test_external_documentation(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
-
+        "components": {
+            "responses": {
+                "200": {"description": "OK"},
+                "400": {"description": "Bad Request"},
+                "401": {"description": "Unauthorized"},
+                "403": {"description": "Forbidden"},
+                "404": {"description": "Not Found"},
+                "405": {"description": "Method Not Allowed"},
+                "410": {"description": "Gone"},
+                "500": {"description": "Internal Server Error"},
+            }
+        },
         "externalDocs": {"description": "Fabulous resource", "url": "http://wikipedia.org/"},
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
@@ -128,8 +138,18 @@ def test_path_integer_min(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
-
+        "components": {
+            "responses": {
+                "200": {"description": "OK"},
+                "400": {"description": "Bad Request"},
+                "401": {"description": "Unauthorized"},
+                "403": {"description": "Forbidden"},
+                "404": {"description": "Not Found"},
+                "405": {"description": "Method Not Allowed"},
+                "410": {"description": "Gone"},
+                "500": {"description": "Internal Server Error"},
+            }
+        },
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -197,8 +217,18 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
-
+        "components": {
+            "responses": {
+                "200": {"description": "OK"},
+                "400": {"description": "Bad Request"},
+                "401": {"description": "Unauthorized"},
+                "403": {"description": "Forbidden"},
+                "404": {"description": "Not Found"},
+                "405": {"description": "Method Not Allowed"},
+                "410": {"description": "Gone"},
+                "500": {"description": "Internal Server Error"},
+            }
+        },
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
@@ -279,8 +309,18 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
 
     _, response = app.test_client.get("/openapi/spec.json")
     expected = {
-        "components": {"responses": {"200": {"description": "OK"}, "400": {"description": "Bad Request"}, "401": {"description": "Unauthorized"}, "403": {"description": "Forbidden"}, "404": {"description": "Not Found"}, "405": {"description": "Method Not Allowed"}, "410": {"description": "Gone"}, "500": {"description": "Internal Server Error"}}},
-
+        "components": {
+            "responses": {
+                "200": {"description": "OK"},
+                "400": {"description": "Bad Request"},
+                "401": {"description": "Unauthorized"},
+                "403": {"description": "Forbidden"},
+                "404": {"description": "Not Found"},
+                "405": {"description": "Method Not Allowed"},
+                "410": {"description": "Gone"},
+                "500": {"description": "Internal Server Error"},
+            }
+        },
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {

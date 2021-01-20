@@ -2,6 +2,7 @@ import pathlib
 
 import sanic.request
 import sanic.response
+import sanic.router
 from sanic import Sanic
 
 # isort: off
@@ -33,9 +34,20 @@ schemas = {
 }
 components = doc.Components(schemas=schemas)
 app.config.API_TITLE = __file__
-app.config.API_DESCRIPTION = "This file has simple examples of all of the methods, plus some schemas."
+app.config.API_DESCRIPTION = "This file has a simple exampleof cloaking all PUT/POST/DELETE methods. "
 app.config.OPENAPI_COMPONENTS = components
 app.config.SHOW_OPENAPI_EXCLUDED = True
+
+
+def cloak(method: str, uri: str, route: sanic.router.Route) -> bool:
+    assert uri  # unused for this cloak method
+    assert route  # unused for this cloak method
+    return method.lower().strip() in {"put", "post", "delete"}
+
+
+app.config.OPENAPI_CLOAK_FN = cloak
+
+
 int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 
 
@@ -229,7 +241,7 @@ example_port = 8002
 
 
 @app.listener("after_server_start")
-async def notify_server_started(app: sanic.app.Sanic, __):
+async def notify_server_started(_, __):
     print("\n\n************* sanic-openapi3e ********************************")
     print(f"* See your openapi swagger on http://127.0.0.1:{example_port}/swagger/ *")
     print("************* sanic-openapi3e ********************************\n\n")

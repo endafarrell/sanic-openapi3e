@@ -34,6 +34,8 @@ schemas = {
 components = doc.Components(schemas=schemas)
 app.config.OPENAPI_COMPONENTS = components
 app.config.API_TITLE = __file__
+app.config.API_DESCRIPTION = """This file has simple examples of adding servers and external docs to the spec. The 
+`/simple/01/from/{start}/to/{end}/in/{hops}` endpoint also has a server of its own."""
 int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 dow_ref = doc.Reference("#/components/schemas/days")
 

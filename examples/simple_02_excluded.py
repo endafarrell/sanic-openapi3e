@@ -15,6 +15,7 @@ from sanic_openapi3e import doc, openapi_blueprint, swagger_blueprint
 
 app = Sanic(name=__file__, strict_slashes=True)
 app.config.SHOW_OPENAPI_EXCLUDED = True
+app.config.API_TITLE = __file__
 app.config.API_DESCRIPTION = f"""This app was configured with `app.config.SHOW_OPENAPI_EXCLUDED = True` so you can:\n
 \n
 * In the black swagger top-nav above, manually change the value of 

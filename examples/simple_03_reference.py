@@ -28,9 +28,11 @@ schemas = {
     "days": days_of_week,
 }
 components = doc.Components(schemas=schemas)
-app.config.OPENAPI_COMPONENTS = components
 int_min_4_ref = doc.Reference("#/components/schemas/int.min4")
 dow_ref = doc.Reference("#/components/schemas/days")
+app.config.API_TITLE = __file__
+app.config.API_DESCRIPTION = "This app has more examples of reusable Reference objects"
+app.config.OPENAPI_COMPONENTS = components
 
 
 @app.get("/simple/01/from/<start>/to/<end>/in/<hops:int>")

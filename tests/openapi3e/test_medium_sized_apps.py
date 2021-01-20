@@ -20,7 +20,7 @@ def test_yaml_spec_00(openapi__mod_bp_doc):
         encoding="utf8"
     )
     if response.content.decode("utf8").splitlines() != expected.splitlines():
-        print(response.content.decode("utf8"))
+        print(response.content.decode("utf8"))  # pragma: no cover
     assert response.content.decode("utf8").splitlines() == expected.splitlines()
 
 
@@ -31,7 +31,7 @@ def test_json_spec_00(openapi__mod_bp_doc):
     _, response = app.test_client.get("/openapi/spec.json")
 
     with open(Path(__file__).absolute().parent / "expected_spec_for_medium_sized_app_00.json") as _f:
-        expected = json.load(_f)
+        expected = json.load(_f)  # pragma: no cover
     run_asserts(response, expected)
 
 

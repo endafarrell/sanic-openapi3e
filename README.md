@@ -7,6 +7,13 @@ including sanic path params. python 3.6+
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![Downloads](https://pepy.tech/badge/sanic-openapi3e)](https://pepy.tech/project/sanic-openapi3e)
+
+## Table of Contents
+1. [Installation](#installation)
+2. [Usage](#usage)
+3. [Control spec generation](#Control-spec-generation)
+4. [OAS Object maturity](#oas-object-maturity)
+
 ## Installation
 
 ```shell
@@ -35,15 +42,18 @@ async def get_user(request, user_id):
 app.go_fast()
 ```
 
-You'll now have a specification at the URL `/openapi/spec.json`.
+You'll now have a specification at the URL `/openapi/spec.json` and
+a YAML version at `/openapi/spec.yml`.
+
 Your routes will be automatically categorized by their blueprints' 
 names.
 
-Run these simple examples and point your browser to 
-http://127.0.0.1:8000/swagger/ to see this in action.
+Below are some simple examples, which you can copy/paste, run, and point your browser to 
+http://127.0.0.1:8000/swagger/ to see them in action.
 
 
-## Describe route path parameters
+### Describe route path parameters
+If you have path parameters, you will want to describe them:
 
 ```python
 import sanic
@@ -63,7 +73,7 @@ def test_id(request, an_id):
 app.go_fast()
 ```
 
-``sanic-openapiv3`` will recognise that the path parameter ``an_id`` is
+``sanic-openapiv3e`` will recognise that the path parameter ``an_id`` is
 described with ``@doc.parameter`` and will merge the details together.
 
 You may wish to specify that a parameter be limited to a set of choices,
@@ -111,7 +121,7 @@ def test_id_min(request, an_id: int):
 app.go_fast()
 ```
 
-## Describe your tags
+### Describe your tags
 OpenAPI uses "tags" (there can be more than one per route) to group the 
 endpoints. It's nice to be able to group your endpoints into tags given
 by the blueprint's name, but sometimes you will want to give them better
@@ -193,7 +203,7 @@ def get_start_end_hops(request, start: str, end: str, hops: int):
 app.go_fast()
 ```
 
-## Deprecate route paths or parameters
+### Deprecate route paths and/or parameters
 
 A parameter can be marked as ``deprecated=True``:
 
@@ -290,13 +300,12 @@ def test_some_ids(request: sanic.request.Request):
 app.go_fast()
 ```
 
-## Predefined components for responses
+### Predefined components for responses
 There are predefimed components for common responses. You can overwrite and append these per route.
 
-## Experimental (v0.8) YAML spec
-There is a new endpoint `/openapi/spec.yml` which delivers a YAML version of your spec. 
 
-## Configure some of the things
+## Control spec generation
+
 
 ```python
 app.config.API_VERSION = '1.0.0'
@@ -304,30 +313,30 @@ app.config.API_TITLE = 'An API'
 app.config.API_DESCRIPTION = 'An API description'
 ```
 
-To have a `contact`, set at least one of (but preferably all) 
-`app.config.API_CONTACT_NAME`, 
+To have a `contact`, set at least one of (but preferably all)
+`app.config.API_CONTACT_NAME`,
 `app.config.API_CONTACT_URL` or
-`app.config.API_CONTACT_EMAIL`. 
+`app.config.API_CONTACT_EMAIL`.
 
-To have a `license`, `set app.config.API_LICENSE_NAME` and 
+To have a `license`, `set app.config.API_LICENSE_NAME` and
 optionally `app.config.API_LICENSE_URL` (all str, but the Swagger UI expects this to be a URL).
 
 To have a `termsOfService`, set
-`app.config.API_TERMS_OF_SERVICE_URL` (a str, but the Swagger UI 
-expects to use this as a URL). 
+`app.config.API_TERMS_OF_SERVICE_URL` (a str, but the Swagger UI
+expects to use this as a URL).
 
-Setting `components`, `security` and `externalDocs` requires you to 
+Setting `components`, `security` and `externalDocs` requires you to
 
-* first create the relevant objects somewhere in your code (near to 
+* first create the relevant objects somewhere in your code (near to
   where you create the `app`),
-* set the appropriate `app.config.OPENAPI_COMPONENTS`, 
+* set the appropriate `app.config.OPENAPI_COMPONENTS`,
   `app.config.OPENAPI_SECURITY`,  
   `app.config.OPENAPI_EXTERNAL_DOCS`.
-  
+
 By default, the YAML spec is served on `/openapi/spec.yml` with the content-type of `application/x-yaml` but you can
 overwrite that by setting `app.config.OPENAPI_YAML_CONTENTTYPE` to something like `text/plain`. This lets you view
 your spec in a browser, and it still works with `/swagger` :-)
-   
+
 ### Configure how the operationId is made
 
 The default code for creating the operationId creates unique (as they must be) strings from
@@ -344,7 +353,7 @@ def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) ->
     return "{}~~{}".format(method.upper(), uri_for_operation_id).replace("/", "~")
 ```
 
-You can implement your own code (as long as the method signature matches this), and set that to 
+You can implement your own code (as long as the method signature matches this), and set that to
 be used in the app config:
 `app.config.OPENAPI_OPERATION_ID_FN = my_operation_id_fn`
 
@@ -379,7 +388,6 @@ and set it like `app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.ca
 
 Note that this does not change the `parameter`'s  names.
 
-### Control spec generation
 
     hide_openapi_self = app.config.get("HIDE_OPENAPI_SELF", True)
     show_excluded = app.config.get("SHOW_OPENAPI_EXCLUDED", False)
@@ -418,7 +426,7 @@ app.config.get("OPENAPI_SECURITY") | Allows you to build your own `Security` for
 app.config.get("OPENAPI_EXTERNAL_DOCS") | If set, adds an `ExternalDocumentation` to your spec
 app.config.get("OPENAPI_YAML_CONTENTTYPE", default_yaml_content_type) | See your `/openapi/spec.yml` in a browser by setting this to `text/plain`
 
-# OAS Object maturity
+## OAS Object maturity
 `sanic-openapi3e` is being used in production, and all of the spec is implemented. Most of the spec is known to be in
 production use, but some of the spec's objects are marked here as "beta" due to no known production use.
 
@@ -457,3 +465,7 @@ XML | beta | no known usage
 
 `sanic-openapi3e` is built to create [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md)
 specs. 
+
+## Changelog
+* v0.9.2
+  * Fixes an issue of rendering SecurityRequirement when there were no entries in the list.

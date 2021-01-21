@@ -217,7 +217,7 @@ def _build_openapi_externaldocs(app: sanic.app.Sanic):
     return external_docs
 
 
-def _build_openapi_security(app: sanic.app.Sanic):
+def _build_openapi_security(app: sanic.app.Sanic) -> List[SecurityRequirement]:
     security = app.config.get("OPENAPI_SECURITY")
     if security:
         if not isinstance(security, list):
@@ -420,11 +420,7 @@ def _upgrade_parameter_schema_description(
 def _build_openapi_path_should_be_skipped(_uri: str, hide_excluded: bool, hide_openapi_self: bool):
 
     if hide_openapi_self:
-        if (
-            _uri.startswith("/" + blueprint.url_prefix)
-            if blueprint.url_prefix
-            else True
-        ) and any(
+        if (_uri.startswith("/" + blueprint.url_prefix) if blueprint.url_prefix else True) and any(
             bp_uri in _uri for bp_uri in [r.uri for r in blueprint.routes]
         ):
             # Remove self-documentation from the spec

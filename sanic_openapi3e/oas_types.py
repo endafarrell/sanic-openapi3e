@@ -78,6 +78,8 @@ def _assert_strictly_greater_than_zero(element, name, clazz):
 
 @functools.lru_cache(maxsize=64)
 def simple_snake2camel(string: str) -> str:
+    if "_" not in string:
+        return string.strip()
     first, *rest = string.strip().lower().split("_")
     return first + "".join(ele.capitalize() for ele in rest)
 
@@ -177,9 +179,13 @@ class OObject:
             raise TypeError(str(opt_key) + " " + self.__class__.__qualname__ + " " + repr(self))
 
         for key, value in self.__dict__.items():
-            # Allow False bools, but not other falsy values
+
+            # Allow False bools, but not other falsy values - UNLESS self is a SecurityRequirement
             if (value is not False) and (not value):
-                continue
+                if value == [] and self.__class__.__qualname__ == "SecurityRequirement":
+                    pass
+                else:
+                    continue
             if key.startswith("x_"):
                 continue
             if key == "deprecated" and value is False:
@@ -194,13 +200,14 @@ class OObject:
             # List of yamlable objects for element in value
             elif key2 == "parameters" and self.__class__ in (PathItem, Operation):
                 value2 = [OObject.as_yamlable_object(e, sort=sort, opt_key=f"{opt_key}.{key2}") for e in value]
-            elif key2 == "security":
-                value2 = [
-                    SecurityRequirement._as_yamlable_object(  # pylint: disable=protected-access
-                        sr, opt_key=f"{opt_key}.{key2}"
-                    )
-                    for sr in value
-                ]
+            # elif key2 == "security":
+            #     value2 = [
+            #         SecurityRequirement._as_yamlable_object(  # pylint: disable=protected-access
+            #             sr, opt_key=f"{opt_key}.{key2}"
+            #         )
+            #         for sr in value
+            #     ]
+            #     print(209, key, key2, value, value2)
             ############################################################################################################
             # dicts of yamlable objects for items() value
             elif key2 == "responses" and self.__class__ == Components:

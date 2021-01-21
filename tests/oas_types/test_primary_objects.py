@@ -10,6 +10,7 @@ from sanic_openapi3e.oas_types import (
     PathItem,
     Paths,
     Schema,
+    SecurityRequirement,
     Tag,
 )
 
@@ -416,6 +417,16 @@ def test_schema_integer_w_choices():
         "uniqueItems": False,
         "writeOnly": False,
     }
+
+
+########################################################################################################################
+# Security Requirement
+########################################################################################################################
+
+
+def test_security_requirement():
+    sr = SecurityRequirement({"bearerAuth": []})
+    assert sr.as_yamlable_object() == {"bearerAuth": []}
 
 
 ########################################################################################################################

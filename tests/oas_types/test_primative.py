@@ -19,3 +19,10 @@ def test_asserts():
 
     with pytest.raises(AssertionError):
         sanic_openapi3e.oas_types._assert_strictly_greater_than_zero(-1, "min_length", sanic_openapi3e.oas_types.Schema)
+
+
+@pytest.mark.parametrize(
+    "key, expected", [("bearerToken", "bearerToken"), ("bearer_format", "bearerFormat"), ("dollar_ref", "$ref"),]
+)
+def test_openapi_keyname(key: str, expected: str):
+    assert sanic_openapi3e.oas_types.openapi_keyname(key) == expected

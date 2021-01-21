@@ -81,15 +81,7 @@ def test_external_documentation(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"type": "integer"},
                         }
                     ],
                     "responses": {
@@ -163,18 +155,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "description": "Minimum: 4",
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "format": "int32",
-                                "minimum": 4,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"description": "Minimum: 4", "format": "int32", "minimum": 4, "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -255,18 +236,7 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "description": "Minimum: 4",
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "format": "int32",
-                                "minimum": 4,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"description": "Minimum: 4", "format": "int32", "minimum": 4, "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -336,15 +306,7 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"type": "integer"},
                         }
                     ],
                     "responses": {
@@ -382,25 +344,13 @@ def test_pathitem():
 
 def test_schema():
     assert Schema(_type="string").as_yamlable_object() == {
-        "exclusiveMaximum": False,
-        "exclusiveMinimum": False,
-        "nullable": False,
-        "readOnly": False,
         "type": "string",
-        "uniqueItems": False,
-        "writeOnly": False,
     }
 
 
 def test_schema_integer():
     assert Schema.Integer.as_yamlable_object() == {
-        "exclusiveMaximum": False,
-        "exclusiveMinimum": False,
-        "nullable": False,
-        "readOnly": False,
         "type": "integer",
-        "uniqueItems": False,
-        "writeOnly": False,
     }
 
 
@@ -409,13 +359,7 @@ def test_schema_integer_w_choices():
     schema.add_enum([1, 2, 3])
     assert schema.as_yamlable_object() == {
         "enum": [1, 2, 3],
-        "exclusiveMaximum": False,
-        "exclusiveMinimum": False,
-        "nullable": False,
-        "readOnly": False,
         "type": "integer",
-        "uniqueItems": False,
-        "writeOnly": False,
     }
 
 

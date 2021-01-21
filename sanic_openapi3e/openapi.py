@@ -345,9 +345,9 @@ def _buld_openapi_paths(  # pylint: disable=too-many-arguments,too-many-locals,t
                 servers=path_item.servers,
                 summary=path_item_summary,
                 tags=sorted(pathitem_tag_names),
+                security=path_item.x_security_holder,
                 # TODO
                 callbacks=NOT_YET_IMPLEMENTED,
-                security=NOT_YET_IMPLEMENTED,
             )
 
             _path = PathItem(**operations)
@@ -502,8 +502,9 @@ async def spec_v3_json(_):
 
 
 @blueprint.route("/spec.yml")
-async def spec_v3_yaml(_):
-    return await serve_spec(_OPENAPI, "yaml")
+async def spec_v3_yaml(request: sanic.request.Request):
+    as_text = "as_text" in request.query_string
+    return await serve_spec(_OPENAPI, "yaml", as_text)
 
 
 @blueprint.route("/uncloaked.json")
@@ -512,8 +513,9 @@ async def spec_v3_uncloaked_json(_):
 
 
 @blueprint.route("/uncloaked.yml")
-async def spec_v3_uncloaked_yaml(_):
-    return await serve_spec(_OPENAPI_UNCLOAKED, "yaml")
+async def spec_v3_uncloaked_yaml(request: sanic.request.Request):
+    as_text = "as_text" in request.query_string
+    return await serve_spec(_OPENAPI_UNCLOAKED, "yaml", as_text)
 
 
 # ======================================================================================================================
@@ -526,14 +528,15 @@ async def spec_all_json(_):
 
 
 @blueprint.route("/spec.all.yml")
-async def spec_all_yml(_):
-    return await serve_spec(_OPENAPI_ALL, "yaml")
+async def spec_all_yml(request: sanic.request.Request):
+    as_text = "as_text" in request.query_string
+    return await serve_spec(_OPENAPI_ALL, "yaml", as_text)
 
 
 # ======================================================================================================================
 
 
-async def serve_spec(spec: Dict, json_yaml: str):
+async def serve_spec(spec: Dict, json_yaml: str, yaml_as_text: bool = False):
     if not spec:
         # ... including empty dicts in this if block
         raise sanic.exceptions.NotFound("Not found")
@@ -542,6 +545,6 @@ async def serve_spec(spec: Dict, json_yaml: str):
         return sanic.response.json(spec)
 
     return sanic.response.HTTPResponse(
-        content_type=YAML_CONTENT_TYPE,
+        content_type="text/plain" if yaml_as_text else YAML_CONTENT_TYPE,
         body=yaml.dump(spec, Dumper=yaml.CDumper, default_flow_style=False, explicit_start=False, sort_keys=False),
     )

@@ -130,15 +130,7 @@ def test_fundamentals(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"type": "integer"},
                         }
                     ],
                     "responses": {
@@ -220,18 +212,7 @@ def test_path__deprecated(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "description": "Minimum: 4",
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "format": "int32",
-                                "minimum": 4,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"description": "Minimum: 4", "format": "int32", "minimum": 4, "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -356,25 +337,7 @@ def test_list_is_a_list_in_query(openapi__mod_bp_doc):
                             "in": "query",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "items": {
-                                    "exclusiveMaximum": false,
-                                    "exclusiveMinimum": false,
-                                    "nullable": false,
-                                    "readOnly": false,
-                                    "type": "integer",
-                                    "uniqueItems": false,
-                                    "writeOnly": false,
-                                },
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "array",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "items": {"type": "integer"}, "type": "array"},
                         }
                     ],
                     "responses": {
@@ -432,22 +395,7 @@ def test_path_without_parameter(openapi__mod_bp_doc):
             "/test/798/anId/{an_id}": {
                 "get": {
                     "operationId": "GET~~~test~798~anId~an_id",
-                    "parameters": [
-                        {
-                            "in": "path",
-                            "name": "an_id",
-                            "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
-                        }
-                    ],
+                    "parameters": [{"in": "path", "name": "an_id", "required": true, "schema": {"type": "integer"}}],
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
@@ -513,16 +461,7 @@ def test_path_exclude(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -594,16 +533,7 @@ def test_path_methods(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -625,16 +555,7 @@ def test_path_methods(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -656,16 +577,7 @@ def test_path_methods(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -687,16 +599,7 @@ def test_path_methods(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -778,16 +681,7 @@ def test_camel_case_operation_id(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -848,16 +742,7 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -879,16 +764,7 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -910,16 +786,7 @@ def test_camel_case_operation_id_for_composite_view(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {

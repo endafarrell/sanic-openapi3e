@@ -87,25 +87,7 @@ def test_param_in_query(openapi__mod_bp_doc):
                             "in": "query",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "items": {
-                                    "exclusiveMaximum": false,
-                                    "exclusiveMinimum": false,
-                                    "nullable": false,
-                                    "readOnly": false,
-                                    "type": "integer",
-                                    "uniqueItems": false,
-                                    "writeOnly": false,
-                                },
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "array",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "items": {"type": "integer"}, "type": "array"},
                         }
                     ],
                     "responses": {
@@ -175,16 +157,7 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": [1, 3, 5, 7, 11, 13],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
                         }
                     ],
                     "responses": {
@@ -248,15 +221,16 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
         "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
         "openapi": "3.0.2",
         "paths": {
-            "/test/833/anId/{an_id}": {
+            "/test/833/anId2/{an_id}": {
                 "get": {
-                    "operationId": "testId",
+                    "operationId": "GET~~~test~759~anId2~an_id",
                     "parameters": [
                         {
+                            "description": "An ID",
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {"enum": [1, 3, 5, 7, 11, 13], "type": "integer"},
+                            "schema": {"type": "integer"},
                         }
                     ],
                     "responses": {
@@ -278,12 +252,6 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
 
 def test_path_params_w_schema_wo_choices(openapi__mod_bp_doc):
     openapi, openapi_blueprint, doc = openapi__mod_bp_doc
-    # schemas = {
-    #     "int.min4": sanic_openapi3e.oas_types.Schema(
-    #         title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",
-    #     )
-    # }
-    # components = sanic_openapi3e.oas_types.Components(schemas=schemas)
 
     app = Sanic("test_path_params_w_schema_wo_choices", strict_slashes=strict_slashes)
     # app.config.OPENAPI_COMPONENTS = components
@@ -322,15 +290,7 @@ def test_path_params_w_schema_wo_choices(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "integer",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"type": "integer"},
                         }
                     ],
                     "responses": {
@@ -390,16 +350,7 @@ def test_path_params_wo_schema_w_choices(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "enum": ["a", "b", "o"],
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "string",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"enum": ["a", "b", "o"], "type": "string"},
                         }
                     ],
                     "responses": {
@@ -457,15 +408,7 @@ def test_path_params_wo_schema_wo_choices(openapi__mod_bp_doc):
                             "in": "path",
                             "name": "an_id",
                             "required": true,
-                            "schema": {
-                                "exclusiveMaximum": false,
-                                "exclusiveMinimum": false,
-                                "nullable": false,
-                                "readOnly": false,
-                                "type": "string",
-                                "uniqueItems": false,
-                                "writeOnly": false,
-                            },
+                            "schema": {"type": "string"},
                         }
                     ],
                     "responses": {

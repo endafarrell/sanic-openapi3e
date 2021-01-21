@@ -179,10 +179,29 @@ class OObject:
             raise TypeError(str(opt_key) + " " + self.__class__.__qualname__ + " " + repr(self))
 
         for key, value in self.__dict__.items():
+            key2 = openapi_keyname(key)
 
-            # Allow False bools, but not other falsy values - UNLESS self is a SecurityRequirement
+            # Schema classes have many keys with bool where their default is false. Don't send them out.
+            if self.__class__.__qualname__ == "Schema" and value is False:
+                if key2 in {
+                    "nullable",
+                    "readOnly",
+                    "writeOnly",
+                    " deprecated",
+                    "exclusiveMaximum",
+                    "exclusiveMinimum",
+                    "uniqueItems",
+                }:
+                    continue
+
+            # Allow False bools, but not other falsy values - UNLESS:
+            #   1: self is a SecurityRequirement
+            #   2: self is an Operation and key is security
+            # as an empty list has special meaning for these.
             if (value is not False) and (not value):
                 if value == [] and self.__class__.__qualname__ == "SecurityRequirement":
+                    pass
+                elif value == [] and key == "security" and self.__class__.__qualname__ == "Operation":
                     pass
                 else:
                     continue
@@ -191,7 +210,7 @@ class OObject:
             if key == "deprecated" and value is False:
                 # By default, items in specs are `deprecated: false` - these are not desirable in the specs
                 continue
-            key2 = openapi_keyname(key)
+
             value2: Union[Dict, List, str, bytes, int, float, bool]
             if value is False or value is True:
                 value2 = value
@@ -3113,12 +3132,12 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
         servers: Optional[List[Server]] = None,
         parameters: Optional[List[Union[Parameter, Reference]]] = None,
         request_body: Optional[Union[RequestBody, Reference]] = None,
-        # TODO = add hide/suppress?
-        x_tags_holder: Optional[List[Tag]] = None,
         x_deprecated_holder: bool = False,
+        x_exclude: bool = False,
         x_external_docs_holder: Optional[ExternalDocumentation] = None,
         x_responses_holder: Optional[Dict[str, Union[Response, Reference]]] = None,
-        x_exclude: bool = False,
+        x_security_holder: Optional[List[SecurityRequirement]] = None,
+        x_tags_holder: Optional[List[Tag]] = None,
     ):
         """
         Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path
@@ -3146,18 +3165,19 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
             location. The list can use the Reference Object to link to parameters that are defined at the OpenAPI
             Object's components/parameters.
         :param request_body: sanic-openapi3e implementation extension to allow requestBody to be defined.
-        :param x_tags_holder: sanic-openapi3e implementation extension to allow tags on the PathItem until they can be
-            passed to the Operation/s.
+
         :param x_deprecated_holder: sanic-openapi3e implementation extension to allow deprecated on the PathItem until
             they can be passed to the Operation/s.
+        :param x_exclude: sanic-openapi3e extension to completly exclude the path from the spec.
         :param x_external_docs_holder: sanic-openapi3e implementation extension to allow externalDocs on the PathItem
             until they can be passed to the Operation/s.
         :param x_responses_holder: sanic-openapi3e implementation extension to allow Responses on the PathItem until
             they can be passed to the Operation/s.
-        :param x_exclude: sanic-openapi3e extension to completly exclude the path from the spec.
+        :param x_security_holder: sanic-openapi3e implementation extension to allow security on the PathItem until they
+            can be passed to the Operation/s.
+        :param x_tags_holder: sanic-openapi3e implementation extension to allow tags on the PathItem until they can be
+            passed to the Operation/s.
         """
-        if x_external_docs_holder:
-            raise ValueError(x_external_docs_holder)
 
         # TODO - validations
         if x_tags_holder:
@@ -3220,6 +3240,7 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
         self.request_body = request_body
 
         self.x_tags_holder: List[Tag] = x_tags_holder if x_tags_holder is not None else []
+        self.x_security_holder = x_security_holder
         self.x_deprecated_holder = x_deprecated_holder
         self.x_responses_holder: Responses = Responses(x_responses_holder)
         self.x_external_docs_holder = x_external_docs_holder

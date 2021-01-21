@@ -4,7 +4,7 @@ TODO - note: everything is documented at the PathItem level, not the Operation l
 from .oas_types import *  # pylint: disable=unused-wildcard-import, wildcard-import  # <<-- here for users
 
 module_tags: Dict[str, Tag] = {}
-endpoints: Paths = Paths()
+endpoints: Paths = Paths()  # Note: this is really a Dict[Callable, PathItem] under the hood.
 
 
 def deprecated():
@@ -227,6 +227,29 @@ def response(
             endpoints[func].x_responses_holder[str(status_code)] = Response(
                 description=description, headers=headers, content=content, links=links
             )
+        return func
+
+    return inner
+
+
+def security(requirements: List[SecurityRequirement]):
+    """
+    Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a
+    security scheme declared in the Security Schemes under the Components Object.
+
+    Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request
+    to be authorized. This enables support for scenarios where multiple query parameters or HTTP headers are required to
+    convey security information.
+
+    When a list of Security Requirement Objects is defined on the OpenAPI Object or Operation Object, only one of the
+    Security Requirement Objects in the list needs to be satisfied to authorize the request.
+
+    `sanic-openapi3e hint: set your standard security requirements via `app.config.OPENAPI_SECURITY`; then override them
+    as needed with a `@doc.security` annotation. Use `@doc.security([])` to disable security for this route/operation.
+    """
+
+    def inner(func):
+        endpoints[func].x_security_holder = requirements
         return func
 
     return inner

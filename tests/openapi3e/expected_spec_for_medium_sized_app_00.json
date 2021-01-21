@@ -29,28 +29,16 @@
     "schemas": {
       "int.min4": {
         "description": "Minimum: 4",
-        "exclusiveMaximum": false,
-        "exclusiveMinimum": false,
         "format": "int32",
         "minimum": 4,
-        "nullable": false,
-        "readOnly": false,
         "title": "int.min4",
-        "type": "integer",
-        "uniqueItems": false,
-        "writeOnly": false
+        "type": "integer"
       },
       "str.min4": {
         "description": "A string of len >= 4",
-        "exclusiveMaximum": false,
-        "exclusiveMinimum": false,
         "minimum": 4,
-        "nullable": false,
-        "readOnly": false,
         "title": "str.min4",
-        "type": "string",
-        "uniqueItems": false,
-        "writeOnly": false
+        "type": "string"
       }
     }
   },
@@ -79,22 +67,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -144,22 +120,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -209,22 +173,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -274,22 +226,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -339,22 +279,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -404,22 +332,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -469,22 +385,10 @@
                 11,
                 13
               ],
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "items": {
-                "exclusiveMaximum": false,
-                "exclusiveMinimum": false,
-                "nullable": false,
-                "readOnly": false,
-                "type": "integer",
-                "uniqueItems": false,
-                "writeOnly": false
+                "type": "integer"
               },
-              "nullable": false,
-              "readOnly": false,
-              "type": "array",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "array"
             }
           }
         ],
@@ -526,13 +430,7 @@
             "name": "an_id",
             "required": true,
             "schema": {
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
-              "nullable": false,
-              "readOnly": false,
-              "type": "integer",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "integer"
             }
           }
         ],
@@ -642,15 +540,9 @@
             "required": true,
             "schema": {
               "description": "Minimum value: 4",
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "format": "int32",
               "minimum": 4,
-              "nullable": false,
-              "readOnly": false,
-              "type": "integer",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "integer"
             }
           }
         ],
@@ -708,15 +600,9 @@
             "required": true,
             "schema": {
               "description": "Minimum value: 4",
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
               "format": "int32",
               "minimum": 4,
-              "nullable": false,
-              "readOnly": false,
-              "type": "integer",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "integer"
             }
           },
           {
@@ -724,13 +610,7 @@
             "name": "another",
             "required": true,
             "schema": {
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
-              "nullable": false,
-              "readOnly": false,
-              "type": "string",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "string"
             }
           }
         ],
@@ -775,13 +655,7 @@
             "name": "an_id",
             "required": true,
             "schema": {
-              "exclusiveMaximum": false,
-              "exclusiveMinimum": false,
-              "nullable": false,
-              "readOnly": false,
-              "type": "integer",
-              "uniqueItems": false,
-              "writeOnly": false
+              "type": "integer"
             }
           }
         ],

@@ -8,11 +8,15 @@ including sanic path params. python 3.6+
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![Downloads](https://pepy.tech/badge/sanic-openapi3e)](https://pepy.tech/project/sanic-openapi3e)
 
-## Table of Contents
-1. [Installation](#installation)
-2. [Usage](#usage)
-3. [Control spec generation](#Control-spec-generation)
-4. [OAS Object maturity](#oas-object-maturity)
+[comment]: <> (## Table of Contents)
+
+[comment]: <> (1. [Installation]&#40;#installation&#41;)
+
+[comment]: <> (2. [Usage]&#40;#usage&#41;)
+
+[comment]: <> (3. [Control spec generation]&#40;#Control-spec-generation&#41;)
+
+[comment]: <> (4. [OAS Object maturity]&#40;#oas-object-maturity&#41;)
 
 ## Installation
 
@@ -43,7 +47,11 @@ app.go_fast()
 ```
 
 You'll now have a specification at the URL `/openapi/spec.json` and
-a YAML version at `/openapi/spec.yml`.
+a YAML version at `/openapi/spec.yml`. 
+
+p.s.: Clicking on the `/openapi/spec.yml` link in a browser will generally download a file and your computer will open
+an application to read it. To see the YAML spec in the browser as a plain text file, add a `?as_text` query string like 
+`/openapi/spec.yml?as_text` instead.
 
 Your routes will be automatically categorized by their blueprints' 
 names.
@@ -467,5 +475,9 @@ XML | beta | no known usage
 specs. 
 
 ## Changelog
+* v0.9.3
+  * Adds a `@doc.security()` to override security requirements on a route.
+  * Removes entries with `false` values from the spec if `false` is the default value. This makes the specs smaller in 
+    in size and are more idomatic.
 * v0.9.2
   * Fixes an issue of rendering SecurityRequirement when there were no entries in the list.

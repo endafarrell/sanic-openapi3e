@@ -7,20 +7,8 @@
       "400": {
         "description": "Bad Request"
       },
-      "401": {
-        "description": "Unauthorized"
-      },
-      "403": {
-        "description": "Forbidden"
-      },
       "404": {
         "description": "Not Found"
-      },
-      "405": {
-        "description": "Method Not Allowed"
-      },
-      "410": {
-        "description": "Gone"
       },
       "500": {
         "description": "Internal Server Error"
@@ -81,20 +69,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -134,20 +110,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -187,20 +151,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -240,20 +192,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -293,20 +233,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -346,20 +274,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -399,20 +315,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -441,20 +345,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -495,20 +387,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -553,20 +433,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -621,20 +489,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"
@@ -666,20 +522,8 @@
           "400": {
             "$ref": "#/components/responses/400"
           },
-          "401": {
-            "$ref": "#/components/responses/401"
-          },
-          "403": {
-            "$ref": "#/components/responses/403"
-          },
           "404": {
             "$ref": "#/components/responses/404"
-          },
-          "405": {
-            "$ref": "#/components/responses/405"
-          },
-          "410": {
-            "$ref": "#/components/responses/410"
           },
           "500": {
             "$ref": "#/components/responses/500"

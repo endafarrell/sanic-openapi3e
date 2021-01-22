@@ -4,7 +4,51 @@ import sanic.request
 import sanic.response
 from sanic import Sanic
 
-from tests.conftest import false, run_asserts, true
+from tests.conftest import false, run_asserts, strict_slashes, true
+
+
+def test_responses_takes_description(openapi__mod_bp_doc):
+    """Test we can describe the responses by their status codes."""
+    openapi, openapi_blueprint, doc = openapi__mod_bp_doc
+    app = Sanic("test_responses_takes_description", strict_slashes=strict_slashes)
+
+    app.blueprint(openapi_blueprint)
+
+    @app.get("/test/612/anId")
+    @doc.response(200, description="A 200 description")
+    @doc.response(201, description="A 201 description")
+    def test_id(_):
+        return sanic.response.json(locals())  # pragma: no cover
+
+    _, response = app.test_client.get("/openapi/spec.json")
+    expected = {
+        "components": {
+            "responses": {
+                "200": {"description": "OK"},
+                "400": {"description": "Bad Request"},
+                "404": {"description": "Not Found"},
+                "500": {"description": "Internal Server Error"},
+            }
+        },
+        "info": {"description": "Description", "title": "API", "version": "v1.0.0"},
+        "openapi": "3.0.2",
+        "paths": {
+            "/test/612/anId": {
+                "get": {
+                    "operationId": "GET~~~test~612~anId",
+                    "responses": {
+                        "200": {"description": "A 200 description"},
+                        "201": {"description": "A 201 description"},
+                        "400": {"$ref": "#/components/responses/400"},
+                        "404": {"$ref": "#/components/responses/404"},
+                        "500": {"$ref": "#/components/responses/500"},
+                    },
+                }
+            }
+        },
+    }
+
+    run_asserts(response, expected)
 
 
 def test_multiple_responses(openapi__mod_bp_doc):
@@ -66,11 +110,7 @@ def test_multiple_responses(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             },
             "schemas": {

@@ -35,6 +35,7 @@ This implementation has some known limitations:
 import copy
 import functools
 import json
+import re
 import traceback
 import warnings
 from collections import OrderedDict
@@ -123,29 +124,40 @@ def openapi_keyname(key: str) -> str:
     }.get(key, simple_snake2camel(key))
 
 
+def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+    uri_for_operation_id: str = uri
+    for parameter in route.parameters:
+        uri_for_operation_id = re.sub("<" + parameter.name + ".*?>", parameter.name, uri_for_operation_id)
+
+    return "{}~~{}".format(method.upper(), uri_for_operation_id).replace("/", "~")
+
+
+def camel_case_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
+    if hasattr(route.handler, "__class__") and hasattr(route.handler, "handlers"):
+        # These are `sanic.view.CompositeView`s
+        _method_handler = route.handler.handlers.get(method.upper())
+        if _method_handler:
+            handler_name = method + "_" + _method_handler.__name__
+        else:
+            raise ValueError(f"No {method.upper()} handler found for {uri} handlers: {route.handler.handlers}")
+    elif hasattr(route.handler, "__name__"):
+        if len(route.methods) > 1:
+            # This fn will be called many times, once per method, but we should prefix the handler_name with this
+            # prefix to make the operationIds globally unique. If the route is only used by one method, use that
+            # handler's name.
+            handler_name = method + "_" + route.handler.__name__
+        else:
+            handler_name = route.handler.__name__
+    else:
+        raise NotImplementedError()
+    return simple_snake2camel(handler_name)
+
+
 NoneType = type(None)
 
 
 class OObject:
     """A base object for sanic_openapi3e. Internal."""
-
-    # @staticmethod
-    # def _serialize(value: Any, for_repr=False, sort=False) -> Union[Dict, List[Dict], Any]:
-    #     """
-    #     Internal serialisation to a dict
-    #     :param value: Any
-    #     :return: dict
-    #     """
-    #     if isinstance(value, OObject):
-    #         return value.serialize(sort=sort)
-    #
-    #     if isinstance(value, dict):
-    #         return {openapi_keyname(k): OObject._serialize(v, for_repr=for_repr, sort=sort) for k, v in value.items()}
-    #
-    #     if isinstance(value, list):
-    #         return [OObject._serialize(v, for_repr=for_repr, sort=sort) for v in value]
-    #
-    #     return value
 
     @staticmethod
     def _as_yamlable_object(
@@ -231,8 +243,7 @@ class OObject:
             # dicts of yamlable objects for items() value
             elif key2 == "responses" and self.__class__ == Components:
                 value2 = {
-                    key: value.as_yamlable_object(opt_key=f"{opt_key}.{key2}")
-                    for key, value in Responses.DEFAULT_RESPONSES.items()
+                    key3: value3.as_yamlable_object(opt_key=f"{opt_key}.{key2}") for key3, value3 in value.items()
                 }
 
             elif key2 == "examples":
@@ -328,10 +339,12 @@ class OObject:
         return OrderedDict(yamable)
 
     def __str__(self):
-        return json.dumps(self.serialize(), sort_keys=True)
+        return json.dumps(self.as_yamlable_object(sort=True), sort_keys=True)
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__qualname__, json.dumps(self.serialize(), sort_keys=True),)
+        return "{}({})".format(
+            self.__class__.__qualname__, json.dumps(self.as_yamlable_object(sort=True), sort_keys=True),
+        )
 
 
 # --------------------------------------------------------------- #
@@ -676,7 +689,7 @@ class Discriminator(OObject):
 
         :param property_name: REQUIRED. The name of the property in the payload that will hold the discriminator value.
         :param mapping: An object to hold mappings between payload values and schema names or references.
-        
+
         """
         _assert_type(property_name, (str,), "property_name", self.__class__)
         _assert_type(mapping, (dict,), "mapping", self.__class__)
@@ -1298,7 +1311,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         one_of: Optional[Union["Schema", Reference]] = None,
         any_of: Optional[Union["Schema", Reference]] = None,
         _not: Optional[Union["Schema", Reference]] = None,
-        items: Optional[Dict[str, Union["Schema", Reference]]] = None,
+        items: Optional[Union["Schema", Reference]] = None,
         properties: Optional[Union["Schema", Reference]] = None,
         additional_properties: Optional[Union[bool, "Schema", Reference]] = None,
         description: Optional[str] = None,
@@ -1494,8 +1507,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         _assert_type(one_of, (Schema, Reference), "one_of", self.__class__)
         _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
         _assert_type(_not, (Schema, Reference), "_not", self.__class__)
-        _assert_type(items, (dict,), "items", self.__class__)
-        # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
+        _assert_type(items, (Schema, Reference,), "items", self.__class__)
         _assert_type(properties, (Schema, Reference), "properties", self.__class__)
         _assert_type(
             additional_properties, (bool, Schema, Reference), "additional_properties", self.__class__,
@@ -1708,7 +1720,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         self._not = _not
         """Inline or referenced schema MUST be of a Schema Object and not a standard JSON Schema."""
 
-        self.items = items
+        self.items: Optional[Union[Schema, Reference]] = items
         """
         Value MUST be an object and not an array. Inline or referenced schema MUST be of a Schema Object and not a 
         standard JSON Schema. items MUST be present if the type is array.
@@ -1811,12 +1823,13 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         if self._type:
             if self._type == "array":
                 if self.items:
-                    assert self.items.get("type") == enum0_type, (
+                    assert not isinstance(self.items, Reference), "You cannot add enums to a Reference"
+                    assert self.items._type == enum0_type, (  # pylint: disable=protected-access
                         self.items,
                         enum0_type,
                     )
                 else:
-                    self.items = {"items": Schema(_type=enum0_type)}
+                    self.items = Schema(_type=enum0_type)
             else:
                 assert self._type == enum0_type, (self._type, enum0_type)
         else:
@@ -1860,9 +1873,9 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
 Schema.Integer = Schema(_type="integer", x_frozen=True)
 Schema.Number = Schema(_type="number", _format="double", x_frozen=True)
 Schema.String = Schema(_type="string", x_frozen=True)
-Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize(), x_frozen=True)
-Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize(), x_frozen=True)
-Schema.Strings = Schema(_type="array", items=Schema.String.serialize(), x_frozen=True)
+Schema.Integers = Schema(_type="array", items=Schema.Integer, x_frozen=True)
+Schema.Numbers = Schema(_type="array", items=Schema.Number, x_frozen=True)
+Schema.Strings = Schema(_type="array", items=Schema.String, x_frozen=True)
 Schema.Object = Schema(_type="object", additional_properties=True, x_frozen=True)
 
 
@@ -2460,21 +2473,14 @@ class SecurityScheme(OObject):  # pylint: disable=too-many-instance-attributes
     Defines a security scheme that can be used by the operations. Supported schemes are HTTP authentication, an API
     key (either as a header, a cookie parameter or as a query parameter), OAuth2's common flows (implicit, password,
     application and access code) as defined in RFC6749, and OpenID Connect Discovery.
-
-    Note: there is an ``Applies To`` column in the spec and its full meaning is not clear. Be advised that you may
-    need to check again how this applies to you. See `Security Scheme Object
-    <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#security-scheme-object>`_.
-    Specifically unclear (and inconsistent with some other sections of the docs) is whether the "REQUIRED"
-    terminology only applies to the ``_type`` value in the ``Applies To`` column. For this reason, there is not
-    validation that (possibly) REQUIRED values are presented.
     """
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
         _type: str,
-        name: str,
-        _in: str,
-        scheme: str,
+        name: Optional[str] = None,
+        _in: Optional[str] = None,
+        scheme: Optional[str] = None,
         flows: Optional[OAuthFlows] = None,
         openid_connect_url: Optional[str] = None,
         description: Optional[str] = None,
@@ -2485,21 +2491,14 @@ class SecurityScheme(OObject):  # pylint: disable=too-many-instance-attributes
         key (either as a header, a cookie parameter or as a query parameter), OAuth2's common flows (implicit, password,
         application and access code) as defined in RFC6749, and OpenID Connect Discovery.
 
-        Note: there is an ``Applies To`` column in the spec and its full meaning is not clear. Be advised that you may
-        need to check again how this applies to you. See `Security Scheme Object
-        <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#security-scheme-object>`_.
-        Specifically unclear (and inconsistent with some other sections of the docs) is whether the "REQUIRED"
-        terminology only applies to the ``_type`` value in the ``Applies To`` column. For this reason, there is not
-        validation that (possibly) REQUIRED values are presented.
-
         :param _type: REQUIRED. The type of the security scheme. Valid values are "apiKey", "http", "oauth2",
             "openIdConnect".
         :param description: A short description for security scheme. CommonMark syntax MAY be used for rich text
             representation.
-        :param name: REQUIRED (but not checked). The name of the header, query or cookie parameter to be used.
-        :param _in: REQUIRED (but not checked). The location of the API key. Valid values are "query", "header" or
-            "cookie".
-        :param scheme: REQUIRED (but not checked). The name of the HTTP Authorization scheme to be used in the
+        :param name: REQUIRED when `_type == "apiKey"`. The name of the header, query or cookie parameter to be used.
+        :param _in: REQUIRED when `_type == "apiKey"`. The location of the API key. Valid values are "query", "header"
+            or "cookie".
+        :param scheme: REQUIRED when `_type == "http"`. The name of the HTTP Authorization scheme to be used in the
             Authorization header as defined in RFC7235.
         :param bearer_format: A hint to the client to identify how the bearer token is formatted. Bearer tokens are
             usually generated by an authorization server, so this information is primarily for documentation purposes.
@@ -2511,27 +2510,36 @@ class SecurityScheme(OObject):  # pylint: disable=too-many-instance-attributes
         # TODO - types
 
         assert _type in {"apiKey", "http", "oauth2", "openIdConnect"}
-        if _in:
+        if _type == "apiKey":
+            _assert_required(name, "name for _type 'apiKey'", self.__class__)
+            _assert_required(_in, "_id for _type 'apiKey'", self.__class__)
             assert _in in {"query", "header", "cookie"}, _in
+        elif _type == "http":
+            _assert_required(scheme, "scheme for _type 'http'", self.__class__)
+        elif _type == "oauth2":
+            _assert_required(flows, "flows for _type 'oauth2'", self.__class__)
+        elif _type == "openIdConnect":
+            _assert_required(openid_connect_url, "openid_connect_url for _type 'openIdConnect'", self.__class__)
 
         self._type = _type
         """
-        REQUIRED (but not checked). The type of the security scheme. Valid values are "apiKey", "http", "oauth2", 
+        REQUIRED. The type of the security scheme. Valid values are "apiKey", "http", "oauth2", 
         "openIdConnect"."""
 
         self.description = description
         """A short description for security scheme. CommonMark syntax MAY be used for rich text representation."""
 
         self.name = name
-        """REQUIRED (but not checked). The name of the header, query or cookie parameter to be used."""
+        """REQUIRED when `_type == "apiKey"`. The name of the header, query or cookie parameter to be used."""
 
         self._in = _in
-        """REQUIRED (but not checked). The location of the API key. Valid values are "query", "header" or "cookie"."""
+        """REQUIRED when `_type == "apiKey"`. The location of the API key. Valid values are "query", "header" or 
+        "cookie"."""
 
         self.scheme = scheme
         """
-        REQUIRED (but not checked). The name of the HTTP Authorization scheme to be used in the Authorization header as 
-        defined in RFC7235.
+        REQUIRED when `_type == "http"`.. The name of the HTTP Authorization scheme to be used in the Authorization 
+        header as defined in RFC7235.
         """
 
         self.bearer_format = bearer_format
@@ -2542,13 +2550,13 @@ class SecurityScheme(OObject):  # pylint: disable=too-many-instance-attributes
 
         self.flows = flows
         """
-        REQUIRED when _type is oauth2. An object containing configuration information for the flow types supported.
+        REQUIRED when `_type == "oauth2"`. An object containing configuration information for the flow types supported.
         """
 
         self.openid_connect_url = openid_connect_url
         """
-        REQUIRED when _type is openIdConnect. OpenId Connect URL to discover OAuth2 configuration values. This MUST be 
-        in the form of a URL.
+        REQUIRED when `_type == "openIdConnect"`. OpenId Connect URL to discover OAuth2 configuration values. This MUST 
+        be in the form of a URL.
         """
 
 
@@ -2665,11 +2673,11 @@ class Responses(OObject):
     DEFAULT_RESPONSES = {
         "200": Response.DEFAULT_SUCCESS,
         "400": Response.BAD_REQUEST,
-        "401": Response.UNAUTHORIZED,
-        "403": Response.FORBIDDEN,
+        # "401": Response.UNAUTHORIZED,
+        # "403": Response.FORBIDDEN,
         "404": Response.NOT_FOUND,
-        "405": Response.METHOD_NOT_ALLOWED,
-        "410": Response.GONE,
+        # "405": Response.METHOD_NOT_ALLOWED,
+        # "410": Response.GONE,
         "500": Response.INTERNAL_SERVER_ERROR,
     }
 
@@ -2709,15 +2717,22 @@ class Responses(OObject):
         """
         # TODO - types
         # TODO - validations
-        _init_responses: Dict[str, Union[Response, Reference]] = {
-            key: Reference("#/components/responses/{}".format(key)) for key in Responses.DEFAULT_RESPONSES
-        }
+        _init_responses: Dict[str, Union[Response, Reference]]
         if responses:
             if no_defaults:
                 _init_responses = responses
             else:
+                # Start with references ...
+                _init_responses = {
+                    key: Reference("#/components/responses/{}".format(key)) for key in Responses.DEFAULT_RESPONSES
+                }
                 for status_code, response in responses.items():
                     _init_responses[str(status_code)] = response
+        else:
+            # Use references
+            _init_responses = {
+                key: Reference("#/components/responses/{}".format(key)) for key in Responses.DEFAULT_RESPONSES
+            }
         self.__dict__ = _init_responses
 
     @property
@@ -3255,7 +3270,7 @@ class PathItem(OObject):  # pylint: disable=too-many-instance-attributes
         self.x_tags_holder: List[Tag] = x_tags_holder if x_tags_holder is not None else []
         self.x_security_holder = x_security_holder
         self.x_deprecated_holder = x_deprecated_holder
-        self.x_responses_holder: Responses = Responses(x_responses_holder)
+        self.x_responses_holder = Responses(x_responses_holder)
         self.x_external_docs_holder = x_external_docs_holder
         self.x_exclude = x_exclude
 

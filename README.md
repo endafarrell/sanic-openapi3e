@@ -466,7 +466,10 @@ Callback | none | not implemented
 specs. 
 
 ## Changelog
-* v0.9.4
+* v0.9.5
+  * Improves how the `.components.responses` are rendered.
+  * Fixes issues with the "static"/"frozen" predefined `Schema` objects.
+* v0.9.4 
   * Adds a `@doc.responses()` to give an easier way of documenting a route.
 * v0.9.3
   * Adds a `@doc.security()` to override security requirements on a route.

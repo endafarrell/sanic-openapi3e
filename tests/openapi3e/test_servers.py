@@ -1,7 +1,7 @@
 import sanic.response
 from sanic import Sanic
 
-from tests.conftest import false, run_asserts, true
+from tests.conftest import run_asserts, true
 
 
 def test_servers(openapi__mod_bp_doc):
@@ -18,7 +18,7 @@ def test_servers(openapi__mod_bp_doc):
 
     servers = [doc.Server(f"http://localhost:{example_port}", "this server")]
     app.config.OPENAPI_SERVERS = servers
-    app.config.OPENAPI_OPERATION_ID_FN = openapi_mod.camel_case_operation_id_fn
+    app.config.OPENAPI_OPERATION_ID_FN = doc.camel_case_operation_id_fn
     schemas = {
         "int.min4": doc.Schema(
             title="int.min4", _type="integer", _format="int32", minimum=4, description="Minimum: 4",
@@ -46,11 +46,7 @@ def test_servers(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             },
             "schemas": {
@@ -100,11 +96,7 @@ def test_servers(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "servers": [

@@ -21,16 +21,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /47/test_id_min/{an_id}:
@@ -55,16 +47,8 @@ paths:
               allowReserved: false
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /55/test_id_examples/{an_id}:
@@ -104,16 +88,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /74/test_path__deprecated/{an_id}/{another}:
@@ -150,16 +126,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
       deprecated: true
@@ -181,16 +149,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /109/some_ids:
@@ -217,16 +177,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /123/post_some_ids:
@@ -253,16 +205,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /137/put_some_ids:
@@ -289,16 +233,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /151/options_some_ids:
@@ -325,16 +261,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /165/delete_some_ids:
@@ -361,16 +289,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /179/head_some_ids:
@@ -397,16 +317,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
   /194/patch_some_ids:
@@ -433,16 +345,8 @@ paths:
           $ref: '#/components/responses/200'
         '400':
           $ref: '#/components/responses/400'
-        '401':
-          $ref: '#/components/responses/401'
-        '403':
-          $ref: '#/components/responses/403'
         '404':
           $ref: '#/components/responses/404'
-        '405':
-          $ref: '#/components/responses/405'
-        '410':
-          $ref: '#/components/responses/410'
         '500':
           $ref: '#/components/responses/500'
 components:
@@ -463,16 +367,8 @@ components:
       description: OK
     '400':
       description: Bad Request
-    '401':
-      description: Unauthorized
-    '403':
-      description: Forbidden
     '404':
       description: Not Found
-    '405':
-      description: Method Not Allowed
-    '410':
-      description: Gone
     '500':
       description: Internal Server Error
 tags:

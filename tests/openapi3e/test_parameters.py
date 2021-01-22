@@ -67,11 +67,7 @@ def test_param_in_query(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -93,11 +89,7 @@ def test_param_in_query(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -137,11 +129,7 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -163,11 +151,7 @@ def test_path_params_must_be_required(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -210,11 +194,7 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -236,11 +216,7 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -270,11 +246,7 @@ def test_path_params_w_schema_wo_choices(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -296,11 +268,7 @@ def test_path_params_w_schema_wo_choices(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -330,11 +298,7 @@ def test_path_params_wo_schema_w_choices(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -356,11 +320,7 @@ def test_path_params_wo_schema_w_choices(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -388,11 +348,7 @@ def test_path_params_wo_schema_wo_choices(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -414,11 +370,7 @@ def test_path_params_wo_schema_wo_choices(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }

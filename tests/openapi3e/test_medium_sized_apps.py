@@ -7,6 +7,7 @@ import sanic.response
 from sanic import Sanic
 
 import sanic_openapi3e
+import sanic_openapi3e.oas_types
 from tests.conftest import run_asserts, strict_slashes
 
 
@@ -37,7 +38,7 @@ def test_json_spec_00(openapi__mod_bp_doc):
 
 def create_medium_sized_app_00(sanic_name: str, doc, openapi_blueprint):
     app = Sanic(sanic_name, strict_slashes=strict_slashes)
-    app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.openapi.camel_case_operation_id_fn
+    app.config.OPENAPI_OPERATION_ID_FN = sanic_openapi3e.oas_types.camel_case_operation_id_fn
     app.blueprint(openapi_blueprint)
     int_min_4 = doc.Schema(_type="integer", _format="int32", minimum=4, description="Minimum value: 4")
     an_id_ex1 = doc.Example(summary="A small number", description="Desc: Numbers less than ten", value=7)

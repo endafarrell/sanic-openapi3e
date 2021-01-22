@@ -3,6 +3,7 @@ import sanic.response
 from sanic import Sanic
 
 import sanic_openapi3e
+import sanic_openapi3e.oas_types
 from tests.conftest import false, run_asserts, strict_slashes, true
 
 # ------------------------------------------------------------ #
@@ -52,11 +53,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -70,11 +67,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Tag 1 - used"],
@@ -87,11 +80,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Tag 1 - used"],
@@ -104,11 +93,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Tag 1 - used"],
@@ -121,11 +106,7 @@ def test_show_unused_tag_v1(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -170,7 +151,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
     # noinspection PyProtectedMember
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
+        operation_id_fn=sanic_openapi3e.oas_types.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
     )
@@ -179,11 +160,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -197,11 +174,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -213,11 +186,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -229,11 +198,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -245,11 +210,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -263,7 +224,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
     # noinspection PyProtectedMember
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
+        operation_id_fn=sanic_openapi3e.oas_types.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
     )
@@ -272,11 +233,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -290,11 +247,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -306,11 +259,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -322,11 +271,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -338,11 +283,7 @@ def test_show_unused_tag_v2(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -417,11 +358,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -444,11 +381,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -470,11 +403,7 @@ def test_tag_unique_description__one_null(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -521,11 +450,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -548,11 +473,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -574,11 +495,7 @@ def test_tag_unique_description__same(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -626,11 +543,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -653,11 +566,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -677,11 +586,7 @@ def test_path_with_multiple_methods_does_not_repeat_tags(openapi__mod_bp_doc):
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],
@@ -720,11 +625,7 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -747,11 +648,7 @@ def test_path_with_multiple_equal_tags_does_not_repeat_tags(openapi__mod_bp_doc)
                         "200": {"description": "A 200 description"},
                         "201": {"description": "A 201 description"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "tags": ["Described tag"],

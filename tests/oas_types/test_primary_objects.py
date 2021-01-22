@@ -17,13 +17,13 @@ from sanic_openapi3e.oas_types import (
 ########################################################################################################################
 # Contact
 ########################################################################################################################
-from tests.conftest import an_id_ex1, an_id_ex2, false, int_min_4, run_asserts
+from tests.conftest import an_id_ex1, an_id_ex2, int_min_4, run_asserts
 from tests.test_openapi3e import strict_slashes, true
 
 
 def test_contact():
     contact = Contact(name="name", url="www.url.com", email="email@url.com")
-    assert contact.serialize() == {
+    assert contact.as_yamlable_object() == {
         "name": "name",
         "url": "www.url.com",
         "email": "email@url.com",
@@ -58,11 +58,7 @@ def test_external_documentation(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -87,11 +83,7 @@ def test_external_documentation(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "summary": "A path with docs",
@@ -110,7 +102,7 @@ def test_external_documentation(openapi__mod_bp_doc):
 
 def test_license():
     _license = License(name="name", url="www.url.com")
-    assert _license.serialize() == {"name": "name", "url": "www.url.com"}
+    assert _license.as_yamlable_object() == {"name": "name", "url": "www.url.com"}
 
 
 ########################################################################################################################
@@ -135,11 +127,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -161,11 +149,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                 }
@@ -179,7 +163,7 @@ def test_path_integer_min(openapi__mod_bp_doc):
 def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
     openapi_mod, openapi_blueprint, doc = openapi__mod_bp_doc
     app = Sanic("test_path_integer_examples_w_summary_and_description", strict_slashes=strict_slashes,)
-    app.config.OPENAPI_OPERATION_ID_FN = openapi_mod.camel_case_operation_id_fn
+    app.config.OPENAPI_OPERATION_ID_FN = doc.camel_case_operation_id_fn
 
     app.blueprint(openapi_blueprint)
 
@@ -203,11 +187,7 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -242,11 +222,7 @@ def test_path_integer_examples_w_summary_and_description(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "summary": "A path with parameter examples",
@@ -284,11 +260,7 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
             "responses": {
                 "200": {"description": "OK"},
                 "400": {"description": "Bad Request"},
-                "401": {"description": "Unauthorized"},
-                "403": {"description": "Forbidden"},
                 "404": {"description": "Not Found"},
-                "405": {"description": "Method Not Allowed"},
-                "410": {"description": "Gone"},
                 "500": {"description": "Internal Server Error"},
             }
         },
@@ -312,11 +284,7 @@ def test_parameter__deprecated(openapi__mod_bp_doc):
                     "responses": {
                         "200": {"$ref": "#/components/responses/200"},
                         "400": {"$ref": "#/components/responses/400"},
-                        "401": {"$ref": "#/components/responses/401"},
-                        "403": {"$ref": "#/components/responses/403"},
                         "404": {"$ref": "#/components/responses/404"},
-                        "405": {"$ref": "#/components/responses/405"},
-                        "410": {"$ref": "#/components/responses/410"},
                         "500": {"$ref": "#/components/responses/500"},
                     },
                     "summary": "A path deprecated parameter",

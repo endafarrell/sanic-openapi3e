@@ -232,6 +232,64 @@ def response(
     return inner
 
 
+def responses(
+    container: Union[
+        Dict[
+            Union[int, str],
+            Optional[
+                Dict[
+                    str,
+                    Union[
+                        str,
+                        Optional[Dict[str, Union[Header, Reference]]],
+                        Optional[Dict[str, MediaType]],
+                        Optional[Dict[str, Union[Link, Reference]]],
+                        Optional[Reference],
+                    ],
+                ]
+            ],
+        ],
+        Responses,
+    ]
+):
+    """
+    A container for the expected responses of an operation. The container maps a HTTP response code to the expected
+    response.
+
+
+    The documentation is not necessarily expected to cover all possible HTTP response codes because they may not be
+    known in advance. However, documentation is expected to cover a successful operation response and any known errors.
+
+    """
+
+    def inner(func):
+        if isinstance(container, Responses):
+            endpoints[func].x_responses_holder = container
+        else:
+            for status_code, opt_desc in container.items():
+                if opt_desc:
+                    d = opt_desc.get("d")  # pylint: disable=invalid-name
+                    h = opt_desc.get("c")  # pylint: disable=invalid-name
+                    c = opt_desc.get("c")  # pylint: disable=invalid-name
+                    l = opt_desc.get("l")  # pylint: disable=invalid-name
+                    r = opt_desc.get("r")  # pylint: disable=invalid-name
+                    if any((d, h, c, l)):
+                        assert not r, "You cannot combine `Reference`s in this `Response`."
+                    if r:
+                        endpoints[func].x_responses_holder[str(status_code)] = r
+                    elif any((d, h, c, l)):
+                        endpoints[func].x_responses_holder[str(status_code)] = Response(
+                            description=d, headers=h, content=c, links=l
+                        )
+                    else:
+                        endpoints[func].x_responses_holder[str(status_code)] = None
+                else:
+                    endpoints[func].x_responses_holder[str(status_code)] = None
+        return func
+
+    return inner
+
+
 def security(requirements: List[SecurityRequirement]):
     """
     Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a

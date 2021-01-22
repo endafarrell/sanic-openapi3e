@@ -33,7 +33,13 @@ pretty:
 .PHONY: good
 good: pretty
 	pylint sanic_openapi3e
+	$(MAKE) mypy
+
+
+.PHONY: mypy
+mypy:
 	mypy -p sanic_openapi3e
+	mypy examples/*.py
 
 .PHONY: pytest
 pytest:

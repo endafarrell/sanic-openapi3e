@@ -38,7 +38,7 @@ import json
 import traceback
 import warnings
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Type, Union
 
 import sanic.router
 
@@ -1266,6 +1266,9 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
     Strings = None  # type: Schema
     """A pre-defined String Schema. An array of (simple) String elements."""
 
+    Object = None  # type: Schema
+    """A pre-defined Object Schema."""
+
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements
         self,
         _type: str,
@@ -1297,7 +1300,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         _not: Optional[Union["Schema", Reference]] = None,
         items: Optional[Dict[str, Union["Schema", Reference]]] = None,
         properties: Optional[Union["Schema", Reference]] = None,
-        additional_properties: Optional[Union["Schema", Reference]] = None,
+        additional_properties: Optional[Union[bool, "Schema", Reference]] = None,
         description: Optional[str] = None,
         _format: Optional[str] = None,
         default: Optional[Union[str, int, float, bool]] = None,
@@ -1495,7 +1498,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         # TODO - finish the definition of "items", it is incomplete. Is it supposed to be a dict of Schemae?
         _assert_type(properties, (Schema, Reference), "properties", self.__class__)
         _assert_type(
-            additional_properties, (Schema, Reference), "additional_properties", self.__class__,
+            additional_properties, (bool, Schema, Reference), "additional_properties", self.__class__,
         )
         _assert_type(description, (str,), "description", self.__class__)
         _assert_type(_format, (str,), "_format", self.__class__)
@@ -1533,6 +1536,10 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         #         )
         if _type == "array":
             _assert_required(items, "items", self.__class__, " as `type=array`.")
+
+        if additional_properties is None:
+            if _type == "object":
+                additional_properties = True
 
         #  Assignment and docs
         self.title = title
@@ -1856,6 +1863,7 @@ Schema.String = Schema(_type="string", x_frozen=True)
 Schema.Integers = Schema(_type="array", items=Schema.Integer.serialize(), x_frozen=True)
 Schema.Numbers = Schema(_type="array", items=Schema.Number.serialize(), x_frozen=True)
 Schema.Strings = Schema(_type="array", items=Schema.String.serialize(), x_frozen=True)
+Schema.Object = Schema(_type="object", additional_properties=True, x_frozen=True)
 
 
 class Parameter(OObject):  # pylint: disable=too-many-instance-attributes
@@ -2666,7 +2674,7 @@ class Responses(OObject):
     }
 
     # TODO - may need to reimplement the ``serialise`` and ``schema``.
-    def __init__(self, responses: Optional[Dict[str, Union[Response, Reference]]] = None):
+    def __init__(self, responses: Optional[Dict[str, Union[Response, Reference]]] = None, no_defaults: bool = False):
         """
         A container for the expected responses of an operation. The container maps a HTTP response code to the expected
         response. The documentation is not necessarily expected to cover all possible HTTP response codes because they
@@ -2696,6 +2704,8 @@ class Responses(OObject):
         explicit code definition takes precedence over the range definition for that code.
 
         :param responses: A mapping of response code (as str) to a Response.
+        :param no_defaults: If True, the defaults are not used, thus only the entries of the `responses` dict will be
+            used.
         """
         # TODO - types
         # TODO - validations
@@ -2703,8 +2713,11 @@ class Responses(OObject):
             key: Reference("#/components/responses/{}".format(key)) for key in Responses.DEFAULT_RESPONSES
         }
         if responses:
-            for status_code, response in responses.items():
-                _init_responses[str(status_code)] = response
+            if no_defaults:
+                _init_responses = responses
+            else:
+                for status_code, response in responses.items():
+                    _init_responses[str(status_code)] = response
         self.__dict__ = _init_responses
 
     @property
@@ -2769,7 +2782,7 @@ class Components(OObject):  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        schemas: Optional[Dict[str, Union[Schema, Reference]]] = None,
+        schemas: Optional[Mapping[str, Union[Schema, Reference]]] = None,
         responses: Optional[Dict[str, Union[Response, Reference]]] = None,
         parameters: Optional[Dict[str, Union[Parameter, Reference]]] = None,
         examples: Optional[Dict[str, Union[Example, Reference]]] = None,

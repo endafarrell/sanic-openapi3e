@@ -8,15 +8,6 @@ including sanic path params. python 3.6+
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![Downloads](https://pepy.tech/badge/sanic-openapi3e)](https://pepy.tech/project/sanic-openapi3e)
 
-[comment]: <> (## Table of Contents)
-
-[comment]: <> (1. [Installation]&#40;#installation&#41;)
-
-[comment]: <> (2. [Usage]&#40;#usage&#41;)
-
-[comment]: <> (3. [Control spec generation]&#40;#Control-spec-generation&#41;)
-
-[comment]: <> (4. [OAS Object maturity]&#40;#oas-object-maturity&#41;)
 
 ## Installation
 
@@ -440,14 +431,10 @@ production use, but some of the spec's objects are marked here as "beta" due to 
 
 | Class | sanic-openapi3e maturity | notes |
 |---|---|---|
-Callback | beta | no known usage
 Components | production/stable |  |
 Contact | production/stable |  |
-Discriminator | beta | no known usage
-Encoding | stable | no known usage |
 Example | production/stable |  |
 ExternalDocumentation | production/stable |  |
-Header | beta | no known usage
 Info | production/stable |  |
 License | production/stable |  |
 Link | beta | no known usage
@@ -461,23 +448,29 @@ PathItem | production/stable |  |
 Paths | production/stable |  |
 Reference | production/stable |  |
 RequestBody | production/stable |  |
-Response | production/stable |  |
 Responses | production/stable |  |
 Schema | production/stable |  |
-SecurityRequirement | beta | no known usage
 SecurityScheme | production/stable |  |
 Server | production/stable |  |
-ServerVariable | beta | no known usage
 Tag | production/stable |  |
+Response | production/stable | The "default" value is not implemented. |
+SecurityRequirement | beta | only the `[]` empty-list override known
+Discriminator | beta | no known usage
+Encoding | stable | no known usage |
+Header | beta | no known usage
+ServerVariable | beta | no known usage
 XML | beta | no known usage
+Callback | none | not implemented
 
 `sanic-openapi3e` is built to create [OpenAPI 3.0.2](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md)
 specs. 
 
 ## Changelog
+* v0.9.4
+  * Adds a `@doc.responses()` to give an easier way of documenting a route.
 * v0.9.3
   * Adds a `@doc.security()` to override security requirements on a route.
   * Removes entries with `false` values from the spec if `false` is the default value. This makes the specs smaller in 
-    in size and are more idomatic.
+    in size and are more idiomatic.
 * v0.9.2
   * Fixes an issue of rendering SecurityRequirement when there were no entries in the list.

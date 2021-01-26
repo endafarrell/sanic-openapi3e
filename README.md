@@ -466,6 +466,8 @@ Callback | none | not implemented
 specs. 
 
 ## Changelog
+* v0.9.6
+    * Fixes a bug where None values in examples would cause a runtime error.
 * v0.9.5
   * Improves how the `.components.responses` are rendered.
   * Fixes issues with the "static"/"frozen" predefined `Schema` objects.

@@ -165,7 +165,7 @@ class OObject:
     ) -> Union[Dict, str, bytes, int, float, List]:
         if isinstance(value, OObject):
             return value.as_yamlable_object(sort=sort, opt_key=opt_key)
-        if isinstance(value, (str, bytes, int, float)):
+        if isinstance(value, (str, bytes, int, float, NoneType)):
             return value
         if isinstance(value, list):
             if sort:

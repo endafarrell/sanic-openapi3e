@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pytest
 import sanic
 import sanic.request
 import sanic.response
@@ -11,18 +12,33 @@ import sanic_openapi3e.oas_types
 from tests.conftest import run_asserts, strict_slashes
 
 
-def test_yaml_spec_00(openapi__mod_bp_doc):
+@pytest.mark.asyncio
+@pytest.mark.skipif(
+    "sanic.__version__ in {'18.12.0', '19.3', '19.3.1', '19.6.1', '19.6.2'}",
+    reason="Unexpected way of running the loop.",
+)
+async def test_yaml_spec_00(openapi__mod_bp_doc):
     _, openapi_blueprint, doc = openapi__mod_bp_doc
     app = create_medium_sized_app_00("test_yaml_spec_00", doc, openapi_blueprint)
 
-    _, response = app.test_client.get("/openapi/spec.yml")
+    _x, response = app.test_client.get("/openapi/spec.yml")
 
     expected = (Path(__file__).absolute().parent / "expected_spec_for_medium_sized_app_00.yml").read_text(
         encoding="utf8"
     )
-    if response.content.decode("utf8").splitlines() != expected.splitlines():
-        print(response.content.decode("utf8"))  # pragma: no cover
-    assert response.content.decode("utf8").splitlines() == expected.splitlines()
+
+    if not response:
+        raise ValueError(_x)
+    if not response.content:
+        raise ValueError(dir(response))
+    _rc = response.content
+    if _rc.__class__.__name__ == "StreamReader":
+        _rc = await _rc.read()
+    else:
+        _rc = _rc.decode("utf8")
+    if _rc.splitlines() != expected.splitlines():
+        print(_rc)  # pragma: no cover
+    assert _rc.splitlines() == expected.splitlines()
 
 
 def test_json_spec_00(openapi__mod_bp_doc):

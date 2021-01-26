@@ -134,7 +134,8 @@ def default_operation_id_fn(method: str, uri: str, route: sanic.router.Route) ->
 
 def camel_case_operation_id_fn(method: str, uri: str, route: sanic.router.Route) -> str:
     if hasattr(route.handler, "__class__") and hasattr(route.handler, "handlers"):
-        # These are `sanic.view.CompositeView`s
+        # These are `sanic.view.CompositeView`s and while seen in the wild, getting a test case for this is
+        # surprisingly difficult
         _method_handler = route.handler.handlers.get(method.upper())
         if _method_handler:
             handler_name = method + "_" + _method_handler.__name__
@@ -162,10 +163,10 @@ class OObject:
     @staticmethod
     def _as_yamlable_object(
         value: Any, sort=False, opt_key: Optional[str] = None
-    ) -> Union[Dict, str, bytes, int, float, List]:
+    ) -> Union[Dict, str, bytes, int, float, List, NoneType]:
         if isinstance(value, OObject):
             return value.as_yamlable_object(sort=sort, opt_key=opt_key)
-        if isinstance(value, (str, bytes, int, float, NoneType)):
+        if isinstance(value, (str, bytes, int, float, type(None))):
             return value
         if isinstance(value, list):
             if sort:
@@ -223,7 +224,7 @@ class OObject:
                 # By default, items in specs are `deprecated: false` - these are not desirable in the specs
                 continue
 
-            value2: Union[Dict, List, str, bytes, int, float, bool]
+            value2: Union[Dict, List, str, bytes, int, float, bool, NoneType]
             if value is False or value is True:
                 value2 = value
 
@@ -231,14 +232,7 @@ class OObject:
             # List of yamlable objects for element in value
             elif key2 == "parameters" and self.__class__ in (PathItem, Operation):
                 value2 = [OObject.as_yamlable_object(e, sort=sort, opt_key=f"{opt_key}.{key2}") for e in value]
-            # elif key2 == "security":
-            #     value2 = [
-            #         SecurityRequirement._as_yamlable_object(  # pylint: disable=protected-access
-            #             sr, opt_key=f"{opt_key}.{key2}"
-            #         )
-            #         for sr in value
-            #     ]
-            #     print(209, key, key2, value, value2)
+
             ############################################################################################################
             # dicts of yamlable objects for items() value
             elif key2 == "responses" and self.__class__ == Components:
@@ -280,67 +274,6 @@ class OObject:
 
         return _repr
 
-    def serialize(self, sort=False) -> OrderedDict:
-        """
-        Serialisation to a dict.
-
-        :return: A dict serialisation of self.
-        :rtype: OrderedDict
-        """
-        # _repr = OrderedDict()  # type: OrderedDict[str, Union[Dict, List]]
-        # for key, value in self.__dict__.items():
-        #
-        #     if callable(value):
-        #         continue
-        #     if not value and not isinstance(value, bool):
-        #         continue
-        #     if key.startswith("x_") and not for_repr:
-        #         continue
-        #     key2 = openapi_keyname(key)
-        #     value2: Union[Dict, List]
-        #     if key2 == "parameters" and self.__class__.__qualname__ in ("PathItem", "Operation",):
-        #         value2 = list(OObject._serialize(e, for_repr=for_repr, sort=sort) for e in value)
-        #     elif key2 == "security":
-        #         value2 = list(
-        #             SecurityRequirement._serialize(sr, for_repr=for_repr)  # pylint: disable=protected-access
-        #             for sr in value
-        #         )
-        #     elif key2 == "schemas":
-        #         # Everyone wants sorted schema entries!
-        #         value2 = OObject._serialize(value, sort=True)
-        #     else:
-        #         value2 = OObject._serialize(value)
-        #     if not value2 or callable(value2):
-        #
-        #         continue
-        #
-        #     _repr[key2] = value2
-        # if sort:
-        #     _sorted_repr = OrderedDict()
-        #     for key in sorted(_repr.keys()):
-        #         _sorted_repr[key] = _repr[key]
-        # return _repr
-        yamable = self.as_yamlable_object(sort=sort)
-        # if self.__class__.__qualname__ == "OpenAPIv3":
-        #     print(278)
-        #     # There is special ordering for this
-        #     _repr = OrderedDict()
-        #     _repr["openapi"] = getattr(self, "version")
-        #     for key in ("info", "servers", "paths", "components", "security", "tags" "externalDocs"):
-        #         _value = yamable.get(key)
-        #         if key == "tags":
-        #             print(284, _value)
-        #         if _value:
-        #             _repr[key] = _value
-        #
-        # else:
-        #     _repr = OrderedDict(yamable)
-        # return _repr
-        return OrderedDict(yamable)
-
-    def __str__(self):
-        return json.dumps(self.as_yamlable_object(sort=True), sort_keys=True)
-
     def __repr__(self):
         return "{}({})".format(
             self.__class__.__qualname__, json.dumps(self.as_yamlable_object(sort=True), sort_keys=True),
@@ -357,81 +290,6 @@ class OType(OObject):
 
     name: str = "otype"
     formats: List[str] = []
-
-
-# class OInteger(OType):
-#     """A sanic_openapi3e class to hold OpenAPI integer types of formats `int32` and/or `int64`."""
-#
-#     name = "integer"
-#     formats = ["int32", "int64"]
-#
-#     def __init__(self, value: int, _format: Optional[str] = None):
-#         if _format:
-#             assert _format in self.formats
-#         self.format = _format
-#         self.value = value
-#
-#     def serialise(self) -> int:
-#         return self.value
-
-
-# class ONumber(OType):
-#     """A sanic_openapi3e class to hold OpenAPI non-integer numeric types of formats `float` and `double`."""
-#
-#     name = "number"
-#     formats = ["float", "double"]
-#
-#     def __init__(self, value: float, _format: Optional[str] = None):
-#         if _format:
-#             assert _format in self.formats
-#         self.format = _format
-#         self.value = value
-#
-#     def serialise(self) -> float:
-#         return self.value
-
-
-# class OString(OType):
-#     """
-#     A sanic_openapi3e class to hold OpenAPI string types of formats `byte`, `binary`, `date`, `date-time` and
-#     `password`.
-#     """
-#
-#     name = "string"
-#     formats = ["byte", "binary", "date", "date-time", "password"]
-#
-#     def __init__(self, value: str, _format: Optional[str] = None):
-#         if _format:
-#             assert _format in self.formats
-#         self.format = _format
-#         self.value = value
-#
-#     def serialise(self) -> str:
-#         return self.value
-
-
-# class OBoolean(OType):
-#     """
-#     A sanic_openapi3e class to hold OpenAPI string types of formats `byte`, `binary`, `date`, `date-time` and
-#     `password`.
-#     """
-#
-#     name = "boolean"
-#     formats: List[str] = []
-#
-#     def __init__(self, value: bool, _format: Optional[str] = None):
-#         if _format:
-#             assert _format in self.formats
-#         self.format = _format
-#         self.value = value
-#
-#     def serialise(self) -> bool:
-#         return self.value
-
-
-# OTypeFormats: Dict[str, List[str]] = {
-#     _type.name: _type.formats for _type in (OInteger, ONumber, OString, OBoolean)
-# }
 
 
 # --------------------------------------------------------------- #
@@ -1312,7 +1170,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         any_of: Optional[Union["Schema", Reference]] = None,
         _not: Optional[Union["Schema", Reference]] = None,
         items: Optional[Union["Schema", Reference]] = None,
-        properties: Optional[Union["Schema", Reference]] = None,
+        properties: Optional[Dict[str, Union["Schema", Reference]]] = None,
         additional_properties: Optional[Union[bool, "Schema", Reference]] = None,
         description: Optional[str] = None,
         _format: Optional[str] = None,
@@ -1508,7 +1366,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
         _assert_type(_not, (Schema, Reference), "_not", self.__class__)
         _assert_type(items, (Schema, Reference,), "items", self.__class__)
-        _assert_type(properties, (Schema, Reference), "properties", self.__class__)
+        _assert_type(properties, (dict,), "properties", self.__class__)
         _assert_type(
             additional_properties, (bool, Schema, Reference), "additional_properties", self.__class__,
         )
@@ -1552,6 +1410,11 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         if additional_properties is None:
             if _type == "object":
                 additional_properties = True
+
+        if properties is not None:
+            for property_name, property_value in properties.items():
+                _assert_type(property_name, (str,), "properties.{} name".format(property_name), self.__class__)
+                _assert_type(property_value, (Schema, Reference), "properties.{}".format(property_name), self.__class__)
 
         #  Assignment and docs
         self.title = title
@@ -2907,10 +2770,6 @@ class SecurityRequirement(OObject):  # pylint: disable=missing-function-docstrin
 
     def __repr__(self):
         return repr(self.__dict__)
-
-    def serialize(self, sort=False):
-        raise NotImplementedError(self)
-        # return self.__dict__
 
     def __len__(self):
         return len(self.__dict__)

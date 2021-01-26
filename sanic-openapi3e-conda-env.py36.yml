@@ -17,5 +17,5 @@ dependencies:
   - pyyaml >= 5.3.1
   # - requests-async >=0.5.0
   - pip:
-      - sanic >=19.6.0
+      - sanic >= 20.12.0
 

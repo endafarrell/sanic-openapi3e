@@ -81,7 +81,7 @@ def run_asserts(
         spec = response  # pragma: no cover
     elif isinstance(response, sanic_openapi3e.oas_types.OpenAPIv3):
         # Allows for test writing flexibility
-        spec = response.serialize()  # pragma: no cover
+        spec = response.as_yamlable_object()
     else:
         # Most tests use this
         assert response.status == 200

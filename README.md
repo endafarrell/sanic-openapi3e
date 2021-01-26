@@ -1,7 +1,7 @@
 # Sanic OpenAPI v3e
 
 OpenAPI v3 support for Sanic. Document and describe all parameters, 
-including sanic path params. python 3.6+
+including sanic path params. python 3.6+; sanic 18.12.0+ but sanic 20.12.0 and later are recommended.
 
 [![Pythons](https://img.shields.io/pypi/pyversions/sanic-openapi3e.svg)](https://img.shields.io/pypi/pyversions/sanic-openapi3e.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -453,11 +453,11 @@ Schema | production/stable |  |
 SecurityScheme | production/stable |  |
 Server | production/stable |  |
 Tag | production/stable |  |
-Response | production/stable | The "default" value is not implemented. |
+Response | production/stable | no known use of the "default" value |
 SecurityRequirement | beta | only the `[]` empty-list override known
 Discriminator | beta | no known usage
 Encoding | stable | no known usage |
-Header | beta | no known usage
+Header | production/stable |  |
 ServerVariable | beta | no known usage
 XML | beta | no known usage
 Callback | none | not implemented
@@ -466,8 +466,10 @@ Callback | none | not implemented
 specs. 
 
 ## Changelog
+* v0.9.7
+  * Extends the ability to define complex Schema objects.
 * v0.9.6
-    * Fixes a bug where None values in examples would cause a runtime error.
+  * Fixes a bug where None values in examples would cause a runtime error.
 * v0.9.5
   * Improves how the `.components.responses` are rendered.
   * Fixes issues with the "static"/"frozen" predefined `Schema` objects.

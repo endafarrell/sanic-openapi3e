@@ -7,7 +7,7 @@ from sanic import Sanic
 
 import sanic_openapi3e
 import sanic_openapi3e.oas_types
-from tests.conftest import false, null, run_asserts, strict_slashes, true
+from tests.conftest import null, run_asserts, strict_slashes, true
 
 
 @pytest.mark.asyncio
@@ -184,7 +184,7 @@ def test_path_parameter_conflicting_types(openapi__mod_bp_doc):
 
     spec = sanic_openapi3e.openapi._build_openapi_spec(
         app,
-        operation_id_fn=sanic_openapi3e.openapi.camel_case_operation_id_fn,
+        operation_id_fn=sanic_openapi3e.oas_types.camel_case_operation_id_fn,
         hide_openapi_self=True,
         hide_excluded=True,
     )

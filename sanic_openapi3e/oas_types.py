@@ -1140,7 +1140,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
     Object = None  # type: Schema
     """A pre-defined Object Schema."""
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements, too-many-branches
         self,
         _type: Optional[str] = None,
         #
@@ -1362,10 +1362,10 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         # JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
         if not any((all_of, one_of, any_of, _not)):
             _assert_type(_type, (str,), "_type as no all_of, one_of, any_of, _not", self.__class__)
-        _assert_type(all_of, (Schema, Reference), "all_of", self.__class__)
-        _assert_type(one_of, (Schema, Reference), "one_of", self.__class__)
-        _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
-        _assert_type(_not, (Schema, Reference), "_not", self.__class__)
+        _assert_type(all_of, (list,), "all_of", self.__class__)
+        _assert_type(one_of, (list,), "one_of", self.__class__)
+        _assert_type(any_of, (list,), "any_of", self.__class__)
+        _assert_type(_not, (list,), "_not", self.__class__)
         _assert_type(items, (Schema, Reference,), "items", self.__class__)
         _assert_type(properties, (dict,), "properties", self.__class__)
         _assert_type(
@@ -1416,6 +1416,11 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
             for property_name, property_value in properties.items():
                 _assert_type(property_name, (str,), "properties.{} name".format(property_name), self.__class__)
                 _assert_type(property_value, (Schema, Reference), "properties.{}".format(property_name), self.__class__)
+
+        for attr, attr_name in ((all_of, "all_of"), (one_of, "one_of"), (any_of, "any_of"), (_not, "_not")):
+            if attr:
+                for idx, element in enumerate(attr):
+                    _assert_type(element, (Schema, Reference), "{}#{}".format(attr_name, idx), self.__class__)
 
         #  Assignment and docs
         self.title = title

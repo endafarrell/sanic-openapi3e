@@ -466,6 +466,8 @@ Callback | none | not implemented
 specs. 
 
 ## Changelog
+* v0.9.9
+  * Fixes type validation bug for `oneOf`.
 * v0.9.8
   * Further extends complex `Schema` objects by extending how `allOf`, `oneOf`, `anyOf`, and `not` are handled.
 * v0.9.7

@@ -466,8 +466,10 @@ Callback | none | not implemented
 specs. 
 
 ## Changelog
+* v0.9.8
+  * Further extends complex `Schema` objects by extending how `allOf`, `oneOf`, `anyOf`, and `not` are handled.
 * v0.9.7
-  * Extends the ability to define complex Schema objects.
+  * Extends the ability to define complex `Schema` objects.
 * v0.9.6
   * Fixes a bug where None values in examples would cause a runtime error.
 * v0.9.5
@@ -477,7 +479,8 @@ specs.
   * Adds a `@doc.responses()` to give an easier way of documenting a route.
 * v0.9.3
   * Adds a `@doc.security()` to override security requirements on a route.
-  * Removes entries with `false` values from the spec if `false` is the default value. This makes the specs smaller in 
-    in size and are more idiomatic.
+  * Removes entries with `false` values from the spec if `false` is the default value. This makes the specs smaller in
+    size and are more idiomatic.
 * v0.9.2
   * Fixes an issue of rendering SecurityRequirement when there were no entries in the list.
+  

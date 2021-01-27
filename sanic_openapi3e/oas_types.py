@@ -1142,7 +1142,7 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals, too-many-statements
         self,
-        _type: str,
+        _type: Optional[str] = None,
         #
         # The following properties are taken directly from the JSON Schema definition and follow the same
         # specifications:
@@ -1165,10 +1165,10 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         #
         # The following properties are taken from the JSON Schema definition but their definitions were adjusted to the
         # OpenAPI Specification.
-        all_of: Optional[Union["Schema", Reference]] = None,
-        one_of: Optional[Union["Schema", Reference]] = None,
-        any_of: Optional[Union["Schema", Reference]] = None,
-        _not: Optional[Union["Schema", Reference]] = None,
+        all_of: Optional[List[Union["Schema", Reference]]] = None,
+        one_of: Optional[List[Union["Schema", Reference]]] = None,
+        any_of: Optional[List[Union["Schema", Reference]]] = None,
+        _not: Optional[List[Union["Schema", Reference]]] = None,
         items: Optional[Union["Schema", Reference]] = None,
         properties: Optional[Dict[str, Union["Schema", Reference]]] = None,
         additional_properties: Optional[Union[bool, "Schema", Reference]] = None,
@@ -1360,7 +1360,8 @@ class Schema(OObject):  # pylint: disable=too-many-instance-attributes
         _assert_type(enum, (list,), "enum", self.__class__)
 
         # JSON Schema definition but their definitions were adjusted to the OpenAPI Specification.
-        _assert_type(_type, (str,), "_type", self.__class__)
+        if not any((all_of, one_of, any_of, _not)):
+            _assert_type(_type, (str,), "_type as no all_of, one_of, any_of, _not", self.__class__)
         _assert_type(all_of, (Schema, Reference), "all_of", self.__class__)
         _assert_type(one_of, (Schema, Reference), "one_of", self.__class__)
         _assert_type(any_of, (Schema, Reference), "any_of", self.__class__)
